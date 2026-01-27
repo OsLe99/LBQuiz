@@ -4,6 +4,7 @@ using LBQuiz.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LBQuiz.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260127124010_NewModels")]
+    partial class NewModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -87,32 +90,6 @@ namespace LBQuiz.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("LBQuiz.Models.MultipleChoiceAnswer", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AnswerText")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool>("IsCorrectAnswer")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("QuestionId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("QuestionId");
-
-                    b.ToTable("MultipleChoiceAnswer");
-                });
-
             modelBuilder.Entity("LBQuiz.Models.Question", b =>
                 {
                     b.Property<int>("Id")
@@ -129,16 +106,15 @@ namespace LBQuiz.Migrations
                     b.Property<int>("Points")
                         .HasColumnType("int");
 
-                    b.Property<string>("QuestionText")
+                    b.Property<string>("QuestionString")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("QuizId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("TimeLimitSeconds")
-                        .HasColumnType("int");
+                    b.Property<double?>("TimeLeft")
+                        .HasColumnType("float");
 
                     b.HasKey("Id");
 
@@ -304,6 +280,14 @@ namespace LBQuiz.Migrations
                 {
                     b.HasBaseType("LBQuiz.Models.Question");
 
+                    b.PrimitiveCollection<string>("AllAnswers")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.PrimitiveCollection<string>("CorrectAnswers")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasDiscriminator().HasValue("QuestionMultiple");
                 });
 
@@ -313,8 +297,7 @@ namespace LBQuiz.Migrations
 
                     b.Property<string>("CorrectAnswer")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasDiscriminator().HasValue("QuestionOpen");
                 });
@@ -333,17 +316,6 @@ namespace LBQuiz.Migrations
                         .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue("QuestionSlider");
-                });
-
-            modelBuilder.Entity("LBQuiz.Models.MultipleChoiceAnswer", b =>
-                {
-                    b.HasOne("LBQuiz.Models.QuestionMultiple", "Question")
-                        .WithMany("AllAnswers")
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Question");
                 });
 
             modelBuilder.Entity("LBQuiz.Models.Question", b =>
@@ -409,11 +381,6 @@ namespace LBQuiz.Migrations
             modelBuilder.Entity("LBQuiz.Models.Quiz", b =>
                 {
                     b.Navigation("Questions");
-                });
-
-            modelBuilder.Entity("LBQuiz.Models.QuestionMultiple", b =>
-                {
-                    b.Navigation("AllAnswers");
                 });
 #pragma warning restore 612, 618
         }
