@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using LBQuiz.Components;
 using LBQuiz.Components.Account;
 using LBQuiz.Data;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +39,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     .AddDefaultTokenProviders();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+builder.Services.AddMudServices();
 
 var app = builder.Build();
 
