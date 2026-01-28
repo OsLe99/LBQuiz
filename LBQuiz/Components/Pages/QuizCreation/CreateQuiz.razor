@@ -1,0 +1,28 @@
+﻿@page "/Quiz/Create"
+
+
+
+@using Microsoft.AspNetCore.Components
+@using System.Globalization;
+
+
+<h1>CreateQuiz</h1>
+
+<MudTextField @bind-Value="_quizName" Label="Quiz Name" Variant.Text></MudTextField>
+<MudTextField @bind-Value="_quizDescription" Label="Quiz Description" Variant.Text></MudTextField>
+
+<MudSelect T="string" @bind-Value="_quizTypeValue" Label="Select QuestionType" HelperText="String" Placeholder="Please Select" AdornmentColor="Color.Primary" AdornmentIcon="@Icons.Material.Filled.Quiz">
+    <MudSelectItem T="string" Value="@("Competition")">Competition</MudSelectItem>
+    <MudSelectItem T="string" Value="@("Educational")">Educational</MudSelectItem>
+</MudSelect>
+<MudButton>Test</MudButton>
+
+
+
+
+
+@code {
+    private string _quizTypeValue { get; set; }
+    private string _quizName { get; set; }
+    private string _quizDescription { get; set; }
+}
