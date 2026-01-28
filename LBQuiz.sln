@@ -1,5 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11415.280 d18.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LBQuiz", "LBQuiz\LBQuiz.csproj", "{0940C5BD-A9E4-430D-AAF3-A77A41BF9D50}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LBQuiz.Test", "LBQuiz.Test\LBQuiz.Test.csproj", "{DBDD96C0-E67F-4FB6-B4A7-C5AFC834C006}"
@@ -18,5 +21,11 @@ Global
 		{DBDD96C0-E67F-4FB6-B4A7-C5AFC834C006}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DBDD96C0-E67F-4FB6-B4A7-C5AFC834C006}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DBDD96C0-E67F-4FB6-B4A7-C5AFC834C006}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AC471540-C625-4FE2-8876-5C771DC0472D}
 	EndGlobalSection
 EndGlobal
