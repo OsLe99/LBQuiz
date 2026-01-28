@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
 
 <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
 <MudPopoverProvider />
@@ -6,55 +7,29 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <div class="page">
-        <div class="sidebar">
-            <NavMenu />
-        </div>
-
-        <main>
-            <div class="top-row px-4">
-                <MudSwitch bind-Value="_isDarkMode" Color="Color.Primary" Class="ma-4" T="bool" Label="Toggle Light/Dark Mode" />
-            </div>
-
-            <article class="content px-4">
-                @Body
-            </article>
-        </main>
-    </div>
-
-    <div id="blazor-error-ui" data-nosnippet>
-        An unhandled error has occurred.
-        <a href="." class="reload">Reload</a>
-        <span class="dismiss">🗙</span>
-        @_isDarkMode
-    </div>
-    </MudLayout>
-
-
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" OnClick="@((e) => DrawerToggle())" Color="Color.Inherit"></MudIconButton>
+        <MudText Typo="Typo.h6" Class="ml-3">LBQuiz</MudText>
+        <MudSpacer/>
+        <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick=>Login</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary">Register</MudButton>
+        <MudSwitch @bind-Value="_isDarkMode" Color="Color.Primary" Class="ml-4" T="bool" Label="Dark Mode"></MudSwitch>
+    </MudAppBar>
+    
+    <MudDrawer @bind-Open="_drawerOpen">
+        
+    </MudDrawer>
+    
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>
 
 
 @code{
-    private ThemeManagerTheme _themeManager = new ThemeManagerTheme();
-    public bool _themeManagerOpen;
-
+    private bool _drawerOpen = false;
+    private bool _isDarkMode;
     private MudTheme _theme = new();
-    private bool _isDarkMode; 
-    
 
-    void OpenThemeManager(bool value)
-    {
-        _themeManagerOpen = value;
-    }
-
-    void UpdateTheme(ThemeManagerTheme value)
-    {
-        _themeManager = value;
-        _theme = value.Theme;
-        StateHasChanged();
-    }
-
-    protected override void OnInitialized()
-    {
-        StateHasChanged();
-    }
+    private void DrawerToggle() => _drawerOpen = !_drawerOpen;
 }
