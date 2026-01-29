@@ -4,6 +4,7 @@ using LBQuiz.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LBQuiz.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260128150718_UpdatedQuiz")]
+    partial class UpdatedQuiz
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -135,9 +138,6 @@ namespace LBQuiz.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("QuizId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SortOrder")
                         .HasColumnType("int");
 
                     b.Property<int?>("TimeLimitSeconds")

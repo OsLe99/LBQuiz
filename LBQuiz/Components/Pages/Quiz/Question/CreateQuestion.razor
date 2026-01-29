@@ -1,0 +1,63 @@
+﻿@page "/quiz/{QuizId:int}/question/create"
+@inject ApplicationDbContext _dbcontext
+@using LBQuiz.Models;
+@using Data
+
+<h3>CreateQuestion</h3>
+
+<MudForm @ref="_form" OnValidSubmit="SaveQuestion">
+
+    <MudTextField @bind-Value="_questionText"
+                  Label="Question"
+                  Variant="Variant.Filled"
+                  Required="true"
+                  For="@(() => _questionText)" />
+
+    <MudTextField @bind-Value="_correctAnswer"
+                  Label="Correct Answer"
+                  Variant="Variant.Filled"
+                  Required="true"
+                  For="@(() => _correctAnswer)" />
+
+    <MudNumericField @bind-Value="_questionPoints"
+                     Label="Points"
+                     Variant="Variant.Filled"
+                     Min="0"
+                     Max="1000"
+                     For="@(() => _questionPoints)" />
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" @onclick="SaveQuestion">Save Question</MudButton>
+
+</MudForm>
+
+@code {
+    [Parameter] public int QuizId { get; set; }
+
+    private MudForm _form;
+
+    private string _questionText { get; set; } = string.Empty;
+    private string _correctAnswer { get; set; } = string.Empty;
+    private int _questionPoints { get; set; } = 1000;
+
+    private async Task SaveQuestion()
+    {
+        await _form.Validate();
+
+        if (!_form.IsValid)
+        {
+            // Implementera error vid fel värden
+            return;
+        }
+
+        var newQuestion = new QuestionOpen
+        {
+            QuizId = QuizId,
+            QuestionText = _questionText,
+            CorrectAnswer = _correctAnswer,
+            Points = _questionPoints
+        };
+        
+        _dbcontext.Question.Add(newQuestion);
+        await _dbcontext.SaveChangesAsync();
+    }
+}
