@@ -5,7 +5,7 @@
 namespace LBQuiz.Migrations
 {
     /// <inheritdoc />
-    public partial class NewModels : Migration
+    public partial class quizmodeltest : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

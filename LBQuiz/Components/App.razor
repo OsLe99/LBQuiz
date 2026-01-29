@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="@Assets["LBQuiz.styles.css"]"/>
     <ImportMap/>
     <link rel="icon" type="image/png" href="favicon.png"/>
-    <HeadOutlet @rendermode="InteractiveServer" />
+    <HeadOutlet @rendermode="RenderModeForPage" />
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -21,7 +21,7 @@
 </head>
 
 <body>
-<Routes />
+    <Routes @rendermode="RenderModeForPage"/>
 <ReconnectModal/>
 <script src="@Assets["_framework/blazor.web.js"]"></script>
 <script src="@Assets["Components/Account/Shared/PasskeySubmit.razor.js"]" type="module"></script>
@@ -30,3 +30,13 @@
 </body>
 
 </html>
+
+@code {
+    [CascadingParameter]
+    public HttpContext? _httpContext { get; set; }
+
+    private IComponentRenderMode? RenderModeForPage =>
+        _httpContext.Request.Path.StartsWithSegments("/Account", StringComparison.OrdinalIgnoreCase)
+            ? null
+            : InteractiveServer;
+}

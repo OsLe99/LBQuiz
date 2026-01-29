@@ -1,0 +1,68 @@
+﻿@page "/Quiz/Create"
+@using Data
+
+
+@using Microsoft.AspNetCore.Components
+@using System.Globalization;
+
+
+<h1>CreateQuiz</h1>
+
+<MudTextField @bind-Value="_quizName" Label="Quiz Name" Variant="Variant.Filled" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"></MudTextField>
+<MudTextField @bind-Value="_quizDescription" Label="Quiz Description" Variant="Variant.Filled" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"></MudTextField>
+
+<MudSelect T="string" @bind-Value="_quizTypeValue" Label="Select QuestionType" HelperText="String" Placeholder="Please Select" AdornmentColor="Color.Primary" AdornmentIcon="@Icons.Material.Filled.Quiz">
+    <MudSelectItem T="string" Value="@("Competition")">Competition</MudSelectItem>
+    <MudSelectItem T="string" Value="@("Educational")">Educational</MudSelectItem>
+</MudSelect>
+@if(_quizSaved == false){
+    <MudButton Variant="Variant.Filled" OnClick="SaveQuizToDatabase">Save Quiz</MudButton>
+}
+else
+{
+    <MudText Typo="Typo.h4">Your quiz was saved successfully <MudIcon Icon="@Icons.Material.Filled.GppGood" Color="Color.Success"></MudIcon></MudText>
+}
+
+    
+
+
+
+
+
+
+@code {
+    private string _quizTypeValue { get; set; }
+    private string _quizName { get; set; }
+    private string _quizDescription { get; set; }
+    private bool _quizSaved { get; set; } = false;
+
+    private readonly ApplicationDbContext _dbContext;
+    public CreateQuiz(ApplicationDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+
+
+    async Task SaveQuizToDatabase()
+    {
+        var newQuiz = new Models.Quiz()
+        {
+            Name = _quizName,
+            Description = _quizDescription,
+            //HostId need to be changed from INT to String or GUID to match the user system
+            //HostId should always be the ID for the person who is logged in
+            HostId = 1
+        };
+        _dbContext.Quiz.Add(newQuiz);
+        try
+        {
+            await _dbContext.SaveChangesAsync();
+            _quizSaved = true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred while saving the quiz: {ex.Message}");
+        }
+    }
+}

@@ -19,5 +19,8 @@ namespace LBQuiz.Models
         [Required(ErrorMessage = "Points are required")]
         [Range(1, 2000, ErrorMessage = "Points must be between 1 and 2000")]
         public int Points { get; set; } = 1000;
+        
+        [Required(ErrorMessage = "Sort order is required")]
+        public int SortOrder { get; set; }
     }
 }
