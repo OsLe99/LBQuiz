@@ -27,7 +27,7 @@
                      Max="1000"
                      For="@(() => _questionPoints)" />
     
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" @onclick="SaveQuestion">Save Question</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
 
 </MudForm>
 
@@ -69,7 +69,6 @@
         try
         {
             await _dbcontext.SaveChangesAsync();
-            StateHasChanged();
         }
         catch (Exception ex)
         {
