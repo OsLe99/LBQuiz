@@ -1,0 +1,50 @@
+﻿@page "/viewquiz"
+@using Data
+<h3>ViewQuiz</h3>
+
+@if(SelectedQuiz != null)
+{
+    @foreach(var question in AllQuestions)
+    {
+
+        <h1>@question.QuestionText</h1>
+    }
+}
+
+@code {
+    public Models.Quiz SelectedQuiz { get; set; }
+    private int _quizId { get; set; } = 1;
+    public List<Models.Question> AllQuestions { get; set; }
+    private readonly ApplicationDbContext _dbContext;
+
+    public ViewQuiz(ApplicationDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+
+    protected override void OnInitialized()
+    {
+        //Change from First to Id from SelectedQuiz
+        var selectedQuiz = _dbContext.Quiz.FirstOrDefault(q => q.Id == _quizId);
+        if(selectedQuiz != null)
+        {
+            SelectedQuiz = selectedQuiz;
+        }
+        GetAllQuestionsFromQuiz().GetAwaiter().GetResult();
+    }
+
+
+
+    private async Task GetAllQuestionsFromQuiz()
+    {
+        var questions = _dbContext.Question.Where(q => q.QuizId == _quizId).ToList();
+
+        if(questions != null)
+        {
+            AllQuestions = questions;
+        }
+    }
+
+
+}
