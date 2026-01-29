@@ -1,11 +1,12 @@
 ﻿@page "/quiz/{QuizId:int}/question/create"
 @inject ApplicationDbContext _dbcontext
 @using LBQuiz.Models;
+@using Microsoft.EntityFrameworkCore
 @using Data
 
 <h3>CreateQuestion</h3>
 
-<MudForm @ref="_form" OnValidSubmit="SaveQuestion">
+<MudForm @ref="_questionForm" OnValidSubmit="SaveQuestion">
 
     <MudTextField @bind-Value="_questionText"
                   Label="Question"
@@ -33,7 +34,7 @@
 @code {
     [Parameter] public int QuizId { get; set; }
 
-    private MudForm _form;
+    private MudForm _questionForm;
 
     private string _questionText { get; set; } = string.Empty;
     private string _correctAnswer { get; set; } = string.Empty;
@@ -41,20 +42,27 @@
 
     private async Task SaveQuestion()
     {
-        await _form.Validate();
+        await _questionForm.Validate();
+        
 
-        if (!_form.IsValid)
+        if (!_questionForm.IsValid)
         {
-            // Implementera error vid fel värden
+            // Implementera error vid fel värden i form
             return;
         }
-
+        
+        var nextSortOrder = await _dbcontext.Question
+            .Where(q => q.QuizId == QuizId)
+            .Select(q => (int?)q.SortOrder)
+            .MaxAsync() ?? 0;
+        
         var newQuestion = new QuestionOpen
         {
             QuizId = QuizId,
             QuestionText = _questionText,
             CorrectAnswer = _correctAnswer,
-            Points = _questionPoints
+            Points = _questionPoints,
+            SortOrder =  nextSortOrder + 1
         };
         
         _dbcontext.Question.Add(newQuestion);
