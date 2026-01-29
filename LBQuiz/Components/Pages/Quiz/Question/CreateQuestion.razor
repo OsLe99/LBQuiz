@@ -4,7 +4,7 @@
 @using Microsoft.EntityFrameworkCore
 @using Data
 
-<h3>CreateQuestion</h3>
+<h3>Create Question</h3>
 
 <MudForm @ref="_questionForm" OnValidSubmit="SaveQuestion">
 
@@ -26,8 +26,8 @@
                      Min="0"
                      Max="1000"
                      For="@(() => _questionPoints)" />
-
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" @onclick="SaveQuestion">Save Question</MudButton>
+    
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" @onclick="SaveQuestion">Save Question</MudButton>
 
 </MudForm>
 
@@ -66,6 +66,14 @@
         };
         
         _dbcontext.Question.Add(newQuestion);
-        await _dbcontext.SaveChangesAsync();
+        try
+        {
+            await _dbcontext.SaveChangesAsync();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred while saving the question: {ex.Message}");
+        }
     }
 }
