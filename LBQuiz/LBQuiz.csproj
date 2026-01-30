@@ -21,8 +21,4 @@
         <PackageReference Include="MudBlazor.ThemeManager" Version="3.0.0" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Services\" />
-    </ItemGroup>
-
 </Project>

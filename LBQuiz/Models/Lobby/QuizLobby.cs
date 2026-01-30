@@ -19,24 +19,4 @@ public class QuizLobby
     
     [Required(ErrorMessage = "Quiz bool statement is required")]
     public bool IsActive { get; set; } = true;
-
-    public QuizLobby()
-    {
-        JoinCode = GenerateJoinCode();
-    }
-
-    private string GenerateJoinCode(int length = 6)
-    {
-        const string validChars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-        var random = new Random();
-        return new string(Enumerable.Repeat(validChars, length).Select(s => s[random.Next(s.Length)]).ToArray());
-    }
-
-    public static bool IsValidJoinCode(string code)
-    {
-        return !string.IsNullOrEmpty(code) && 
-               code.Length >= 4 &&
-               code.Length <= 6 &&
-               code.All(c => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".Contains(char.ToUpper(c)));
-    }
 }
