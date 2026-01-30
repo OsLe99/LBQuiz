@@ -26,12 +26,13 @@
                      Min="0"
                      Max="1000"
                      For="@(() => _questionPoints)" />
-    
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
 
 </MudForm>
 
 @code {
+    ///quiz/1/question/create
     [Parameter] public int QuizId { get; set; }
 
     private MudForm _questionForm;
@@ -43,28 +44,28 @@
     private async Task SaveQuestion()
     {
         await _questionForm.Validate();
-        
+
 
         if (!_questionForm.IsValid)
         {
             // Implementera error vid fel värden i form
             return;
         }
-        
+
         var nextSortOrder = await _dbcontext.Question
             .Where(q => q.QuizId == QuizId)
             .Select(q => (int?)q.SortOrder)
             .MaxAsync() ?? 0;
-        
+
         var newQuestion = new QuestionOpen
         {
             QuizId = QuizId,
             QuestionText = _questionText,
             CorrectAnswer = _correctAnswer,
             Points = _questionPoints,
-            SortOrder =  nextSortOrder + 1
+            SortOrder = nextSortOrder + 1
         };
-        
+
         _dbcontext.Question.Add(newQuestion);
         try
         {
