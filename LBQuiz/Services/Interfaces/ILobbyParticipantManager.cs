@@ -7,5 +7,6 @@ namespace LBQuiz.Services.Interfaces
         bool AddParticipant(int lobbyId, LobbyParticipant participant);
         List<LobbyParticipant> GetParticipants(int lobbyId);
         List<LobbyParticipant> GetLeaderboard(int lobbyId);
+        LobbyParticipant? RemoveParticipantByConnectionId(string connectionId);
     }
 }
