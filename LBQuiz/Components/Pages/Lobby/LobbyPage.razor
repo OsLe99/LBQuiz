@@ -1,0 +1,21 @@
+﻿@page "/quiz/{QuizId:int}"
+
+<h3>LobbyPage</h3>
+<h1>@QuizId</h1>
+
+@if(_quizStart == false)
+{
+    <h1>Waiting for host to start the quiz</h1>
+    <h2>Number of people in lobby: @_lobbyCount</h2>
+}
+
+@code {
+    [Parameter]
+    public int QuizId { get; set; }
+    private bool _quizStart = false;
+    private int _lobbyCount = 0; 
+
+
+
+
+}

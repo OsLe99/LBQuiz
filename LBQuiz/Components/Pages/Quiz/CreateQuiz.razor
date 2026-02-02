@@ -50,9 +50,8 @@ else
         {
             Name = _quizName,
             Description = _quizDescription,
-            //HostId need to be changed from INT to String or GUID to match the user system
             //HostId should always be the ID for the person who is logged in
-            HostId = 1
+            HostId = "1" // TODO: Replace with actual logged-in user ID
         };
         _dbContext.Quiz.Add(newQuiz);
         try

@@ -15,7 +15,7 @@ namespace LBQuiz.Models
         public string Description { get; set; }
         
         [Required(ErrorMessage = "Host id is required")]
-        public int HostId { get; set; }
+        public string HostId { get; set; }
 
         [Required(ErrorMessage = "A quiz must have questions")]
         public List<Question> Questions { get; set; } = new();
