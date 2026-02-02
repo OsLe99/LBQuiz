@@ -40,4 +40,21 @@ public class LobbyParticipantManager : ILobbyParticipantManager
     {
         return GetParticipants(lobbyId).OrderByDescending(p => p.Score).ToList();
     }
+    
+    // Remove participant from lobby
+    public LobbyParticipant? RemoveParticipantByConnectionId(string connectionId)
+    {
+        if (_connectionToLobby.TryRemove(connectionId, out var lobbyId))
+        {
+            if (_lobbyParticipants.TryGetValue(lobbyId, out var participants))
+            {
+                if (participants.TryRemove(connectionId, out var participant))
+                {
+                    return participant;
+                }
+            }
+        }
+        
+        return null;
+    }
 }
