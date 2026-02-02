@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using LBQuiz.Models;
+using LBQuiz.Models.Lobby;
 
 namespace LBQuiz.Data;
 
@@ -7,9 +9,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     : IdentityDbContext<ApplicationUser, Microsoft.AspNetCore.Identity.IdentityRole, string>(options)
 {
 
-    public DbSet<LBQuiz.Models.Quiz> Quiz { get; set; }
-    public DbSet<LBQuiz.Models.Question> Question { get; set; }
-    public DbSet<LBQuiz.Models.QuestionOpen> QuestionOpen { get; set; }
-    public DbSet<LBQuiz.Models.QuestionSlider> QuestionSlider { get; set; }
-    public DbSet<LBQuiz.Models.QuestionMultiple> QuestionMultiple { get; set; }
+    public DbSet<Quiz> Quiz { get; set; }
+    
+    // Question DbSets go here
+    public DbSet<Question> Question { get; set; }
+    public DbSet<QuestionOpen> QuestionOpen { get; set; }
+    public DbSet<QuestionSlider> QuestionSlider { get; set; }
+    public DbSet<QuestionMultiple> QuestionMultiple { get; set; }
+    
+    // Lobby DbSets go here
+    public DbSet<QuizLobby> QuizLobby { get; set; }
 }
