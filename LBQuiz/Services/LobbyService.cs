@@ -1,11 +1,12 @@
 ﻿using LBQuiz.Data;
 using LBQuiz.Models;
 using LBQuiz.Models.Lobby;
+using LBQuiz.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace LBQuiz.Services;
 
-public class LobbyService 
+public class LobbyService : ILobbyService
 {
     private readonly ApplicationDbContext _db;
 
@@ -37,6 +38,8 @@ public class LobbyService
         return lobby;
     }
 
+    #region JoinCode Creation
+
     // Generates a code until we hit one that doesn't exist. Can be made faster
     private async Task<string> GenerateUniqueJoinCodeAsync()
     {
@@ -58,4 +61,6 @@ public class LobbyService
             .Select(_ => chars[random.Next(chars.Length)])
             .ToArray());
     }
+
+    #endregion
 }
