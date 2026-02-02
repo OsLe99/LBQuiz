@@ -1,11 +1,13 @@
-﻿@page "/lobby/join"
+@page "/lobby/join"
 @inject ApplicationDbContext DbContext
 @inject ILobbyParticipantManager LobbyParticipantManager
-@inject 
+@inject NavigationManager Navigation
 @using LBQuiz.Data
-@using Microsoft.EntityFrameworkCore
-@using Models.Lobby
 @using LBQuiz.Services.Interfaces
+@using LBQuiz.Hubs
+@using LBQuiz.Models.Lobby
+@using Microsoft.AspNetCore.SignalR.Client
+@implements IAsyncDisposable
 
 
 
@@ -13,37 +15,58 @@
 
 <MudTextField InputType="InputType.Text" @bind-Value="_joinCode"></MudTextField>
 <MudTextField InputType="InputType.Text" @bind-Value="_nickName"></MudTextField>
+<MudButton @onclick="AddUser">Join lobby</MudButton>
+
+@if (showList != false)
+{
+    <ul>
+        @foreach (var user in LobbyParticipantManager.GetParticipants(_quizLobby.Id))
+        {
+            <li>@user.Nickname</li>
+        }
+    </ul>
+}
 
 
 
 @code {
-
     private string _joinCode = string.Empty;    
     private string _nickName = string.Empty;
+    private QuizLobby _quizLobby;
+    private bool showList = false;
 
+    private HubConnection? _hubConnection;
 
-    public List<LobbyParticipant> LobbyParticipants = new List<LobbyParticipant>();
-
-    public async Task<bool> CreateLobbyParticipantAsync(string nickName, string connectionId)
+    protected override async Task OnInitializedAsync()
     {
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/lobbyHub"))
+            .Build();
 
-        var lobbyId = await DbContext.QuizLobby
-            .Where(l => l.JoinCode == _joinCode)
-            .Select(l => l.Id)
-            .FirstOrDefaultAsync();
-
-        if(lobbyId != null)
+        _hubConnection.On<string, List<LobbyParticipant>>("ParticipantJoined", (nickname, participants) =>
         {
-            var lP = new LobbyParticipant()
-            {
-                //ConnectionId, ska komma från SignalR via LobbyHub. Via metoden LobbyHubConnectionId()
-                ConnectionId = connectionId,
-                LobbyId = lobbyId,
-                Nickname = _nickName
-            };
-            LobbyParticipants.Add(lP);
-            return LobbyParticipantManager.AddParticipant(lobbyId, lP);
+            InvokeAsync(StateHasChanged);
+        });
+
+        await _hubConnection.StartAsync();
+    }
+
+    public async Task AddUser()
+    {
+        if (_hubConnection is not null)
+        {
+            await _hubConnection.InvokeAsync("JoinLobby", _joinCode, _nickName);
+            _quizLobby = DbContext.QuizLobby.Where(q => q.JoinCode == _joinCode).SingleOrDefault();
+            showList = true;
+            StateHasChanged();
         }
-        return false;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection is not null)
+        {
+            await _hubConnection.DisposeAsync();
+        }
     }
 }

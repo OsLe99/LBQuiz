@@ -1,21 +1,48 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using LBQuiz.Models.Lobby;
+using Microsoft.AspNetCore.SignalR;
+using LBQuiz.Services.Interfaces;
 
 namespace LBQuiz.Hubs
 {
     public class LobbyHub : Hub
     {
-        //Lägg till routing till Lobbyhub i Program.cs
-        public string LobbyHubConnectionId()
+        private readonly ILobbyParticipantManager _lobbyParticipantManager;
+        private readonly ILobbyService _lobbyService;
+
+        public LobbyHub(ILobbyParticipantManager lobbyParticipantManager, ILobbyService lobbyService)
         {
-            var connectionId = Context.ConnectionId;
-            Console.WriteLine($"LOBBY HUB CONNECTED: {connectionId}");
-            return connectionId;
+            _lobbyParticipantManager = lobbyParticipantManager;
+            _lobbyService = lobbyService;
         }
+
         public override async Task OnConnectedAsync()
         {
-            Console.WriteLine("LOBBY HUB CONNECTED");
+            Console.WriteLine($"LOBBY HUB CONNECTED: {Context.ConnectionId}");
             await base.OnConnectedAsync();
-            var hub = new LobbyHub();
+        }
+
+        public async Task JoinLobby(string joinCode, string nickname)
+        {
+            var lobby = await _lobbyService.GetLobbyByJoinCodeAsync(joinCode);
+            if (lobby == null)
+            {
+                throw new HubException("Invalid join code");
+            }
+
+            var participant = new LobbyParticipant
+            {
+                ConnectionId = Context.ConnectionId,
+                LobbyId = lobby.Id,
+                Nickname = nickname,
+                Score = 0
+            };
+
+            if (_lobbyParticipantManager.AddParticipant(lobby.Id, participant))
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, lobby.Id.ToString());
+                var participants = _lobbyParticipantManager.GetParticipants(lobby.Id);
+                await Clients.Group(lobby.Id.ToString()).SendAsync("ParticipantJoined", nickname, participants);
+            }
         }
     }
 }

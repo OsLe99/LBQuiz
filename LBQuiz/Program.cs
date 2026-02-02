@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using LBQuiz.Components;
 using LBQuiz.Components.Account;
 using LBQuiz.Data;
+using LBQuiz.Services;
+using LBQuiz.Services.Interfaces;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,6 +44,10 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 builder.Services.AddMudServices();
 builder.Services.AddSignalR();
 
+// Lobby services
+builder.Services.AddSingleton<ILobbyParticipantManager, LobbyParticipantManager>();
+builder.Services.AddScoped<ILobbyService, LobbyService>();
+
 var app = builder.Build();
 
 app.UseAuthentication();
@@ -68,6 +74,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.MapHub<LBQuiz.Hubs.ChatHub>("/chathub");
+app.MapHub<LBQuiz.Hubs.LobbyHub>("/lobbyHub");
 
 app.UseAntiforgery();
 

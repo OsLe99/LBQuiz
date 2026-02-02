@@ -5,4 +5,5 @@ namespace LBQuiz.Services.Interfaces;
 public interface ILobbyService
 {
     Task<QuizLobby> CreateLobbyAsync(int quizId);
+    Task<QuizLobby?> GetLobbyByJoinCodeAsync(string joinCode);
 }
