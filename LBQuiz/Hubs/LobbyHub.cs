@@ -17,7 +17,6 @@ namespace LBQuiz.Hubs
 
         public override async Task OnConnectedAsync()
         {
-            Console.WriteLine($"LOBBY HUB CONNECTED: {Context.ConnectionId}");
             await base.OnConnectedAsync();
         }
 
@@ -43,6 +42,28 @@ namespace LBQuiz.Hubs
                 var participants = _lobbyParticipantManager.GetParticipants(lobby.Id);
                 await Clients.Group(lobby.Id.ToString()).SendAsync("ParticipantJoined", nickname, participants);
             }
+        }
+
+        public async Task LeaveLobby()
+        {
+            var participant = _lobbyParticipantManager.RemoveParticipantByConnectionId(Context.ConnectionId);
+            if (participant != null)
+            {
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, participant.LobbyId.ToString());
+                var participants = _lobbyParticipantManager.GetParticipants(participant.LobbyId);
+                await Clients.Group(participant.LobbyId.ToString()).SendAsync("ParticipantLeft", participant.Nickname, participants);
+            }
+        }
+
+        public override async Task OnDisconnectedAsync(Exception? exception)
+        {
+            var participant = _lobbyParticipantManager.RemoveParticipantByConnectionId(Context.ConnectionId);
+            if (participant != null)
+            {
+                var participants = _lobbyParticipantManager.GetParticipants(participant.LobbyId);
+                await Clients.Group(participant.LobbyId.ToString()).SendAsync("ParticipantLeft", participant.Nickname, participants);
+            }
+            await base.OnDisconnectedAsync(exception);
         }
     }
 }
