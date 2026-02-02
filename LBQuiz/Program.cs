@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using LBQuiz.Components;
 using LBQuiz.Components.Account;
 using LBQuiz.Data;
+using LBQuiz.Services;
+using LBQuiz.Services.Interfaces;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,8 +42,17 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 builder.Services.AddMudServices();
+builder.Services.AddSignalR();
+
+// Lobby services
+builder.Services.AddSingleton<ILobbyParticipantManager, LobbyParticipantManager>();
+builder.Services.AddScoped<ILobbyService, LobbyService>();
 
 var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -58,11 +69,14 @@ else
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
-app.UseAntiforgery();
-
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapHub<LBQuiz.Hubs.ChatHub>("/chathub");
+app.MapHub<LBQuiz.Hubs.LobbyHub>("/lobbyHub");
+
+app.UseAntiforgery();
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
