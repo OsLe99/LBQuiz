@@ -1,0 +1,49 @@
+﻿@page "/lobby/join"
+@inject ApplicationDbContext DbContext
+@inject ILobbyParticipantManager LobbyParticipantManager
+@inject 
+@using LBQuiz.Data
+@using Microsoft.EntityFrameworkCore
+@using Models.Lobby
+@using LBQuiz.Services.Interfaces
+
+
+
+<h3>JoinLobby</h3>
+
+<MudTextField InputType="InputType.Text" @bind-Value="_joinCode"></MudTextField>
+<MudTextField InputType="InputType.Text" @bind-Value="_nickName"></MudTextField>
+
+
+
+@code {
+
+    private string _joinCode = string.Empty;    
+    private string _nickName = string.Empty;
+
+
+    public List<LobbyParticipant> LobbyParticipants = new List<LobbyParticipant>();
+
+    public async Task<bool> CreateLobbyParticipantAsync(string nickName, string connectionId)
+    {
+
+        var lobbyId = await DbContext.QuizLobby
+            .Where(l => l.JoinCode == _joinCode)
+            .Select(l => l.Id)
+            .FirstOrDefaultAsync();
+
+        if(lobbyId != null)
+        {
+            var lP = new LobbyParticipant()
+            {
+                //ConnectionId, ska komma från SignalR via LobbyHub. Via metoden LobbyHubConnectionId()
+                ConnectionId = connectionId,
+                LobbyId = lobbyId,
+                Nickname = _nickName
+            };
+            LobbyParticipants.Add(lP);
+            return LobbyParticipantManager.AddParticipant(lobbyId, lP);
+        }
+        return false;
+    }
+}
