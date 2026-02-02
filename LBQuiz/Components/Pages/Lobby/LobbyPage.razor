@@ -1,4 +1,9 @@
-﻿@page "/quiz/{QuizId:int}"
+﻿@using LBQuiz.Models.Lobby
+@using Microsoft.AspNetCore.SignalR.Client
+@using LBQuiz.Services.Interfaces
+@inject NavigationManager Navigation
+@inject ILobbyHubConnection LobbyHub
+@page "/quiz/{QuizId:int}"
 
 <h3>LobbyPage</h3>
 <h1>@QuizId</h1>
@@ -6,16 +11,26 @@
 @if(_quizStart == false)
 {
     <h1>Waiting for host to start the quiz</h1>
-    <h2>Number of people in lobby: @_lobbyCount</h2>
+    <h2>Number of people in lobby: @LobbyHub.Participants.Count</h2>
 }
 
 @code {
     [Parameter]
     public int QuizId { get; set; }
-    private bool _quizStart = false;
-    private int _lobbyCount = 0; 
+    private bool _quizStart = false; 
 
+    protected override async Task OnInitializedAsync()
+    {
+        await LobbyHub.InitializeAsync(Navigation);
+        LobbyHub.OnParticipantsChanged += async () =>
+        {
+            await InvokeAsync(StateHasChanged); // säker UI-tråd
+        };
+    }
 
 
 
 }
+
+
+

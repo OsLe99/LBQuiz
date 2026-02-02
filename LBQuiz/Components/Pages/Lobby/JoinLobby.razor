@@ -1,8 +1,10 @@
 @page "/lobby/join"
 @inject NavigationManager Navigation
+@inject ILobbyHubConnection LobbyHub
+@using LBQuiz.Services.Interfaces
 @using LBQuiz.Models.Lobby
 @using Microsoft.AspNetCore.SignalR.Client
-@implements IAsyncDisposable
+
 
 
 
@@ -27,55 +29,28 @@
     private string _joinCode = string.Empty;    
     private string _nickName = string.Empty;
     private QuizLobby _quizLobby;
-    private HubConnection? _hubConnection;
     private List<LobbyParticipant> _participants = new();
 
     protected override async Task OnInitializedAsync()
     {
-        _hubConnection = new HubConnectionBuilder()
-            .WithUrl(Navigation.ToAbsoluteUri("/lobbyHub"))
-            .Build();
+        await LobbyHub.InitializeAsync(Navigation);
 
-        _hubConnection.On<string, List<LobbyParticipant>>("ParticipantJoined", (nickname, participants) =>
+        // Koppla eventet en gång
+        LobbyHub.OnParticipantsChanged += async () =>
         {
-            _participants = participants;
-            InvokeAsync(StateHasChanged);
-        });
-        _hubConnection.On<string, List<LobbyParticipant>>("ParticipantLeft", (nickname, participants) =>
-        {
-            _participants = participants;
-            InvokeAsync(StateHasChanged);
-        });
-
-        await _hubConnection.StartAsync();
+            _participants = LobbyHub.Participants;
+            await InvokeAsync(StateHasChanged); // säker UI-tråd
+        };
     }
 
     public async Task AddUser()
     {
-        if (_hubConnection is not null)
-        {
-            await _hubConnection.InvokeAsync("JoinLobby", _joinCode, _nickName);
-            StateHasChanged();
-        }
+        await LobbyHub.JoinLobbyAsync(_joinCode, _nickName);
     }
 
     private async Task LeaveLobby()
     {
-        if (_hubConnection is not null)
-        {
-            await _hubConnection.InvokeAsync("LeaveLobby");
-            await _hubConnection.StopAsync();
-            _participants.Clear();
-            _quizLobby = null;
-            Navigation.NavigateTo("/");
-        }
+        await LobbyHub.LeaveLobbyAsync();
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        if (_hubConnection is not null)
-        {
-            await _hubConnection.DisposeAsync();
-        }
-    }
 }
