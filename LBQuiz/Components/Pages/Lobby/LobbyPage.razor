@@ -1,33 +1,63 @@
 ﻿@using LBQuiz.Models.Lobby
 @using Microsoft.AspNetCore.SignalR.Client
 @using LBQuiz.Services.Interfaces
+@using LBQuiz.Data
+@using Microsoft.EntityFrameworkCore
 @inject NavigationManager Navigation
 @inject ILobbyHubConnection LobbyHub
-@page "/quiz/{QuizId:int}"
+@inject ApplicationDbContext DbContext
+@page "/quiz/{QuizId:int}/{LobbyId:int}"
 
 <h3>LobbyPage</h3>
-<h1>@QuizId</h1>
+<h1>QuizId: @QuizId LobbyId: @LobbyId</h1>
 
-@if(_quizStart == false)
+@if(CurrentLobby == null)
 {
-    <h1>Waiting for host to start the quiz</h1>
+    <h1>Creating lobby...</h1>
+}
+else if(_quizStart == false)
+{
+    <h1>Waiting for host to start the quiz | JoinCode: @CurrentLobby.JoinCode</h1>
     <h2>Number of people in lobby: @LobbyHub.Participants.Count</h2>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StartQuiz">Start Quiz</MudButton>
 }
 
 @code {
     [Parameter]
     public int QuizId { get; set; }
+    [Parameter]
+    public int LobbyId { get; set; }
+    public Models.Lobby.QuizLobby CurrentLobby { get; set; }
+
     private bool _quizStart = false; 
 
     protected override async Task OnInitializedAsync()
     {
+        try
+        {
+            CurrentLobby = await DbContext.QuizLobby.FirstOrDefaultAsync(ql => ql.Id == LobbyId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Failed to retrieve data:" + ex);
+        }
+
         await LobbyHub.InitializeAsync(Navigation);
+
+        await LobbyHub.JoinLobbyAsync(CurrentLobby.JoinCode, "TestAnvändare");
+
         LobbyHub.OnParticipantsChanged += async () =>
         {
             await InvokeAsync(StateHasChanged); // säker UI-tråd
         };
+
+       
     }
 
+    public async Task StartQuiz()
+    {
+        await LobbyHub.StartQuizAsync(LobbyId, QuizId);
+    }
 
 
 }

@@ -65,5 +65,9 @@ namespace LBQuiz.Hubs
             }
             await base.OnDisconnectedAsync(exception);
         }
+        public async Task StartQuiz(int lobbyId, int quizId)
+        {
+            await Clients.Group(lobbyId.ToString()).SendAsync("QuizLobbyStarted", quizId, lobbyId);
+        }
     }
 }
