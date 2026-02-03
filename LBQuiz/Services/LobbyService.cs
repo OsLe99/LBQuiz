@@ -42,6 +42,10 @@ public class LobbyService : ILobbyService
     {
         return await _db.QuizLobby.FirstOrDefaultAsync(q => q.JoinCode == joinCode && q.IsActive);
     }
+    public async Task<QuizLobby?> GetLobbyFromJoinCodeAsync(string joinCode)
+    {
+        return await _db.QuizLobby.FirstOrDefaultAsync(ql => ql.JoinCode == joinCode);
+    }
 
     #region JoinCode Creation
 
@@ -66,6 +70,7 @@ public class LobbyService : ILobbyService
             .Select(_ => chars[random.Next(chars.Length)])
             .ToArray());
     }
+
 
     #endregion
 }

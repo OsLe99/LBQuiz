@@ -25,7 +25,8 @@
     public async Task AddUser()
     {
         await LobbyHub.JoinLobbyAsync(_joinCode, _nickName);
-        var quiz = await LobbyService.GetLobbyByJoinCodeAsync(_joinCode);
-        Navigation.NavigateTo($"/quiz/{quiz.Id}");
+        var quizLobby = await LobbyService.GetLobbyByJoinCodeAsync(_joinCode);
+
+        Navigation.NavigateTo($"/quiz/{quizLobby.QuizId}/{quizLobby.Id}");
     }
 }
