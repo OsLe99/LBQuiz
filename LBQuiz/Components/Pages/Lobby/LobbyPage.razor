@@ -3,9 +3,12 @@
 @using LBQuiz.Services.Interfaces
 @using LBQuiz.Data
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 @inject NavigationManager Navigation
 @inject ILobbyHubConnection LobbyHub
 @inject ApplicationDbContext DbContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @page "/quiz/{QuizId:int}/{LobbyId:int}"
 
 <h3>LobbyPage</h3>
@@ -28,23 +31,42 @@ else if(_quizStart == false)
     [Parameter]
     public int LobbyId { get; set; }
     public Models.Lobby.QuizLobby CurrentLobby { get; set; }
-
-    private bool _quizStart = false; 
+    public Models.Quiz CurrentQuiz { get; set; }
+    private string? _userId;
+    private bool _quizStart = false;
 
     protected override async Task OnInitializedAsync()
     {
+        // Get current user ID
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        _userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        
         try
         {
             CurrentLobby = await DbContext.QuizLobby.FirstOrDefaultAsync(ql => ql.Id == LobbyId);
+            CurrentQuiz = await DbContext.Quiz.FirstOrDefaultAsync(q => q.Id == QuizId);
         }
         catch (Exception ex)
         {
             Console.WriteLine("Failed to retrieve data:" + ex);
         }
 
-        await LobbyHub.InitializeAsync(Navigation);
+        await LobbyHub.InitializeAsync(Navigation, _userId);
 
-        await LobbyHub.JoinLobbyAsync(CurrentLobby.JoinCode, "TestAnvändare");
+        // Check if current user is the host
+        bool isHost = CurrentQuiz != null && !string.IsNullOrEmpty(_userId) && _userId == CurrentQuiz.HostId;
+        
+        if (isHost)
+        {
+            // Host joins to receive events but is NOT added as a participant
+            await LobbyHub.JoinLobbyAsHostAsync(LobbyId);
+        }
+        else
+        {
+            // Regular participants join as normal
+            await LobbyHub.JoinLobbyAsync(CurrentLobby.JoinCode, "TestAnvändare");
+        }
 
         LobbyHub.OnParticipantsChanged += async () =>
         {
@@ -56,7 +78,10 @@ else if(_quizStart == false)
 
     public async Task StartQuiz()
     {
-        await LobbyHub.StartQuizAsync(LobbyId, QuizId);
+        if (CurrentQuiz != null)
+        {
+            await LobbyHub.StartQuizAsync(LobbyId, QuizId, CurrentQuiz.HostId);
+        }
     }
 
 

@@ -1,4 +1,4 @@
-﻿using LBQuiz.Models.Lobby;
+using LBQuiz.Models.Lobby;
 using Microsoft.AspNetCore.SignalR;
 using LBQuiz.Services.Interfaces;
 
@@ -65,9 +65,20 @@ namespace LBQuiz.Hubs
             }
             await base.OnDisconnectedAsync(exception);
         }
-        public async Task StartQuiz(int lobbyId, int quizId)
+        public async Task StartQuiz(int lobbyId, int quizId, string hostId)
         {
-            await Clients.Group(lobbyId.ToString()).SendAsync("QuizLobbyStarted", quizId, lobbyId);
+            await Clients.Group(lobbyId.ToString()).SendAsync("QuizLobbyStarted", quizId, lobbyId, hostId);
+        }
+        
+        public async Task JoinLobbyAsHost(int lobbyId)
+        {
+            var lobby = await _lobbyService.GetLobbyByIdAsync(lobbyId);
+            if (lobby == null)
+            {
+                throw new HubException("Lobby not found");
+            }
+            // Join group as host but not as a participant
+            await Groups.AddToGroupAsync(Context.ConnectionId, lobbyId.ToString());
         }
     }
 }
