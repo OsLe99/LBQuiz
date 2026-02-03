@@ -8,6 +8,7 @@ namespace LBQuiz.Services.Interfaces
         Task InitializeAsync(NavigationManager navigation);
         Task JoinLobbyAsync(string joinCode, string nickname);
         Task LeaveLobbyAsync();
+        Task StartQuizAsync(int lobbyId, int quizId);
         List<LobbyParticipant> Participants { get; }
         event Func<Task>? OnParticipantsChanged;
     }

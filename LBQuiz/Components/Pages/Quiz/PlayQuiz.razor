@@ -1,0 +1,9 @@
+﻿@page "/quiz/play/{quizId}/{lobbyId}"
+<h3>PlayQuiz</h3>
+
+@code {
+    [Parameter]
+    public string quizId { get; set; }
+    [Parameter]
+    public string lobbyId { get; set; }
+}

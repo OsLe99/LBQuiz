@@ -1,9 +1,12 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using LBQuiz.Data
 @using System.Security.Claims
+@using Services.Interfaces 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ApplicationDbContext DbContext
 @inject NavigationManager Navigation
+@inject ILobbyService LobbyService
+
 
 @page "/lobby/create"
 
@@ -56,9 +59,11 @@ else
 
     }
 
-    public void OnQuizClicked(Models.Quiz quiz)
+    public async Task OnQuizClicked(Models.Quiz quiz)
     {
-        Navigation.NavigateTo($"/quiz/{quiz.Id}");
+        //ska lägga till lobbyId för att veta vilken joinCode som ska visas på nästa sida
+        var lobby = await LobbyService.CreateLobbyAsync(quiz.Id);
+        Navigation.NavigateTo($"/quiz/{quiz.Id}/{lobby.Id}");
     }
 
 
