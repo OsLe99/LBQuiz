@@ -11,6 +11,7 @@ namespace LBQuiz.Services
     {
         private HubConnection? _hubConnection;
         private int? _currentLobbyId;
+        private string? _currentUserId;
         public List<LobbyParticipant> Participants { get; private set; } = new();
 
         public event Func<Task>? OnParticipantsChanged;
@@ -18,14 +19,19 @@ namespace LBQuiz.Services
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
 
-        public async Task InitializeAsync(NavigationManager navigation)
+        public async Task InitializeAsync(NavigationManager navigation, string? userId = null)
         {
             if (_hubConnection?.State == HubConnectionState.Connected) return;
+            
+            _currentUserId = userId;
 
 
 
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl(navigation.ToAbsoluteUri("/lobbyHub"))
+                .WithUrl(navigation.ToAbsoluteUri("/lobbyHub"), options =>
+                {
+                    options.UseDefaultCredentials = true;
+                })
                 .WithAutomaticReconnect()
                 .Build();
 
@@ -45,10 +51,19 @@ namespace LBQuiz.Services
                     await OnParticipantsChanged.Invoke();
                 });
 
-            _hubConnection.On<int, int>("QuizLobbyStarted",
-                (quizId, lobbyId) =>
+            _hubConnection.On<int, int, string>("QuizLobbyStarted",
+                (quizId, lobbyId, hostId) =>
                 {
-                    navigation.NavigateTo($"/quiz/play/{quizId}/{lobbyId}");
+                    // If host, go to host page
+                    if (_currentUserId != null && _currentUserId == hostId)
+                    {
+                        navigation.NavigateTo($"/quiz/host/{quizId}/{lobbyId}");
+                    }
+                    // All other users
+                    else
+                    {
+                        navigation.NavigateTo($"/quiz/play/{quizId}/{lobbyId}");
+                    }
                 });
 
 
@@ -63,6 +78,15 @@ namespace LBQuiz.Services
             }
         }
 
+        public async Task JoinLobbyAsHostAsync(int lobbyId)
+        {
+            if (_hubConnection != null)
+            {
+                await _hubConnection.InvokeAsync("JoinLobbyAsHost", lobbyId);
+                _currentLobbyId = lobbyId;
+            }
+        }
+        
         public async Task LeaveLobbyAsync()
         {
             if (_hubConnection != null)
@@ -72,11 +96,11 @@ namespace LBQuiz.Services
                 Participants.Clear();
             }
         }
-        public async Task StartQuizAsync(int lobbyId, int quizId)
+        public async Task StartQuizAsync(int lobbyId, int quizId, string hostId)
         {
             if (_hubConnection?.State == HubConnectionState.Connected)
             {
-                await _hubConnection.SendAsync("StartQuiz", lobbyId, quizId);
+                await _hubConnection.SendAsync("StartQuiz", lobbyId, quizId, hostId);
             }
         }
     }

@@ -1,0 +1,10 @@
+@page "/quiz/host/{quizId}/{lobbyId}"
+
+<h3>Host View</h3>
+
+@code {
+    [Parameter]
+    public string quizId { get; set; }
+    [Parameter]
+    public string lobbyId { get; set; }
+}
