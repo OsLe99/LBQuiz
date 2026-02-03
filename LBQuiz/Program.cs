@@ -47,6 +47,7 @@ builder.Services.AddSignalR();
 // Lobby services
 builder.Services.AddSingleton<ILobbyParticipantManager, LobbyParticipantManager>();
 builder.Services.AddScoped<ILobbyService, LobbyService>();
+builder.Services.AddScoped<ILobbyHubConnection, LobbyHubConnection>();
 
 var app = builder.Build();
 

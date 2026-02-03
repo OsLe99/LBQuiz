@@ -1,0 +1,65 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using LBQuiz.Data
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ApplicationDbContext DbContext
+@inject NavigationManager Navigation
+
+@page "/lobby/create"
+
+
+<h3>CreateLobby</h3>
+
+@if(isAuthenticated == true)
+{
+    @foreach (var quiz in _quizzes)
+    {
+        <MudItem>
+            <MudLink Href="/">
+                <MudPaper Class="pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px"
+                @onclick="() => OnQuizClicked(quiz)">
+                    <MudText Typo="Typo.h4">@quiz.Name</MudText>
+                    <MudText Typo="Typo.h6">@quiz.Description</MudText>
+                </MudPaper>
+            </MudLink>
+        </MudItem>
+       
+    }
+    
+}
+else
+{
+    <MudText>You need to log in first!</MudText>
+}
+
+
+@code {
+
+    private bool isAuthenticated;
+    private List<Models.Quiz> _quizzes = new List<Models.Quiz>();
+
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        isAuthenticated = user.Identity != null && user.Identity.IsAuthenticated;
+
+
+        if(user != null)
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            _quizzes = DbContext.Quiz.Where(q => q.HostId == userId).ToList();
+        }
+
+    }
+
+    public void OnQuizClicked(Models.Quiz quiz)
+    {
+        Navigation.NavigateTo($"/quiz/{quiz.Id}");
+    }
+
+
+}
