@@ -1,10 +1,78 @@
+@using LBQuiz.Services.Interfaces
+@using LBQuiz.Hubs
+@using LBQuiz.Models.Lobby
+@using LBQuiz.Models
+@using Microsoft.EntityFrameworkCore
+@using LBQuiz.Data
+@inject ILobbyHubConnection LobbyHub
+
+
 @page "/quiz/host/{quizId}/{lobbyId}"
 
+
 <h3>Host View</h3>
+<ul>
+    @foreach (var user in _userList)
+    {
+        <li>@user.Nickname</li>
+    }
+</ul>
+<MudItem xs="12" md="4">
+    <MudPaper Class="pa-4" Style="height: 250px; background-color: antiquewhite; border: 1px solid black">
+        <MudItem>@AllQuestions[_questionIndex].QuestionText</MudItem>
+    </MudPaper>
+    <MudButton OnClick="NextQuestion">Next question</MudButton>
+</MudItem>
 
 @code {
-    [Parameter]
-    public string quizId { get; set; }
-    [Parameter]
-    public string lobbyId { get; set; }
+    [Parameter] public string quizId { get; set; }
+    [Parameter] public string lobbyId { get; set; }
+
+    private ApplicationDbContext _dbContext;
+
+    private List<LobbyParticipant> _userList = new();
+    private int _questionIndex = 0;
+    private List<QuestionOpen> AllQuestions = new();
+
+
+    public HostQuizPage(ApplicationDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    protected override void OnInitialized()
+    {
+        @foreach (var participant in LobbyHub.Participants)
+        {
+            _userList.Add(participant);
+        }
+
+        var selectedQuiz = _dbContext.Quiz.FirstOrDefault(q => q.Id == int.Parse(quizId));
+        
+        GetAllQuestionsFromQuiz().GetAwaiter().GetResult();
+
+        LobbyHub.OnQuestionChanged += HandleNextQuestion;
+    }
+
+    private async Task GetAllQuestionsFromQuiz()
+    {
+        var questions = _dbContext.QuestionOpen.Where(q => q.QuizId == int.Parse(quizId)).ToList();
+
+        if (questions != null)
+        {
+            AllQuestions = questions;
+        }
+    }
+
+    private async Task HandleNextQuestion(int questionIndex)
+    {
+        _questionIndex = questionIndex;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task NextQuestion()
+    {
+        await LobbyHub.GoToNextQuestionAsync(_questionIndex, lobbyId);
+        await InvokeAsync(StateHasChanged);
+    }
 }

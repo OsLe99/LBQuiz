@@ -1,7 +1,8 @@
-﻿using System.Collections.Concurrent;
-using LBQuiz.Models;
+﻿using LBQuiz.Models;
 using LBQuiz.Models.Lobby;
 using LBQuiz.Services.Interfaces;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace LBQuiz.Services;
 
@@ -9,6 +10,7 @@ public class LobbyParticipantManager : ILobbyParticipantManager
 {
     private readonly ConcurrentDictionary<int, ConcurrentDictionary<string, LobbyParticipant>> _lobbyParticipants = new();
     private readonly ConcurrentDictionary<string, int> _connectionToLobby = new();
+    private readonly ConcurrentDictionary<string, ConcurrentDictionary<int, string>> AnswerDictionary = new();
 
     public bool AddParticipant(int lobbyId, LobbyParticipant participant)
     {
@@ -56,5 +58,43 @@ public class LobbyParticipantManager : ILobbyParticipantManager
         }
         
         return null;
+    }
+    public LobbyParticipant GetLobbyParticipant(string connectionId)
+    {
+        if (_connectionToLobby.TryGetValue(connectionId, out var lobbyId))
+        {
+            if (_lobbyParticipants.TryGetValue(lobbyId, out var participants))
+            {
+                if (participants.TryGetValue(connectionId, out var participant))
+                {
+                    return participant;
+                }
+            }
+        }
+        throw new KeyNotFoundException("Participant not found");
+    }
+    public async Task SubmitParticipantAnswer(string connectionId, string answer, int questionId)
+    {
+        var lobbyParticipant = GetLobbyParticipant(connectionId);
+        var dict = new ConcurrentDictionary<int, string>();
+        if (dict.TryAdd(questionId, answer))
+        {
+            AnswerDictionary.TryAdd(connectionId, dict);
+        }
+    }
+    public async Task<bool> CheckAnswer(string correctAnswer, int questionId, string connectionId)
+    {
+        
+        if(AnswerDictionary.TryGetValue(connectionId, out var participantAnswers))
+        {
+            if(participantAnswers.TryGetValue(questionId, out var participantAnswer))
+            {
+                if(correctAnswer == participantAnswer)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
