@@ -13,6 +13,15 @@ namespace LBQuiz.Services.Interfaces
         Task ShowQuestionAsync(int questionId, int lobbyId, string questionText);
         List<LobbyParticipant> Participants { get; }
         event Func<Task>? OnParticipantsChanged;
+        event Func<string, Models.Lobby.LobbyParticipant, Task>? OnAnswerRecieved;
+        event Func<string, Models.QuestionOpen, Models.Lobby.LobbyParticipant, Task>? OnCalculateScoreBoard;
+        Task SubmitAnswer(string lobbyId, string answer, int quizId);
+        Task UpdateScoreBoard(Models.QuestionOpen Question, string answer);
+
+
+
+
+
         event Func<Task>? OnQuestionChanged;
     }
 }
