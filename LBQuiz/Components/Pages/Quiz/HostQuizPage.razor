@@ -1,10 +1,32 @@
+@using LBQuiz.Services.Interfaces
+@using LBQuiz.Hubs
+@using LBQuiz.Models.Lobby
+@inject ILobbyHubConnection LobbyHub
+
 @page "/quiz/host/{quizId}/{lobbyId}"
 
+
 <h3>Host View</h3>
+<ul>
+    @foreach (var user in _userList)
+    {
+        <li>@user.Nickname</li>
+    }
+</ul>
 
 @code {
-    [Parameter]
-    public string quizId { get; set; }
-    [Parameter]
-    public string lobbyId { get; set; }
+    [Parameter] public string quizId { get; set; }
+    [Parameter] public string lobbyId { get; set; }
+
+    private List<LobbyParticipant> _userList = new List<LobbyParticipant>();
+
+    protected override Task OnInitializedAsync()
+    {
+        @foreach (var participant in LobbyHub.Participants)
+        {
+            _userList.Add(participant);
+        }
+
+        return base.OnInitializedAsync();
+    }
 }
