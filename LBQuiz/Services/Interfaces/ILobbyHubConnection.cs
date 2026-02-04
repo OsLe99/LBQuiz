@@ -18,5 +18,6 @@ namespace LBQuiz.Services.Interfaces
         Task SubmitAnswer(string lobbyId, string answer, int quizId);
         Task UpdateScoreBoard(Models.QuestionOpen Question, string answer);
         Task GoToNextQuestionAsync(int questionIndex, string lobbyId);
+        Task GoToPreviousQuestionAsync(int questionIndex, string lobbyId);
     }
 }

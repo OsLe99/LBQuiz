@@ -115,5 +115,12 @@ namespace LBQuiz.Hubs
         {
             await Clients.Group(lobbyId).SendAsync("GoToNextQuestion", questionIndex);
         }
+
+        public async Task GoToPreviousQuestionAsync(int questionIndex, string lobbyId)
+        {
+            await Clients.Group(lobbyId).SendAsync("GoToPreviousQuestion", questionIndex);
+        }
+
+       
     }
 }

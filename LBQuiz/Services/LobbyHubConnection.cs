@@ -109,6 +109,14 @@ namespace LBQuiz.Services
                 }
                 
             });
+            _hubConnection.On<int>("GoToPreviousQuestion", async (questionIndex) =>
+            {
+                questionIndex--;
+                if (OnQuestionChanged != null)
+                {
+                    await OnQuestionChanged.Invoke(questionIndex);
+                }
+            });
 
             await _hubConnection.StartAsync();
         }
@@ -171,6 +179,14 @@ namespace LBQuiz.Services
                 await _hubConnection.InvokeAsync("GoToNextQuestionAsync", questionIndex, lobbyId);
             }
         }
-        
+
+        public async Task GoToPreviousQuestionAsync(int questionIndex, string lobbyId)
+        {
+            if (_hubConnection != null)
+            {
+                await _hubConnection.InvokeAsync("GoToPreviousQuestionAsync", questionIndex, lobbyId);
+            }
+        }
+
     }
 }
