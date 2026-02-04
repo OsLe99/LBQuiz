@@ -4,6 +4,7 @@ using LBQuiz.Services.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Collections.Concurrent;
 
 namespace LBQuiz.Services
 {
@@ -17,6 +18,11 @@ namespace LBQuiz.Services
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
+
+        public event Func<string,Models.Lobby.LobbyParticipant, Task>? OnAnswerRecieved;
+
+        
+
 
         public async Task InitializeAsync(NavigationManager navigation)
         {
@@ -51,6 +57,16 @@ namespace LBQuiz.Services
                     navigation.NavigateTo($"/quiz/play/{quizId}/{lobbyId}");
                 });
 
+            // Listen for server event with corrected name and payload
+            _hubConnection.On<string, int, Models.Lobby.LobbyParticipant>("AnswerReceived",
+                async (answer, questionId, participant) =>
+                {
+                    if(OnAnswerRecieved != null)
+                    {
+                        await OnAnswerRecieved.Invoke(answer, participant);
+                    }
+                    
+                });
 
             await _hubConnection.StartAsync();
         }
@@ -77,6 +93,15 @@ namespace LBQuiz.Services
             if (_hubConnection?.State == HubConnectionState.Connected)
             {
                 await _hubConnection.SendAsync("StartQuiz", lobbyId, quizId);
+            }
+        }
+        public async Task SubmitAnswer(string lobbyId, string answer, int quizId)
+        {
+            if(_hubConnection != null)
+            {
+                // Call server Hub method name and parameter list matching server
+                await _hubConnection.InvokeAsync("ReceiveSubmittedAnswer", answer, lobbyId, quizId);
+                Console.WriteLine("Lobbyhubconnection");
             }
         }
     }

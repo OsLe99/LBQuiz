@@ -69,5 +69,29 @@ namespace LBQuiz.Hubs
         {
             await Clients.Group(lobbyId.ToString()).SendAsync("QuizLobbyStarted", quizId, lobbyId);
         }
+
+        public async Task ReceiveSubmittedAnswer(string answer, string lobbyId, int quizId)
+        {
+            var participant = _lobbyParticipantManager.GetLobbyParticipant(Context.ConnectionId);
+            if(participant != null)
+            {
+                // Send a consistent server-to-client event name and payload
+                await Clients.Group(participant.LobbyId.ToString()).SendAsync("AnswerReceived", answer, quizId, participant);
+                Console.WriteLine("LobbyHub : " + participant.LobbyId);
+            }
+        }
+
+        public async Task CheckParticipantAnswer(int currentQuestion, string currentCorrectAnswer, int points)
+        {
+            var connectionId = Context.ConnectionId;
+            if (await _lobbyParticipantManager.CheckAnswer(currentCorrectAnswer, currentQuestion, connectionId))
+            {
+                // Answer is correct, you can implement additional logic here if needed
+                var participant = _lobbyParticipantManager.GetLobbyParticipant(connectionId);
+                participant.Score += points;
+            }
+        }
+        
+
     }
 }

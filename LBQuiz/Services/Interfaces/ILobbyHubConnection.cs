@@ -11,5 +11,9 @@ namespace LBQuiz.Services.Interfaces
         Task StartQuizAsync(int lobbyId, int quizId);
         List<LobbyParticipant> Participants { get; }
         event Func<Task>? OnParticipantsChanged;
+        event Func<string, Models.Lobby.LobbyParticipant, Task>? OnAnswerRecieved;
+        Task SubmitAnswer(string lobbyId, string answer, int quizId);
+        
+
     }
 }
