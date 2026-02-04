@@ -16,6 +16,8 @@ namespace LBQuiz.Services
 
         public event Func<Task>? OnParticipantsChanged;
 
+        public event Func<Task>? OnQuestionChanged;
+
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
 
@@ -48,7 +50,7 @@ namespace LBQuiz.Services
                 {
                     Participants = participants;
                     if (OnParticipantsChanged != null)
-                    await OnParticipantsChanged.Invoke();
+                        await OnParticipantsChanged.Invoke();
                 });
 
             _hubConnection.On<int, int, string>("QuizLobbyStarted",
@@ -65,6 +67,11 @@ namespace LBQuiz.Services
                         navigation.NavigateTo($"/quiz/play/{quizId}/{lobbyId}");
                     }
                 });
+
+            _hubConnection.On<int, int, string>("ShowQuestion", async (quizId, lobbyId, questionText) =>
+            {
+                await OnQuestionChanged.Invoke();
+            });
 
 
             await _hubConnection.StartAsync();
@@ -101,6 +108,14 @@ namespace LBQuiz.Services
             if (_hubConnection?.State == HubConnectionState.Connected)
             {
                 await _hubConnection.SendAsync("StartQuiz", lobbyId, quizId, hostId);
+            }
+        }
+        
+        public async Task ShowQuestionAsync(int questionId, int lobbyId, string questionText)
+        {
+            if (_hubConnection?.State == HubConnectionState.Connected)
+            {
+                await _hubConnection.SendAsync("ShowQuestion", questionId, questionText);
             }
         }
     }

@@ -10,7 +10,9 @@ namespace LBQuiz.Services.Interfaces
         Task JoinLobbyAsHostAsync(int lobbyId);
         Task LeaveLobbyAsync();
         Task StartQuizAsync(int lobbyId, int quizId, string hostId);
+        Task ShowQuestionAsync(int questionId, int lobbyId, string questionText);
         List<LobbyParticipant> Participants { get; }
         event Func<Task>? OnParticipantsChanged;
+        event Func<Task>? OnQuestionChanged;
     }
 }

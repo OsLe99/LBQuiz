@@ -11,21 +11,18 @@ namespace LBQuiz.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "QuizLobby",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    QuizId = table.Column<int>(type: "int", nullable: false),
-                    JoinCode = table.Column<string>(type: "nvarchar(6)", maxLength: 6, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_QuizLobby", x => x.Id);
-                });
+            migrationBuilder.Sql(@"
+                IF OBJECT_ID(N'[QuizLobby]') IS NULL
+                BEGIN
+                    CREATE TABLE [QuizLobby] (
+                        [Id] int NOT NULL IDENTITY,
+                        [QuizId] int NOT NULL,
+                        [JoinCode] nvarchar(6) NOT NULL,
+                        [CreatedAt] datetime2 NOT NULL,
+                        [IsActive] bit NOT NULL,
+                        CONSTRAINT [PK_QuizLobby] PRIMARY KEY ([Id])
+                    );
+                END");
         }
 
         /// <inheritdoc />
