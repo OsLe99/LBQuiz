@@ -19,9 +19,11 @@ namespace LBQuiz.Services
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
 
-        public event Func<string,Models.Lobby.LobbyParticipant, Task>? OnAnswerRecieved;
+        public event Func<string, Models.Lobby.LobbyParticipant, Task>? OnAnswerRecieved;
+        public event Func<string, Models.QuestionOpen, Models.Lobby.LobbyParticipant, Task>? OnCalculateScoreBoard;
 
-        
+
+
 
 
         public async Task InitializeAsync(NavigationManager navigation)
@@ -68,6 +70,21 @@ namespace LBQuiz.Services
                     
                 });
 
+            _hubConnection.On<Models.QuestionOpen, string, Models.Lobby.LobbyParticipant>("ScoreBoardCalculated",
+                async (question, answer, participant) =>
+                {
+                    if(question.CorrectAnswer.ToLower() == answer.ToLower())
+                    {
+                        participant.Score += question.Points;
+                    }
+                    Console.WriteLine(participant);
+                    if (OnCalculateScoreBoard != null)
+                    {
+                        await OnCalculateScoreBoard.Invoke(answer, question, participant);
+                    }
+
+                });
+
             await _hubConnection.StartAsync();
         }
 
@@ -102,6 +119,13 @@ namespace LBQuiz.Services
                 // Call server Hub method name and parameter list matching server
                 await _hubConnection.InvokeAsync("ReceiveSubmittedAnswer", answer, lobbyId, quizId);
                 Console.WriteLine("Lobbyhubconnection");
+            }
+        }
+        public async Task UpdateScoreBoard(Models.QuestionOpen Question, string answer)
+        {
+            if(_hubConnection != null)
+            {
+                await _hubConnection.InvokeAsync("CalculateScoreBoard", Question, answer);
             }
         }
     }

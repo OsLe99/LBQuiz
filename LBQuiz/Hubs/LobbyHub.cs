@@ -91,7 +91,16 @@ namespace LBQuiz.Hubs
                 participant.Score += points;
             }
         }
-        
+        public async Task CalculateScoreBoard(Models.QuestionOpen Question, string answer)
+        {
+            var participant = _lobbyParticipantManager.GetLobbyParticipant(Context.ConnectionId);
+            if (participant != null)
+            {
+                await Clients.Group(participant.LobbyId.ToString()).SendAsync("ScoreBoardCalculated", Question, answer, participant);
+            }
+        }
+
+
 
     }
 }
