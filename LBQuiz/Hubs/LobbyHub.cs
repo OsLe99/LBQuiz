@@ -81,16 +81,6 @@ namespace LBQuiz.Hubs
             await Groups.AddToGroupAsync(Context.ConnectionId, lobbyId.ToString());
         }
 
-        public async Task ShowQuestion(int lobbyId, string questionText)
-        {
-            var lobby = await _lobbyService.GetLobbyByIdAsync(lobbyId);
-            if (lobby == null)
-                {
-                    throw new HubException("Lobby not found");
-                }
-            await Clients.Group(lobbyId.ToString()).SendAsync("ShowQuestion", questionText);
-        }
-
         public async Task ReceiveSubmittedAnswer(string answer, string lobbyId, int quizId)
         {
             var participant = _lobbyParticipantManager.GetLobbyParticipant(Context.ConnectionId);
@@ -121,7 +111,9 @@ namespace LBQuiz.Hubs
             }
         }
 
-
-
+        public async Task GoToNextQuestionAsync(int questionIndex, string lobbyId)
+        {
+            await Clients.Group(lobbyId).SendAsync("GoToNextQuestion", questionIndex);
+        }
     }
 }

@@ -6,6 +6,7 @@
 @using LBQuiz.Data
 @inject ILobbyHubConnection LobbyHub
 
+
 @page "/quiz/host/{quizId}/{lobbyId}"
 
 
@@ -39,7 +40,7 @@
         _dbContext = dbContext;
     }
 
-    protected override Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         @foreach (var participant in LobbyHub.Participants)
         {
@@ -49,8 +50,8 @@
         var selectedQuiz = _dbContext.Quiz.FirstOrDefault(q => q.Id == int.Parse(quizId));
         
         GetAllQuestionsFromQuiz().GetAwaiter().GetResult();
-        
-        return base.OnInitializedAsync();
+
+        LobbyHub.OnQuestionChanged += HandleNextQuestion;
     }
 
     private async Task GetAllQuestionsFromQuiz()
@@ -63,8 +64,15 @@
         }
     }
 
+    private async Task HandleNextQuestion(int questionIndex)
+    {
+        _questionIndex = questionIndex;
+        await InvokeAsync(StateHasChanged);
+    }
+
     private async Task NextQuestion()
     {
-        _questionIndex++;
+        await LobbyHub.GoToNextQuestionAsync(_questionIndex, lobbyId);
+        await InvokeAsync(StateHasChanged);
     }
 }

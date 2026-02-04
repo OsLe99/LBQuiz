@@ -54,6 +54,8 @@
 
     private int _index = 0;
 
+    private int? _score = 0;
+
     public string Answer { get; set; }
 
     public List<Models.Lobby.LobbyParticipant> ParticipantsList { get; set; } = new List<Models.Lobby.LobbyParticipant>();
@@ -64,14 +66,17 @@
     {
         int qId = int.Parse(quizId);
         AllQuestions = QuestionManager.GetAllQuestionFromQuizId(qId);
+
+        ParticipantsList = LobbyManager.GetLeaderboard(int.Parse(lobbyId));
+        HubConnection.OnAnswerRecieved += HandleAnswerReceived;
+        HubConnection.OnCalculateScoreBoard += HandleScoreBoard;
+        HubConnection.OnQuestionChanged += HandleNextQuestion;
+        
         CurrentQuestion = AllQuestions[_index];
         if (_index < (AllQuestions.Count))
         {
             _index++;
         }
-        ParticipantsList = LobbyManager.GetLeaderboard(int.Parse(lobbyId));
-        HubConnection.OnAnswerRecieved += HandleAnswerReceived;
-        HubConnection.OnCalculateScoreBoard += HandleScoreBoard;
     }
 
     public async Task SaveAnswer()
@@ -95,7 +100,9 @@
     }
     private Task HandleScoreBoard(string answer, Models.QuestionOpen question, Models.Lobby.LobbyParticipant lobbyParticipant)
     {
+        _score += lobbyParticipant.Score;
         var newList = ParticipantsList.Where(p => p.ConnectionId != lobbyParticipant.ConnectionId).ToList();
+        lobbyParticipant.Score = _score;
         newList.Add(lobbyParticipant);
         ParticipantsList = new List<Models.Lobby.LobbyParticipant>();
         ParticipantsList = newList.OrderByDescending(p => p.Score).ToList();
@@ -103,6 +110,11 @@
         return Task.CompletedTask;
     }
 
-    
+    private async Task HandleNextQuestion(int questionIndex)
+    {
+        _index = questionIndex;
+        CurrentQuestion = AllQuestions[_index];
+        await InvokeAsync(StateHasChanged);
+    }
 
 }

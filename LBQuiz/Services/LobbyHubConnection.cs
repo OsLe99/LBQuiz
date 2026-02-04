@@ -17,7 +17,7 @@ namespace LBQuiz.Services
 
         public event Func<Task>? OnParticipantsChanged;
 
-        public event Func<Task>? OnQuestionChanged;
+        public event Func<int, Task>? OnQuestionChanged;
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
@@ -74,11 +74,6 @@ namespace LBQuiz.Services
                     }
                 });
 
-            _hubConnection.On<int, int, string>("ShowQuestion", async (quizId, lobbyId, questionText) =>
-            {
-                await OnQuestionChanged.Invoke();
-            });
-
             // Listen for server event with corrected name and payload
             _hubConnection.On<string, int, Models.Lobby.LobbyParticipant>("AnswerReceived",
                 async (answer, questionId, participant) =>
@@ -104,6 +99,16 @@ namespace LBQuiz.Services
                     }
 
                 });
+
+            _hubConnection.On<int>("GoToNextQuestion", async (questionIndex) =>
+            {
+                questionIndex++;
+                if (OnQuestionChanged != null)
+                {
+                    await OnQuestionChanged.Invoke(questionIndex);
+                }
+                
+            });
 
             await _hubConnection.StartAsync();
         }
@@ -142,13 +147,6 @@ namespace LBQuiz.Services
             }
         }
         
-        public async Task ShowQuestionAsync(int questionId, int lobbyId, string questionText)
-        {
-            if (_hubConnection?.State == HubConnectionState.Connected)
-            {
-                await _hubConnection.SendAsync("ShowQuestion", questionId, questionText);
-            }
-        }
         public async Task SubmitAnswer(string lobbyId, string answer, int quizId)
         {
             if(_hubConnection != null)
@@ -165,5 +163,14 @@ namespace LBQuiz.Services
                 await _hubConnection.InvokeAsync("CalculateScoreBoard", Question, answer);
             }
         }
+
+        public async Task GoToNextQuestionAsync(int questionIndex, string lobbyId)
+        {
+            if (_hubConnection != null)
+            {
+                await _hubConnection.InvokeAsync("GoToNextQuestionAsync", questionIndex, lobbyId);
+            }
+        }
+        
     }
 }
