@@ -12,34 +12,49 @@
 
 
 <h3>Host View</h3>
+@if (_showResults == true)
+{
+    <ul>
+        @foreach (var part in _userList)
+        {
+            <li>
+                @part.Nickname -- @part.Score points
+            </li>
+        }
+    </ul>
+}
+else
+{
 
-<div class="hostPageContainer">
-    <div>
-        <MudItem xs="12" md="4">
-            <MudPaper Class="pa-4" Style="height: 250px; background-color: antiquewhite; border: 1px solid black">
-                <MudItem>@AllQuestions[_questionIndex].QuestionText</MudItem>
-            </MudPaper>
-            <MudButton Disabled="previousButton" OnClick="PreviousQuestion">Previous question</MudButton>
-            <MudButton Disabled="nextButton" OnClick="NextQuestion">Next question</MudButton>
-        </MudItem>
+    <div class="hostPageContainer">
+        <div>
+            <MudItem xs="12" md="4">
+                <MudPaper Class="pa-4" Style="height: 250px; background-color: antiquewhite; border: 1px solid black">
+                    <MudItem>@AllQuestions[_questionIndex].QuestionText</MudItem>
+                </MudPaper>
+                <MudButton Disabled="previousButton" OnClick="PreviousQuestion">Previous question</MudButton>
+                <MudButton Disabled="nextButton" OnClick="NextQuestion">Next question</MudButton>
+                <MudButton Disabled="_resultButton" OnClick="ShowResults">Show results</MudButton>
+            </MudItem>
+        </div>
+        <div>
+            <MudText Typo="Typo.h2" Align="Align.Center" Style="text-decoration: underline">Participants</MudText>
+            <ul>
+                @foreach (var user in _userList)
+                {
+                    <li>
+                        <MudAvatar Color="Color.Tertiary"
+                                   Size="Size.Small">
+                            @user.Nickname[0]
+                        </MudAvatar>
+                        - @user.Nickname - @user.Score points
+                    </li>
+                }
+            </ul>
+        </div>
     </div>
-    <div>
-        <MudText Typo="Typo.h2" Align="Align.Center" Style="text-decoration: underline">Participants</MudText>
-        <ul>
-            @foreach (var user in _userList)
-            {
-                <li>
-                    <MudAvatar 
-                    Color="Color.Tertiary" 
-                    Size="Size.Small">
-                    @user.Nickname[0]
-                    </MudAvatar>
-                    - @user.Nickname - @user.Score points
-                </li>
-            }
-        </ul>
-    </div>
-</div>
+}
+
 
 
 @code {
