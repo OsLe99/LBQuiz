@@ -79,6 +79,13 @@ app.MapRazorComponents<App>()
 app.MapHub<LBQuiz.Hubs.ChatHub>("/chathub");
 app.MapHub<LBQuiz.Hubs.LobbyHub>("/lobbyHub");
 
+app.MapPost("/logout", async (SignInManager<ApplicationUser> signInManager, HttpContext context) =>
+{
+    await signInManager.SignOutAsync();
+    return Results.Redirect("/"); // redirect efter logout
+});
+
+
 app.UseAntiforgery();
 
 // Add additional endpoints required by the Identity /Account Razor components.
