@@ -58,3 +58,16 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+.hostPageContainer {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    padding: 10px;
+    border: 1px solid black;
+    
+}
+
+.hostPageContainer div {
+    padding: 10px;
+    border: 1px solid gray;
+}
