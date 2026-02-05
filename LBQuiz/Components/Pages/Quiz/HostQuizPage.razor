@@ -11,19 +11,28 @@
 
 
 <h3>Host View</h3>
-<ul>
-    @foreach (var user in _userList)
-    {
-        <li>@user.Nickname</li>
-    }
-</ul>
-<MudItem xs="12" md="4">
-    <MudPaper Class="pa-4" Style="height: 250px; background-color: antiquewhite; border: 1px solid black">
-        <MudItem>@AllQuestions[_questionIndex].QuestionText</MudItem>
-    </MudPaper>
-    <MudButton Disabled="previousButton" OnClick="PreviousQuestion">Previous question</MudButton>
-    <MudButton Disabled="nextButton" OnClick="NextQuestion">Next question</MudButton>
-</MudItem>
+
+<div class="hostPageContainer">
+    <div>
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Style="height: 250px; background-color: antiquewhite; border: 1px solid black">
+                <MudItem>@AllQuestions[_questionIndex].QuestionText</MudItem>
+            </MudPaper>
+            <MudButton Disabled="previousButton" OnClick="PreviousQuestion">Previous question</MudButton>
+            <MudButton Disabled="nextButton" OnClick="NextQuestion">Next question</MudButton>
+        </MudItem>
+    </div>
+    <div>
+        <MudText Typo="Typo.h2" Align="Align.Center" Style="text-decoration: underline">Participants</MudText>
+        <ul>
+            @foreach (var user in _userList)
+            {
+                <li><MudAvatar Color="Color.Tertiary" Size="Size.Small">@user.Nickname[0]</MudAvatar> - @user.Nickname - @user.Score points</li>
+            }
+        </ul>
+    </div>
+</div>
+
 
 @code {
     [Parameter] public string quizId { get; set; }
@@ -35,6 +44,7 @@
     private List<LobbyParticipant> _userList = new();
     private int _questionIndex = 0;
     private List<QuestionOpen> AllQuestions = new();
+    private int? _score = 0;
 
 
     public HostQuizPage(ApplicationDbContext dbContext)
@@ -54,6 +64,7 @@
         GetAllQuestionsFromQuiz().GetAwaiter().GetResult();
 
         LobbyHub.OnQuestionChanged += HandleNextQuestion;
+        LobbyHub.OnCalculateScoreBoard += HandleScoreBoard;
     }
 
     private async Task GetAllQuestionsFromQuiz()
@@ -94,5 +105,16 @@
     {
         await LobbyHub.GoToPreviousQuestionAsync(_questionIndex, lobbyId);
         await InvokeAsync(StateHasChanged);
+    }
+    private Task HandleScoreBoard(string answer, Models.QuestionOpen question, Models.Lobby.LobbyParticipant lobbyParticipant)
+    {
+        _score += lobbyParticipant.Score;
+        var newList = _userList.Where(p => p.ConnectionId != lobbyParticipant.ConnectionId).ToList();
+        lobbyParticipant.Score = _score;
+        newList.Add(lobbyParticipant);
+        _userList = new List<Models.Lobby.LobbyParticipant>();
+        _userList = newList.OrderByDescending(p => p.Score).ToList();
+        InvokeAsync(StateHasChanged);
+        return Task.CompletedTask;
     }
 }
