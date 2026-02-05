@@ -25,7 +25,7 @@ namespace LBQuiz.Services
         public int? CurrentLobbyId => _currentLobbyId;
 
         public event Func<string, Models.Lobby.LobbyParticipant, Task>? OnAnswerRecieved;
-        public event Func<string, Models.QuestionOpen, Models.Lobby.LobbyParticipant, bool, Task>? OnCalculateScoreBoard;
+        public event Func<string, Models.QuestionOpen, Models.Lobby.LobbyParticipant, Task>? OnCalculateScoreBoard;
 
 
         
