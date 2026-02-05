@@ -100,12 +100,16 @@
     }
     private Task HandleScoreBoard(string answer, Models.QuestionOpen question, Models.Lobby.LobbyParticipant lobbyParticipant)
     {
-        _score += lobbyParticipant.Score;
-        var newList = ParticipantsList.Where(p => p.ConnectionId != lobbyParticipant.ConnectionId).ToList();
-        lobbyParticipant.Score = _score;
-        newList.Add(lobbyParticipant);
-        ParticipantsList = new List<Models.Lobby.LobbyParticipant>();
-        ParticipantsList = newList.OrderByDescending(p => p.Score).ToList();
+        var existing = ParticipantsList.FirstOrDefault(p => p.ConnectionId == lobbyParticipant.ConnectionId);
+        if (existing != null)
+        {
+            existing.Score = lobbyParticipant.Score;
+        }
+        else
+        {
+            ParticipantsList.Add(lobbyParticipant);
+        }
+        ParticipantsList = ParticipantsList.OrderByDescending(p => p.Score).ToList();
         InvokeAsync(StateHasChanged);
         return Task.CompletedTask;
     }

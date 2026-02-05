@@ -5,25 +5,51 @@
 @using Microsoft.EntityFrameworkCore
 @using LBQuiz.Data
 @inject ILobbyHubConnection LobbyHub
+@inject ILobbyParticipantManager LobbyManager
 
 
 @page "/quiz/host/{quizId}/{lobbyId}"
 
 
 <h3>Host View</h3>
+@if (_showResults == true)
+{
+    <ul>
+        @foreach (var part in _userList)
+        {
+            <li>
+                @part.Nickname -- @part.Score points
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <MudItem xs="12" md="4">
+        <MudPaper Class="pa-4" Style="height: 250px; background-color: antiquewhite; border: 1px solid black">
+            <MudItem>@AllQuestions[_questionIndex].QuestionText</MudItem>
+        </MudPaper>
+        <MudButton Disabled="previousButton" OnClick="PreviousQuestion">Previous Question</MudButton>
+        <MudButton Disabled="nextButton" OnClick="NextQuestion">Next Question</MudButton>
+        <MudButton Disabled="_resultButton" OnClick="ShowResults">Show Results</MudButton>
+    </MudItem>
+    
+    <h4>Submitted Answers</h4>
+    <ul>
+        @foreach (var submission in _submittedAnswers)
+        {
+            <li>@submission.Participant.Nickname: @submission.Answer</li>
+        }
+    </ul>
+}
+<p>All Users</p>
 <ul>
     @foreach (var user in _userList)
     {
-        <li>@user.Nickname</li>
+        <li>@user.Nickname -- @user.Score</li>
     }
 </ul>
-<MudItem xs="12" md="4">
-    <MudPaper Class="pa-4" Style="height: 250px; background-color: antiquewhite; border: 1px solid black">
-        <MudItem>@AllQuestions[_questionIndex].QuestionText</MudItem>
-    </MudPaper>
-    <MudButton Disabled="previousButton" OnClick="PreviousQuestion">Previous question</MudButton>
-    <MudButton Disabled="nextButton" OnClick="NextQuestion">Next question</MudButton>
-</MudItem>
+
 
 @code {
     [Parameter] public string quizId { get; set; }
@@ -32,7 +58,10 @@
     private ApplicationDbContext _dbContext;
     private bool previousButton = true;
     private bool nextButton = false;
+    private bool _resultButton = true;
+    private bool _showResults = false;
     private List<LobbyParticipant> _userList = new();
+    private List<(LobbyParticipant Participant, string Answer)> _submittedAnswers = new();
     private int _questionIndex = 0;
     private List<QuestionOpen> AllQuestions = new();
 
@@ -54,6 +83,8 @@
         GetAllQuestionsFromQuiz().GetAwaiter().GetResult();
 
         LobbyHub.OnQuestionChanged += HandleNextQuestion;
+        LobbyHub.OnAnswerRecieved += HandleAnswerRecieved;
+        LobbyHub.OnCalculateScoreBoard += HandleScoreUpdate;
     }
 
     private async Task GetAllQuestionsFromQuiz()
@@ -70,8 +101,12 @@
     {
         _questionIndex = questionIndex;
         if (_questionIndex == 0) previousButton = true;
-        else if(_questionIndex == AllQuestions.Count-1) nextButton = true;
-        else if(AllQuestions.Count == 1)
+        else if (_questionIndex == AllQuestions.Count - 1)
+        {
+            nextButton = true;
+            _resultButton = false;
+        }
+        else if (AllQuestions.Count == 1)
         {
             previousButton = true;
             nextButton = true;
@@ -90,9 +125,34 @@
         await LobbyHub.GoToNextQuestionAsync(_questionIndex, lobbyId);
         await InvokeAsync(StateHasChanged);
     }
+
     private async Task PreviousQuestion()
     {
         await LobbyHub.GoToPreviousQuestionAsync(_questionIndex, lobbyId);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ShowResults()
+    {
+        _showResults = true;
+        _userList = _userList.OrderByDescending(p => p.Score).ToList();
+        await LobbyHub.GoToResultsAsync(_showResults, lobbyId);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleAnswerRecieved(string answer, LobbyParticipant participant)
+    {
+        _submittedAnswers.Add((participant, answer));
+        await InvokeAsync(StateHasChanged);
+    }
+    
+    private async Task HandleScoreUpdate(string answer, QuestionOpen question, LobbyParticipant participant)
+    {
+        var existing = _userList.FirstOrDefault(p => p.ConnectionId == participant.ConnectionId);
+        if (existing != null)
+        {
+            existing.Score = participant.Score;
+        }
         await InvokeAsync(StateHasChanged);
     }
 }
