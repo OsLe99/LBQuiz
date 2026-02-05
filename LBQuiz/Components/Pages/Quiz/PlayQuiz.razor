@@ -24,22 +24,6 @@
             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAnswer">Submit answer</MudButton>
         </MudPaper>
     </MudItem>
-    <ul>
-        @foreach (var part in ParticipantsList)
-        {
-            <li>
-                @part.Nickname -- @part.Score points
-            </li>
-        }
-    </ul>
-    <ul>
-        @foreach (var ans in AllAnswers)
-        {
-            <li>
-                @ans
-            </li>
-        }
-    </ul>
 }
 
 @code {
@@ -69,7 +53,6 @@
 
         ParticipantsList = LobbyManager.GetLeaderboard(int.Parse(lobbyId));
         HubConnection.OnAnswerRecieved += HandleAnswerReceived;
-        HubConnection.OnCalculateScoreBoard += HandleScoreBoard;
         HubConnection.OnQuestionChanged += HandleNextQuestion;
         
         CurrentQuestion = AllQuestions[_index];
@@ -83,6 +66,7 @@
     {
         //Ska kalla på service
         await HubConnection.SubmitAnswer(lobbyId, Answer, int.Parse(quizId));
+        //Borde skicka med viken user som svarade
         await HubConnection.UpdateScoreBoard(CurrentQuestion, Answer);
     }
 
@@ -98,17 +82,7 @@
         InvokeAsync(StateHasChanged);
         return Task.CompletedTask;
     }
-    private Task HandleScoreBoard(string answer, Models.QuestionOpen question, Models.Lobby.LobbyParticipant lobbyParticipant)
-    {
-        _score += lobbyParticipant.Score;
-        var newList = ParticipantsList.Where(p => p.ConnectionId != lobbyParticipant.ConnectionId).ToList();
-        lobbyParticipant.Score = _score;
-        newList.Add(lobbyParticipant);
-        ParticipantsList = new List<Models.Lobby.LobbyParticipant>();
-        ParticipantsList = newList.OrderByDescending(p => p.Score).ToList();
-        InvokeAsync(StateHasChanged);
-        return Task.CompletedTask;
-    }
+   
 
     private async Task HandleNextQuestion(int questionIndex)
     {

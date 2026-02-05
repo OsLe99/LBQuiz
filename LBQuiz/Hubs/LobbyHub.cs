@@ -102,13 +102,21 @@ namespace LBQuiz.Hubs
                 participant.Score += points;
             }
         }
+
+        //Här ska logiken för att räkna ut poängställningen in
         public async Task CalculateScoreBoard(Models.QuestionOpen Question, string answer)
         {
             var participant = _lobbyParticipantManager.GetLobbyParticipant(Context.ConnectionId);
-            if (participant != null)
+            if (participant == null) return;
+            if(Question.CorrectAnswer.Equals(answer, StringComparison.OrdinalIgnoreCase))
             {
-                await Clients.Group(participant.LobbyId.ToString()).SendAsync("ScoreBoardCalculated", Question, answer, participant);
+                participant.Score += Question.Points;
             }
+
+            var participants = _lobbyParticipantManager.GetParticipants(participant.LobbyId);
+
+            await Clients.Group(participant.LobbyId.ToString()).SendAsync("ScoreBoardUpdated", participants);
+            
         }
 
         public async Task GoToNextQuestionAsync(int questionIndex, string lobbyId)

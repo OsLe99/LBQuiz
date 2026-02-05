@@ -19,11 +19,13 @@ namespace LBQuiz.Services
 
         public event Func<int, Task>? OnQuestionChanged;
 
+        public event Action<List<Models.Lobby.LobbyParticipant>>? OnScoreBoardUpdated;
+
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
 
         public event Func<string, Models.Lobby.LobbyParticipant, Task>? OnAnswerRecieved;
-        public event Func<string, Models.QuestionOpen, Models.Lobby.LobbyParticipant, Task>? OnCalculateScoreBoard;
+        public event Func<string, Models.QuestionOpen, Models.Lobby.LobbyParticipant, bool, Task>? OnCalculateScoreBoard;
 
 
         
@@ -85,20 +87,14 @@ namespace LBQuiz.Services
                     
                 });
 
-            _hubConnection.On<Models.QuestionOpen, string, Models.Lobby.LobbyParticipant>("ScoreBoardCalculated",
-                async (question, answer, participant) =>
-                {
-                    if(question.CorrectAnswer.ToLower() == answer.ToLower())
-                    {
-                        participant.Score += question.Points;
-                    }
-                    Console.WriteLine(participant);
-                    if (OnCalculateScoreBoard != null)
-                    {
-                        await OnCalculateScoreBoard.Invoke(answer, question, participant);
-                    }
+            _hubConnection.On<List<Models.Lobby.LobbyParticipant>>("ScoreBoardUpdated", async participants =>
+            {
+                OnScoreBoardUpdated?.Invoke(participants);
+            });
 
-                });
+
+
+
 
             _hubConnection.On<int>("GoToNextQuestion", async (questionIndex) =>
             {

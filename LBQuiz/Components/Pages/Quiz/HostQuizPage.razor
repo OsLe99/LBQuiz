@@ -27,7 +27,14 @@
         <ul>
             @foreach (var user in _userList)
             {
-                <li><MudAvatar Color="Color.Tertiary" Size="Size.Small">@user.Nickname[0]</MudAvatar> - @user.Nickname - @user.Score points</li>
+                <li>
+                    <MudAvatar 
+                    Color="Color.Tertiary" 
+                    Size="Size.Small">
+                    @user.Nickname[0]
+                    </MudAvatar>
+                    - @user.Nickname - @user.Score points
+                </li>
             }
         </ul>
     </div>
@@ -59,12 +66,13 @@
             _userList.Add(participant);
         }
 
+        
+
         var selectedQuiz = _dbContext.Quiz.FirstOrDefault(q => q.Id == int.Parse(quizId));
 
         GetAllQuestionsFromQuiz().GetAwaiter().GetResult();
 
         LobbyHub.OnQuestionChanged += HandleNextQuestion;
-        LobbyHub.OnCalculateScoreBoard += HandleScoreBoard;
     }
 
     private async Task GetAllQuestionsFromQuiz()
@@ -106,15 +114,5 @@
         await LobbyHub.GoToPreviousQuestionAsync(_questionIndex, lobbyId);
         await InvokeAsync(StateHasChanged);
     }
-    private Task HandleScoreBoard(string answer, Models.QuestionOpen question, Models.Lobby.LobbyParticipant lobbyParticipant)
-    {
-        _score += lobbyParticipant.Score;
-        var newList = _userList.Where(p => p.ConnectionId != lobbyParticipant.ConnectionId).ToList();
-        lobbyParticipant.Score = _score;
-        newList.Add(lobbyParticipant);
-        _userList = new List<Models.Lobby.LobbyParticipant>();
-        _userList = newList.OrderByDescending(p => p.Score).ToList();
-        InvokeAsync(StateHasChanged);
-        return Task.CompletedTask;
-    }
+    
 }
