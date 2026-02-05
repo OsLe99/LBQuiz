@@ -103,7 +103,7 @@ namespace LBQuiz.Hubs
             }
         }
 
-        //Här ska logiken för att räkna ut poängställningen in
+        //Hï¿½r ska logiken fï¿½r att rï¿½kna ut poï¿½ngstï¿½llningen in
         public async Task CalculateScoreBoard(Models.QuestionOpen Question, string answer)
         {
             var participant = _lobbyParticipantManager.GetLobbyParticipant(Context.ConnectionId);
@@ -137,6 +137,19 @@ namespace LBQuiz.Hubs
         public async Task GoToResultsAsync(bool showResults, string lobbyId)
         {
             await Clients.Group(lobbyId).SendAsync("GoToResults", showResults);
+        }
+
+        public async Task EndQuiz(string lobbyId)
+        {
+            await _lobbyService.EndQuizAsync(lobbyId);
+            await Clients.Group(lobbyId).SendAsync("EndQuiz");
+
+            var participants = _lobbyParticipantManager.GetParticipants(int.Parse(lobbyId));
+            foreach (var participant in participants.ToList())
+            {
+                await Groups.RemoveFromGroupAsync(participant.ConnectionId, participant.LobbyId.ToString());
+                _lobbyParticipantManager.RemoveParticipantByConnectionId(participant.ConnectionId);
+            }
         }
     }
 }

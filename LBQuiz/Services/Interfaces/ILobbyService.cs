@@ -7,4 +7,5 @@ public interface ILobbyService
     Task<QuizLobby> CreateLobbyAsync(int quizId);
     Task<QuizLobby?> GetLobbyByJoinCodeAsync(string joinCode);
     Task<QuizLobby?> GetLobbyByIdAsync(int lobbyId);
+    Task EndQuizAsync(string quizId);
 }

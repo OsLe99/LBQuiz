@@ -17,9 +17,10 @@ namespace LBQuiz.Services.Interfaces
         event Func<bool, Task>? OnResultShow;
         event Func<string, Models.QuestionOpen, LobbyParticipant, Task>? OnCalculateScoreBoard;
         Task SubmitAnswer(string lobbyId, string answer, int quizId);
-        Task UpdateScoreBoard(Models.QuestionOpen Question, string answer);
+        Task UpdateScoreBoard(Models.QuestionOpen question, string answer);
         Task GoToNextQuestionAsync(int questionIndex, string lobbyId);
         Task GoToPreviousQuestionAsync(int questionIndex, string lobbyId);
         Task GoToResultsAsync(bool showResults, string lobbyId);
+        Task EndQuizAsync(string lobbyId);
     }
 }

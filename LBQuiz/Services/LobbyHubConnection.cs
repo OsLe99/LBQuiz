@@ -123,7 +123,13 @@ namespace LBQuiz.Services
                     await OnResultShow.Invoke(showResults);
                 }
             });
-
+            
+            _hubConnection.On("QuizEnded", async () =>
+            {
+                await _hubConnection.StopAsync();
+                navigation.NavigateTo("/");
+            });
+            
             await _hubConnection.StartAsync();
         }
 
@@ -200,5 +206,12 @@ namespace LBQuiz.Services
             }
         }
 
+        public async Task EndQuizAsync(string lobbyId)
+        {
+            if (_hubConnection != null)
+            {
+                await _hubConnection.InvokeAsync("EndQuiz", lobbyId);
+            }
+        }
     }
 }

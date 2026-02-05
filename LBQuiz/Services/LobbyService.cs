@@ -48,6 +48,16 @@ public class LobbyService : ILobbyService
         return await _db.QuizLobby.FirstOrDefaultAsync(ql => ql.Id == lobbyId);
     }
 
+    public async Task EndQuizAsync(string lobbyId)
+    {
+        var lobby = await _db.QuizLobby.FirstOrDefaultAsync(q => q.Id == int.Parse(lobbyId));
+        if (lobby != null)
+        {
+            lobby.IsActive = false;
+            await _db.SaveChangesAsync();
+        }
+    }
+    
     #region JoinCode Creation
 
     // Generates a code until we hit one that doesn't exist. Can be made faster
