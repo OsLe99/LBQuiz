@@ -82,7 +82,21 @@
         InvokeAsync(StateHasChanged);
         return Task.CompletedTask;
     }
-   
+    private Task HandleScoreBoard(string answer, Models.QuestionOpen question, Models.Lobby.LobbyParticipant lobbyParticipant)
+    {
+        var existing = ParticipantsList.FirstOrDefault(p => p.ConnectionId == lobbyParticipant.ConnectionId);
+        if (existing != null)
+        {
+            existing.Score = lobbyParticipant.Score;
+        }
+        else
+        {
+            ParticipantsList.Add(lobbyParticipant);
+        }
+        ParticipantsList = ParticipantsList.OrderByDescending(p => p.Score).ToList();
+        InvokeAsync(StateHasChanged);
+        return Task.CompletedTask;
+    }
 
     private async Task HandleNextQuestion(int questionIndex)
     {

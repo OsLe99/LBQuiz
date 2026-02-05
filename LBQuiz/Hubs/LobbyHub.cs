@@ -110,7 +110,12 @@ namespace LBQuiz.Hubs
             if (participant == null) return;
             if(Question.CorrectAnswer.Equals(answer, StringComparison.OrdinalIgnoreCase))
             {
-                participant.Score += Question.Points;
+                if (string.Equals(Question.CorrectAnswer, answer, StringComparison.OrdinalIgnoreCase))
+                {
+                    participant.Score += Question.Points;
+                }
+                
+                await Clients.Group(participant.LobbyId.ToString()).SendAsync("ScoreBoardCalculated", Question, answer, participant);
             }
 
             var participants = _lobbyParticipantManager.GetParticipants(participant.LobbyId);
@@ -129,6 +134,9 @@ namespace LBQuiz.Hubs
             await Clients.Group(lobbyId).SendAsync("GoToPreviousQuestion", questionIndex);
         }
 
-       
+        public async Task GoToResultsAsync(bool showResults, string lobbyId)
+        {
+            await Clients.Group(lobbyId).SendAsync("GoToResults", showResults);
+        }
     }
 }

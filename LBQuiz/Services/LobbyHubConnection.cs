@@ -19,7 +19,7 @@ namespace LBQuiz.Services
 
         public event Func<int, Task>? OnQuestionChanged;
 
-        public event Action<List<Models.Lobby.LobbyParticipant>>? OnScoreBoardUpdated;
+        public event Func<bool, Task>? OnResultShow;
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
@@ -87,14 +87,16 @@ namespace LBQuiz.Services
                     
                 });
 
-            _hubConnection.On<List<Models.Lobby.LobbyParticipant>>("ScoreBoardUpdated", async participants =>
-            {
-                OnScoreBoardUpdated?.Invoke(participants);
-            });
-
-
-
-
+            _hubConnection.On<Models.QuestionOpen, string, Models.Lobby.LobbyParticipant>("ScoreBoardCalculated",
+                async (question, answer, participant) =>
+                {
+                    // Score is now calculated server-side, just pass it through
+                    Console.WriteLine($"{participant.Nickname}: {participant.Score} points");
+                    if (OnCalculateScoreBoard != null)
+                    {
+                        await OnCalculateScoreBoard.Invoke(answer, question, participant);
+                    }
+                });
 
             _hubConnection.On<int>("GoToNextQuestion", async (questionIndex) =>
             {
@@ -111,6 +113,14 @@ namespace LBQuiz.Services
                 if (OnQuestionChanged != null)
                 {
                     await OnQuestionChanged.Invoke(questionIndex);
+                }
+            });
+
+            _hubConnection.On<bool>("GoToResults", async (showResults) =>
+            {
+                if (OnResultShow != null)
+                {
+                    await OnResultShow.Invoke(showResults);
                 }
             });
 
@@ -155,9 +165,7 @@ namespace LBQuiz.Services
         {
             if(_hubConnection != null)
             {
-                // Call server Hub method name and parameter list matching server
                 await _hubConnection.InvokeAsync("ReceiveSubmittedAnswer", answer, lobbyId, quizId);
-                Console.WriteLine("Lobbyhubconnection");
             }
         }
         public async Task UpdateScoreBoard(Models.QuestionOpen Question, string answer)
@@ -181,6 +189,14 @@ namespace LBQuiz.Services
             if (_hubConnection != null)
             {
                 await _hubConnection.InvokeAsync("GoToPreviousQuestionAsync", questionIndex, lobbyId);
+            }
+        }
+
+        public async Task GoToResultsAsync(bool showResults, string lobbyId)
+        {
+            if (_hubConnection != null)
+            {
+                await _hubConnection.InvokeAsync("GoToResultsAsync", showResults, lobbyId);
             }
         }
 
