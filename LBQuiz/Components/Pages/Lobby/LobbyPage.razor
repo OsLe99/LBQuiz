@@ -12,7 +12,7 @@
 @page "/quiz/{QuizId:int}/{LobbyId:int}"
 
 <h3>LobbyPage</h3>
-<h1>QuizId: @QuizId LobbyId: @LobbyId</h1>
+
 
 @if(CurrentLobby == null)
 {
@@ -20,9 +20,37 @@
 }
 else if(_quizStart == false)
 {
-    <h1>Waiting for host to start the quiz | JoinCode: @CurrentLobby.JoinCode</h1>
-    <h2>Number of people in lobby: @LobbyHub.Participants.Count</h2>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StartQuiz">Start Quiz</MudButton>
+    <MudGrid Justify="Justify.Center">
+        <MudItem>
+            <MudPaper Class="pa-4" Style="height:100%; min-height:200px">
+                <MudText Typo="Typo.h4">Welcome to the LobbyPage</MudText>
+                <MudText Typo="Typo.h4">Waiting for the lobbyleader to start the quiz</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem>
+            <MudPaper Class="pa-4" Style="height:100%; min-height:200px">
+                <MudText Typo="Typo.h4">Lobby-Code: </MudText>
+                <MudText Typo="Typo.h4">@CurrentLobby.JoinCode</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem>
+            <MudPaper Class="pa-4" Style="height:100%; min-height:200px">
+                <MudText Typo="Typo.h6">Number of players in the lobby: @LobbyHub.Participants.Count</MudText>
+                <MudList T="string">
+                    @foreach(var part in LobbyHub.Participants)
+                    {
+                        <MudListItem Icon="@Icons.Material.Filled.AccountCircle">@part.Nickname</MudListItem>
+                    }
+                </MudList>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    @if(_userId == CurrentQuiz.HostId)
+    {
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StartQuiz">Start Quiz</MudButton>
+    }
+   
 }
 
 @code {
