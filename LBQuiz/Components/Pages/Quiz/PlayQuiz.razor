@@ -2,6 +2,7 @@
 @using Data
 @using Services.Interfaces
 @using System.Collections.Concurrent;
+@using LBQuiz.Models.Lobby
 @using LBQuiz.Hubs
 @inject ApplicationDbContext DbContext
 @inject IQuestionManager QuestionManager
@@ -14,17 +15,31 @@
 
 <h3>PlayQuiz</h3>
 
-
-@if(CurrentQuestion != null)
+@if (_showResults == false)
 {
-    <MudItem xs="12" md="4">
-        <MudPaper Class="pa-4" Style="height: 250px">
-            <MudText Typo="Typo.h2" Class="mb-3">@CurrentQuestion.QuestionText</MudText>
-            <MudTextField @bind-Value="Answer" Label="Answer" Variant="Variant.Filled"></MudTextField>
-            <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAnswer">Submit answer</MudButton>
-        </MudPaper>
-    </MudItem>
+    @if(CurrentQuestion != null)
+    {
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Style="height: 250px">
+                <MudText Typo="Typo.h2" Class="mb-3">@CurrentQuestion.QuestionText</MudText>
+                <MudTextField @bind-Value="Answer" Label="Answer" Variant="Variant.Filled"></MudTextField>
+                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAnswer">Submit answer</MudButton>
+            </MudPaper>
+        </MudItem>
+    }
 }
+else
+{
+    <ul>
+        @foreach (var part in ParticipantsList)
+        {
+            <li>
+                @part.Nickname -- @part.Score points
+            </li>
+        }
+    </ul>
+}
+
 
 @code {
     [Parameter]
@@ -37,12 +52,10 @@
     public List<Models.QuestionOpen> AllQuestions { get; set; }
 
     private int _index = 0;
-
     private int? _score = 0;
-
     public string Answer { get; set; }
-
     private bool answerButtonShow = false;
+    private bool _showResults = false;
 
     public List<Models.Lobby.LobbyParticipant> ParticipantsList { get; set; } = new List<Models.Lobby.LobbyParticipant>();
     public List<string> AllAnswers = new();
@@ -56,6 +69,7 @@
         ParticipantsList = LobbyManager.GetLeaderboard(int.Parse(lobbyId));
         HubConnection.OnAnswerRecieved += HandleAnswerReceived;
         HubConnection.OnQuestionChanged += HandleNextQuestion;
+        HubConnection.OnResultShow += HandleShowResults;
 
         CurrentQuestion = AllQuestions[_index];
         if (_index < (AllQuestions.Count))
@@ -109,4 +123,10 @@
         await InvokeAsync(StateHasChanged);
     }
 
+    private async Task HandleShowResults(bool showResults, List<LobbyParticipant> scoreBoard)
+    {
+        ParticipantsList = scoreBoard.OrderByDescending(p => p.Score).ToList();
+        _showResults = showResults;
+        await InvokeAsync(StateHasChanged);
+    }
 }
