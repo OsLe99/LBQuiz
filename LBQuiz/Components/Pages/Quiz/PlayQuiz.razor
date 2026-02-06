@@ -2,6 +2,7 @@
 @using Data
 @using Services.Interfaces
 @using System.Collections.Concurrent;
+@using LBQuiz.Models.Lobby
 @using LBQuiz.Hubs
 @inject ApplicationDbContext DbContext
 @inject IQuestionManager QuestionManager
@@ -29,7 +30,14 @@
 }
 else
 {
-    <p>Results will be shown here</p>
+    <ul>
+        @foreach (var part in ParticipantsList)
+        {
+            <li>
+                @part.Nickname -- @part.Score points
+            </li>
+        }
+    </ul>
 }
 
 
@@ -115,8 +123,9 @@ else
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task HandleShowResults(bool showResults)
+    private async Task HandleShowResults(bool showResults, List<LobbyParticipant> scoreBoard)
     {
+        ParticipantsList = scoreBoard.OrderByDescending(p => p.Score).ToList();
         _showResults = showResults;
         await InvokeAsync(StateHasChanged);
     }

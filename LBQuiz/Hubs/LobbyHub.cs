@@ -134,9 +134,9 @@ namespace LBQuiz.Hubs
             await Clients.Group(lobbyId).SendAsync("GoToPreviousQuestion", questionIndex);
         }
 
-        public async Task GoToResultsAsync(bool showResults, string lobbyId)
+        public async Task GoToResultsAsync(bool showResults, string lobbyId, List<LobbyParticipant> scoreBoard)
         {
-            await Clients.Group(lobbyId).SendAsync("GoToResults", showResults);
+            await Clients.Group(lobbyId).SendAsync("GoToResults", showResults, scoreBoard);
         }
 
         public async Task EndQuiz(string lobbyId)

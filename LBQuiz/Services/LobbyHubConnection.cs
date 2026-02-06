@@ -19,7 +19,7 @@ namespace LBQuiz.Services
 
         public event Func<int, Task>? OnQuestionChanged;
 
-        public event Func<bool, Task>? OnResultShow;
+        public event Func<bool, List<LobbyParticipant>, Task>? OnResultShow;
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
@@ -116,11 +116,11 @@ namespace LBQuiz.Services
                 }
             });
 
-            _hubConnection.On<bool>("GoToResults", async (showResults) =>
+            _hubConnection.On<bool, List<LobbyParticipant>>("GoToResults", async (showResults, scoreBoard) =>
             {
                 if (OnResultShow != null)
                 {
-                    await OnResultShow.Invoke(showResults);
+                    await OnResultShow.Invoke(showResults, scoreBoard);
                 }
             });
             
@@ -198,11 +198,11 @@ namespace LBQuiz.Services
             }
         }
 
-        public async Task GoToResultsAsync(bool showResults, string lobbyId)
+        public async Task GoToResultsAsync(bool showResults, string lobbyId, List<LobbyParticipant> lobbyScore)
         {
             if (_hubConnection != null)
             {
-                await _hubConnection.InvokeAsync("GoToResultsAsync", showResults, lobbyId);
+                await _hubConnection.InvokeAsync("GoToResultsAsync", showResults, lobbyId, lobbyScore);
             }
         }
 

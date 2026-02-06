@@ -146,7 +146,7 @@ else
     {
         _showResults = true;
         _userList = _userList.OrderByDescending(p => p.Score).ToList();
-        await LobbyHub.GoToResultsAsync(_showResults, lobbyId);
+        await LobbyHub.GoToResultsAsync(_showResults, lobbyId, _userList);
         await InvokeAsync(StateHasChanged);
     }
 
