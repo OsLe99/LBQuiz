@@ -109,7 +109,7 @@ else if(_quizStart == false)
     {
         if (CurrentQuiz != null)
         {
-            await LobbyHub.StartQuizAsync(LobbyId, QuizId, CurrentQuiz.HostId);
+            await LobbyHub.StartQuizAsync(CurrentLobby.JoinCode, LobbyId, CurrentQuiz.HostId);
         }
     }
 

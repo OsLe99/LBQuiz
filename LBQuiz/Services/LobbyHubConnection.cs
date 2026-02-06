@@ -61,18 +61,18 @@ namespace LBQuiz.Services
                         await OnParticipantsChanged.Invoke();
                 });
 
-            _hubConnection.On<int, int, string>("QuizLobbyStarted",
-                (quizId, lobbyId, hostId) =>
+            _hubConnection.On<string, int, string>("QuizLobbyStarted",
+                (joinCode, lobbyId, hostId) =>
                 {
                     // If host, go to host page
                     if (_currentUserId != null && _currentUserId == hostId)
                     {
-                        navigation.NavigateTo($"/quiz/host/{quizId}/{lobbyId}");
+                        navigation.NavigateTo($"/quiz/host/{joinCode}");
                     }
                     // All other users
                     else
                     {
-                        navigation.NavigateTo($"/quiz/play/{quizId}/{lobbyId}");
+                        navigation.NavigateTo($"/quiz/play/{joinCode}");
                     }
                 });
 
@@ -161,11 +161,11 @@ namespace LBQuiz.Services
                 Participants.Clear();
             }
         }
-        public async Task StartQuizAsync(int lobbyId, int quizId, string hostId)
+        public async Task StartQuizAsync(string joinCode, int lobbyId, string hostId)
         {
             if (_hubConnection?.State == HubConnectionState.Connected)
             {
-                await _hubConnection.SendAsync("StartQuiz", lobbyId, quizId, hostId);
+                await _hubConnection.SendAsync("StartQuiz", joinCode, lobbyId, hostId);
             }
         }
         

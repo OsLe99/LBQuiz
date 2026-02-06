@@ -9,9 +9,11 @@
 @inject ILobbyHubService LobbyHub
 @inject ILobbyParticipantManager LobbyManager
 @inject ILobbyHubConnection HubConnection
+@inject ILobbyService LobbyService
+@inject ApplicationDbContext _dbContext
 
 
-@page "/quiz/play/{quizId}/{lobbyId}"
+@page "/quiz/play/{joinCode}"
 
 <h3>PlayQuiz</h3>
 
@@ -46,6 +48,9 @@ else
     public string quizId { get; set; }
     [Parameter]
     public string lobbyId { get; set; }
+    [Parameter]
+    public string joinCode { get; set; }
+
 
     public Models.QuestionOpen CurrentQuestion { get; set; }
 
@@ -56,32 +61,33 @@ else
     public string Answer { get; set; }
     private bool answerButtonShow = false;
     private bool _showResults = false;
+    private LBQuiz.Models.Lobby.QuizLobby currentLobby;
 
     public List<Models.Lobby.LobbyParticipant> ParticipantsList { get; set; } = new List<Models.Lobby.LobbyParticipant>();
     public List<string> AllAnswers = new();
 
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        int qId = int.Parse(quizId);
-        AllQuestions = QuestionManager.GetAllQuestionFromQuizId(qId);
-
-        ParticipantsList = LobbyManager.GetLeaderboard(int.Parse(lobbyId));
+        currentLobby = await LobbyService.GetLobbyByJoinCodeAsync(joinCode);
+        AllQuestions = _dbContext.QuestionOpen.Where(q => q.QuizId == currentLobby.QuizId).ToList();
+        //int.parse(lobbyId)
+        ParticipantsList = LobbyManager.GetLeaderboard(currentLobby.Id);
         HubConnection.OnAnswerRecieved += HandleAnswerReceived;
         HubConnection.OnQuestionChanged += HandleNextQuestion;
         HubConnection.OnResultShow += HandleShowResults;
 
         CurrentQuestion = AllQuestions[_index];
-        if (_index < (AllQuestions.Count))
-        {
-            _index++;
-        }
+        // if (_index < (AllQuestions.Count))
+        // {
+        //     _index++;
+        // }
     }
 
     public async Task SaveAnswer()
     {
         //Ska kalla på service
-        await HubConnection.SubmitAnswer(lobbyId, Answer, int.Parse(quizId));
+        await HubConnection.SubmitAnswer(currentLobby.Id.ToString(), Answer, currentLobby.QuizId);
         //Borde skicka med viken user som svarade
         await HubConnection.UpdateScoreBoard(CurrentQuestion, Answer);
         answerButtonShow = true;

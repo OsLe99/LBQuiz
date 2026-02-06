@@ -6,9 +6,11 @@
 @using LBQuiz.Data
 @inject ILobbyHubConnection LobbyHub
 @inject ILobbyParticipantManager LobbyManager
+@inject ILobbyService LobbyService
+@inject ApplicationDbContext _dbContext
 
 
-@page "/quiz/host/{quizId}/{lobbyId}"
+@page "/quiz/host/{joinCode}"
 
 
 <h3>Host View</h3>
@@ -31,7 +33,10 @@ else
         <div>
             <MudItem xs="12" md="4">
                 <MudPaper Class="pa-4" Style="height: 250px; background-color: antiquewhite; border: 1px solid black">
-                    <MudItem>@AllQuestions[_questionIndex].QuestionText</MudItem>
+                    @if(AllQuestions == null || AllQuestions.Count != 0)
+                    {
+                        <MudItem>@AllQuestions[_questionIndex].QuestionText</MudItem>
+                    }
                 </MudPaper>
                 <MudButton Disabled="previousButton" OnClick="PreviousQuestion">Previous question</MudButton>
                 <MudButton Disabled="nextButton" OnClick="NextQuestion">Next question</MudButton>
@@ -59,10 +64,13 @@ else
 
 
 @code {
-    [Parameter] public string quizId { get; set; }
-    [Parameter] public string lobbyId { get; set; }
+    [Parameter] 
+    public string quizId { get; set; }
+    [Parameter]
+    public string lobbyId { get; set; }
+    [Parameter]
+    public string joinCode { get; set; }
 
-    private ApplicationDbContext _dbContext;
     private bool previousButton = true;
     private bool nextButton = false;
     private bool _resultButton = true;
@@ -72,25 +80,21 @@ else
     private int _questionIndex = 0;
     private List<QuestionOpen> AllQuestions = new();
     private int? _score = 0;
+    private LBQuiz.Models.Lobby.QuizLobby currentLobby;
 
 
-    public HostQuizPage(ApplicationDbContext dbContext)
-    {
-        _dbContext = dbContext;
-    }
+    
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         @foreach (var participant in LobbyHub.Participants)
         {
             _userList.Add(participant);
         }
 
+        currentLobby = await LobbyService.GetLobbyByJoinCodeAsync(joinCode);
 
-
-        var selectedQuiz = _dbContext.Quiz.FirstOrDefault(q => q.Id == int.Parse(quizId));
-
-        GetAllQuestionsFromQuiz().GetAwaiter().GetResult();
+        AllQuestions = _dbContext.QuestionOpen.Where(q => q.QuizId == currentLobby.QuizId).ToList();
 
         LobbyHub.OnQuestionChanged += HandleNextQuestion;
         LobbyHub.OnAnswerRecieved += HandleAnswerRecieved;
@@ -99,7 +103,7 @@ else
 
     private async Task GetAllQuestionsFromQuiz()
     {
-        var questions = _dbContext.QuestionOpen.Where(q => q.QuizId == int.Parse(quizId)).ToList();
+        var questions = _dbContext.QuestionOpen.Where(q => q.QuizId == currentLobby.QuizId).ToList();
 
         if (questions != null)
         {
@@ -133,13 +137,13 @@ else
 
     private async Task NextQuestion()
     {
-        await LobbyHub.GoToNextQuestionAsync(_questionIndex, lobbyId);
+        await LobbyHub.GoToNextQuestionAsync(_questionIndex, currentLobby.Id.ToString());
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task PreviousQuestion()
     {
-        await LobbyHub.GoToPreviousQuestionAsync(_questionIndex, lobbyId);
+        await LobbyHub.GoToPreviousQuestionAsync(_questionIndex, currentLobby.Id.ToString());
         await InvokeAsync(StateHasChanged);
     }
 
@@ -147,13 +151,13 @@ else
     {
         _showResults = true;
         _userList = _userList.OrderByDescending(p => p.Score).ToList();
-        await LobbyHub.GoToResultsAsync(_showResults, lobbyId, _userList);
+        await LobbyHub.GoToResultsAsync(_showResults, currentLobby.Id.ToString(), _userList);
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task EndQuiz()
     {
-        await LobbyHub.EndQuizAsync(lobbyId);
+        await LobbyHub.EndQuizAsync(currentLobby.Id.ToString());
         await InvokeAsync(StateHasChanged);
     }
 
