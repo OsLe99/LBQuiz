@@ -109,6 +109,7 @@ else
 
     private async Task HandleNextQuestion(int questionIndex)
     {
+        //Skapa logik för om man bara har en quetion i ett quiz.
         _questionIndex = questionIndex;
         if (_questionIndex == 0) previousButton = true;
         else if (_questionIndex == AllQuestions.Count - 1)
