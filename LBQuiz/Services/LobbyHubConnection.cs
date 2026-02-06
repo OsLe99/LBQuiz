@@ -126,9 +126,11 @@ namespace LBQuiz.Services
             
             _hubConnection.On("QuizEnded", async () =>
             {
-                await _hubConnection.StopAsync();
                 navigation.NavigateTo("/");
+                await _hubConnection.StopAsync();
             });
+
+            
             
             await _hubConnection.StartAsync();
         }
@@ -213,5 +215,7 @@ namespace LBQuiz.Services
                 await _hubConnection.InvokeAsync("EndQuiz", lobbyId);
             }
         }
+
+        
     }
 }

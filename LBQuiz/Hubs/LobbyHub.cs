@@ -142,7 +142,7 @@ namespace LBQuiz.Hubs
         public async Task EndQuiz(string lobbyId)
         {
             await _lobbyService.EndQuizAsync(lobbyId);
-            await Clients.Group(lobbyId).SendAsync("EndQuiz");
+            await Clients.Group(lobbyId).SendAsync("QuizEnded");
 
             var participants = _lobbyParticipantManager.GetParticipants(int.Parse(lobbyId));
             foreach (var participant in participants.ToList())
@@ -151,5 +151,6 @@ namespace LBQuiz.Hubs
                 _lobbyParticipantManager.RemoveParticipantByConnectionId(participant.ConnectionId);
             }
         }
+        
     }
 }
