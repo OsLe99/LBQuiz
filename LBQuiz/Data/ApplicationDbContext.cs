@@ -19,4 +19,5 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     
     // Lobby DbSets go here
     public DbSet<QuizLobby> QuizLobby { get; set; }
+    public DbSet<QuestionJsonBlob> QuestionJsonBlobs { get; set; }
 }
