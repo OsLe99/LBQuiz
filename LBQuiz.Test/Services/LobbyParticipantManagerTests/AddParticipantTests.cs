@@ -62,6 +62,7 @@ public class AddParticipantTests
     [Fact]
     public void AddParticipant_InvalidLobbyId_ShouldThrowException()
     {
+        // Arrange
         var manager = new LobbyParticipantManager();
         var participant = new LobbyParticipant
         {
@@ -69,6 +70,7 @@ public class AddParticipantTests
             Nickname = "TestUser"
         };
         
+        // Assert
         Assert.Throws<ArgumentException>(() => manager.AddParticipant(0, participant));
         Assert.Throws<ArgumentException>(() => manager.AddParticipant(-1, participant));
     }
@@ -76,8 +78,10 @@ public class AddParticipantTests
     [Fact]
     public void AddParticipant_WithNullParticipant_ShouldThrowException()
     {
+        // Arrange
         var manager = new LobbyParticipantManager();
         
+        // Assert
         Assert.Throws<ArgumentNullException>(() => manager.AddParticipant(1, null));
     }
 
