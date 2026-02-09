@@ -9,18 +9,18 @@ namespace LBQuiz.Services.Interfaces
         Task JoinLobbyAsync(string joinCode, string nickname);
         Task JoinLobbyAsHostAsync(int lobbyId);
         Task LeaveLobbyAsync();
-        Task StartQuizAsync(int lobbyId, int quizId, string hostId);
+        Task StartQuizAsync(int lobbyId, int quizId);
         List<LobbyParticipant> Participants { get; }
         event Func<Task>? OnParticipantsChanged;
         event Func<int, Task>? OnQuestionChanged;
         event Func<string, LobbyParticipant, Task>? OnAnswerRecieved;
         event Func<bool, List<LobbyParticipant>, Task>? OnResultShow;
         event Func<string, Models.QuestionOpen, LobbyParticipant, Task>? OnCalculateScoreBoard;
-        Task SubmitAnswer(string lobbyId, string answer, int quizId);
+        Task SubmitAnswer(int lobbyId, string answer, int quizId);
         Task UpdateScoreBoard(Models.QuestionOpen question, string answer);
-        Task GoToNextQuestionAsync(int questionIndex, string lobbyId);
-        Task GoToPreviousQuestionAsync(int questionIndex, string lobbyId);
-        Task GoToResultsAsync(bool showResults, string lobbyId, List<LobbyParticipant> lobbyScore);
-        Task EndQuizAsync(string lobbyId);
+        Task GoToNextQuestionAsync(int questionIndex, int lobbyId);
+        Task GoToPreviousQuestionAsync(int questionIndex, int lobbyId);
+        Task GoToResultsAsync(bool showResults, int lobbyId, List<LobbyParticipant> lobbyScore);
+        Task EndQuizAsync(int lobbyId);
     }
 }

@@ -106,6 +106,10 @@ namespace LBQuiz.Migrations
                         .HasMaxLength(6)
                         .HasColumnType("nvarchar(6)");
 
+                    b.Property<string>("QuizHostId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("QuizId")
                         .HasColumnType("int");
 

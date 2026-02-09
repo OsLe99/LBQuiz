@@ -81,7 +81,7 @@ else
     public async Task SaveAnswer()
     {
         //Ska kalla på service
-        await HubConnection.SubmitAnswer(lobbyId, Answer, int.Parse(quizId));
+        await HubConnection.SubmitAnswer(int.Parse(lobbyId), Answer, int.Parse(quizId));
         //Borde skicka med viken user som svarade
         await HubConnection.UpdateScoreBoard(CurrentQuestion, Answer);
         answerButtonShow = true;

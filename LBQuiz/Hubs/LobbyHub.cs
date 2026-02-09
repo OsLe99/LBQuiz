@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using LBQuiz.Models.Lobby;
 using Microsoft.AspNetCore.SignalR;
 using LBQuiz.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace LBQuiz.Hubs
 {
@@ -8,7 +10,7 @@ namespace LBQuiz.Hubs
     {
         private readonly ILobbyParticipantManager _lobbyParticipantManager;
         private readonly ILobbyService _lobbyService;
-
+        private string? GetUserId() => Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         public LobbyHub(ILobbyParticipantManager lobbyParticipantManager, ILobbyService lobbyService)
         {
             _lobbyParticipantManager = lobbyParticipantManager;
@@ -20,6 +22,19 @@ namespace LBQuiz.Hubs
             await base.OnConnectedAsync();
         }
 
+        private async Task EnsureIsHostAsync(int lobbyId)
+        {
+            var userId = GetUserId();
+            if (userId == null)
+            {
+                throw new HubException("Invalid host id");
+            }
+            var lobby = await _lobbyService.GetLobbyByIdAsync(lobbyId);
+            if (lobby?.QuizHostId != userId)
+            {
+                throw new HubException("Only for hosts.");
+            }
+        }
         public async Task JoinLobby(string joinCode, string nickname)
         {
             var lobby = await _lobbyService.GetLobbyByJoinCodeAsync(joinCode);
@@ -65,19 +80,22 @@ namespace LBQuiz.Hubs
             }
             await base.OnDisconnectedAsync(exception);
         }
-        public async Task StartQuiz(int lobbyId, int quizId, string hostId)
+        public async Task StartQuiz(int lobbyId, int quizId)
         {
+            await EnsureIsHostAsync(lobbyId);
+            var hostId = GetUserId();
             await Clients.Group(lobbyId.ToString()).SendAsync("QuizLobbyStarted", quizId, lobbyId, hostId);
         }
         
         public async Task JoinLobbyAsHost(int lobbyId)
         {
-            var lobby = await _lobbyService.GetLobbyByIdAsync(lobbyId);
-            if (lobby == null)
-            {
-                throw new HubException("Lobby not found");
-            }
+            // var lobby = await _lobbyService.GetLobbyByIdAsync(lobbyId);
+            // if (lobby == null)
+            // {
+            //     throw new HubException("Lobby not found");
+            // }
             // Join group as host but not as a participant
+            await EnsureIsHostAsync(lobbyId);
             await Groups.AddToGroupAsync(Context.ConnectionId, lobbyId.ToString());
         }
 
@@ -124,27 +142,31 @@ namespace LBQuiz.Hubs
             
         }
 
-        public async Task GoToNextQuestionAsync(int questionIndex, string lobbyId)
+        public async Task GoToNextQuestionAsync(int questionIndex, int lobbyId)
         {
-            await Clients.Group(lobbyId).SendAsync("GoToNextQuestion", questionIndex);
+            await EnsureIsHostAsync(lobbyId);
+            await Clients.Group(lobbyId.ToString()).SendAsync("GoToNextQuestion", questionIndex);
         }
 
-        public async Task GoToPreviousQuestionAsync(int questionIndex, string lobbyId)
+        public async Task GoToPreviousQuestionAsync(int questionIndex, int lobbyId)
         {
-            await Clients.Group(lobbyId).SendAsync("GoToPreviousQuestion", questionIndex);
+            await EnsureIsHostAsync(lobbyId);
+            await Clients.Group(lobbyId.ToString()).SendAsync("GoToPreviousQuestion", questionIndex);
         }
 
-        public async Task GoToResultsAsync(bool showResults, string lobbyId, List<LobbyParticipant> scoreBoard)
+        public async Task GoToResultsAsync(bool showResults, int lobbyId, List<LobbyParticipant> scoreBoard)
         {
-            await Clients.Group(lobbyId).SendAsync("GoToResults", showResults, scoreBoard);
+            await EnsureIsHostAsync(lobbyId);
+            await Clients.Group(lobbyId.ToString()).SendAsync("GoToResults", showResults, scoreBoard);
         }
-
-        public async Task EndQuiz(string lobbyId)
+        
+        public async Task EndQuiz(int lobbyId)
         {
+            await EnsureIsHostAsync(lobbyId);
             await _lobbyService.EndQuizAsync(lobbyId);
-            await Clients.Group(lobbyId).SendAsync("QuizEnded");
+            await Clients.Group(lobbyId.ToString()).SendAsync("QuizEnded");
 
-            var participants = _lobbyParticipantManager.GetParticipants(int.Parse(lobbyId));
+            var participants = _lobbyParticipantManager.GetParticipants(lobbyId);
             foreach (var participant in participants.ToList())
             {
                 await Groups.RemoveFromGroupAsync(participant.ConnectionId, participant.LobbyId.ToString());
