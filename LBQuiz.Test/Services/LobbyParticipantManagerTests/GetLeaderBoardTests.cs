@@ -7,7 +7,7 @@ namespace LBQuiz.Test.Services.LobbyParticipantManagerTests;
 public class GetLeaderBoardTests
 {
     [Fact]
-    public void GetLeaderboard_Null_ReturnsEmptyList()
+    public void GetLeaderboard_EmptyLobby_ReturnsEmptyList()
     {
         // Arrange
         var manager = new LobbyParticipantManager();

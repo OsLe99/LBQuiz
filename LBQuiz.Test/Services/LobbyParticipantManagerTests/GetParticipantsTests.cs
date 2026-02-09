@@ -52,7 +52,7 @@ public class GetParticipantsTests
         };
         var participant2 = new LobbyParticipant
         {
-            ConnectionId = "newCon-123",
+            ConnectionId = "newCon-456",
             Nickname = "TestUser2",
         };
         
