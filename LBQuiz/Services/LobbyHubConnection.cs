@@ -45,6 +45,7 @@ namespace LBQuiz.Services
                 .WithAutomaticReconnect()
                 .Build();
 
+
             _hubConnection.On<string, List<LobbyParticipant>>("ParticipantJoined",
                 async (nickname, participants) =>
                 {
@@ -130,8 +131,8 @@ namespace LBQuiz.Services
                 await _hubConnection.StopAsync();
             });
 
-            
-            
+
+
             await _hubConnection.StartAsync();
         }
 
@@ -215,6 +216,7 @@ namespace LBQuiz.Services
                 await _hubConnection.InvokeAsync("EndQuiz", lobbyId);
             }
         }
+        
 
         
     }

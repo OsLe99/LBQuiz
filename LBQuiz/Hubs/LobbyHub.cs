@@ -151,6 +151,10 @@ namespace LBQuiz.Hubs
                 _lobbyParticipantManager.RemoveParticipantByConnectionId(participant.ConnectionId);
             }
         }
-        
+        public async Task ReConnectToRoom(string lobbyId)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, lobbyId);
+        }
+
     }
 }
