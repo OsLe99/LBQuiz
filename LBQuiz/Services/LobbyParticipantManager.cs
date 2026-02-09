@@ -14,6 +14,16 @@ public class LobbyParticipantManager : ILobbyParticipantManager
 
     public bool AddParticipant(int lobbyId, LobbyParticipant participant)
     {
+        if (lobbyId <= 0)
+        {
+            throw new ArgumentException("Lobby Id must be greater than 0", nameof(lobbyId));
+        }
+
+        if (participant == null)
+        {
+            throw new ArgumentNullException(nameof(participant));
+        }
+        
         var participants = _lobbyParticipants.GetOrAdd(lobbyId, _ => new ConcurrentDictionary<string, LobbyParticipant>());
 
         // Add participant to lobby
