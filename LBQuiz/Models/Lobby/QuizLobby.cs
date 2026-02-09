@@ -9,6 +9,9 @@ public class QuizLobby
     
     [Required(ErrorMessage = "QuizId is required")]
     public int QuizId { get; set; }
+    
+    [Required(ErrorMessage = "HostId is required")]
+    public string QuizHostId { get; set; }
 
     [Required(ErrorMessage = "JoinCode is required")]
     [StringLength(6, MinimumLength = 4, ErrorMessage = "QuizCode must be between 4 and 6 characters")]

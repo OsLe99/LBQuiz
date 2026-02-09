@@ -2,7 +2,7 @@
 @using LBQuiz.Data
 @using System.Security.Claims
 @using Services.Interfaces 
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject AuthenticationStateProvider AuthStateProvider
 @inject ApplicationDbContext DbContext
 @inject NavigationManager Navigation
 @inject ILobbyService LobbyService
@@ -46,7 +46,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         isAuthenticated = user.Identity != null && user.Identity.IsAuthenticated;
 
@@ -62,7 +62,16 @@ else
     public async Task OnQuizClicked(Models.Quiz quiz)
     {
         //ska lägga till lobbyId för att veta vilken joinCode som ska visas på nästa sida
-        var lobby = await LobbyService.CreateLobbyAsync(quiz.Id);
+        // Uppdaterad för att kolla ifall användaren är inloggad, samt skicka med identity från authState
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+        {
+            // Error hantering bör gå här
+            return;
+        }
+        var lobby = await LobbyService.CreateLobbyAsync(quiz.Id, userId);
         Navigation.NavigateTo($"/quiz/{quiz.Id}/{lobby.Id}");
     }
 

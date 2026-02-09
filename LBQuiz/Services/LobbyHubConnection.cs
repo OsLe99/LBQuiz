@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Collections.Concurrent;
+using LBQuiz.Hubs;
 
 namespace LBQuiz.Services
 {
@@ -13,6 +14,7 @@ namespace LBQuiz.Services
         private HubConnection? _hubConnection;
         private int? _currentLobbyId;
         private string? _currentUserId;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         public List<LobbyParticipant> Participants { get; private set; } = new();
 
         public event Func<Task>? OnParticipantsChanged;
@@ -27,20 +29,27 @@ namespace LBQuiz.Services
         public event Func<string, Models.Lobby.LobbyParticipant, Task>? OnAnswerRecieved;
         public event Func<string, Models.QuestionOpen, Models.Lobby.LobbyParticipant, Task>? OnCalculateScoreBoard;
 
-
+        public LobbyHubConnection(IHttpContextAccessor httpContextAccessor)
+        {
+            _httpContextAccessor =  httpContextAccessor;
+        }
         
         public async Task InitializeAsync(NavigationManager navigation, string? userId = null)
         {
             if (_hubConnection?.State == HubConnectionState.Connected) return;
             
             _currentUserId = userId;
-
-
+            
+            var httpContext = _httpContextAccessor.HttpContext;
+            var cookies = httpContext?.Request.Cookies;
 
             _hubConnection = new HubConnectionBuilder()
                 .WithUrl(navigation.ToAbsoluteUri("/lobbyHub"), options =>
                 {
-                    options.UseDefaultCredentials = true;
+                    if (cookies != null)
+                    {
+                        options.Headers.Add("Cookie", string.Join("; ", cookies.Select(c => $"{c.Key}={c.Value}")));
+                    }
                 })
                 .WithAutomaticReconnect()
                 .Build();
@@ -130,8 +139,6 @@ namespace LBQuiz.Services
                 await _hubConnection.StopAsync();
             });
 
-            
-            
             await _hubConnection.StartAsync();
         }
 
@@ -161,19 +168,19 @@ namespace LBQuiz.Services
                 Participants.Clear();
             }
         }
-        public async Task StartQuizAsync(int lobbyId, int quizId, string hostId)
+        public async Task StartQuizAsync(int lobbyId, int quizId)
         {
             if (_hubConnection?.State == HubConnectionState.Connected)
             {
-                await _hubConnection.SendAsync("StartQuiz", lobbyId, quizId, hostId);
+                await _hubConnection.SendAsync("StartQuiz", lobbyId, quizId);
             }
         }
         
-        public async Task SubmitAnswer(string lobbyId, string answer, int quizId)
+        public async Task SubmitAnswer(int lobbyId, string answer, int quizId)
         {
             if(_hubConnection != null)
             {
-                await _hubConnection.InvokeAsync("ReceiveSubmittedAnswer", answer, lobbyId, quizId);
+                await _hubConnection.InvokeAsync("ReceiveSubmittedAnswer", answer, lobbyId.ToString(), quizId);
             }
         }
         public async Task UpdateScoreBoard(Models.QuestionOpen Question, string answer)
@@ -184,7 +191,7 @@ namespace LBQuiz.Services
             }
         }
 
-        public async Task GoToNextQuestionAsync(int questionIndex, string lobbyId)
+        public async Task GoToNextQuestionAsync(int questionIndex, int lobbyId)
         {
             if (_hubConnection != null)
             {
@@ -192,7 +199,7 @@ namespace LBQuiz.Services
             }
         }
 
-        public async Task GoToPreviousQuestionAsync(int questionIndex, string lobbyId)
+        public async Task GoToPreviousQuestionAsync(int questionIndex, int lobbyId)
         {
             if (_hubConnection != null)
             {
@@ -200,7 +207,7 @@ namespace LBQuiz.Services
             }
         }
 
-        public async Task GoToResultsAsync(bool showResults, string lobbyId, List<LobbyParticipant> lobbyScore)
+        public async Task GoToResultsAsync(bool showResults, int lobbyId, List<LobbyParticipant> lobbyScore)
         {
             if (_hubConnection != null)
             {
@@ -208,7 +215,7 @@ namespace LBQuiz.Services
             }
         }
 
-        public async Task EndQuizAsync(string lobbyId)
+        public async Task EndQuizAsync(int lobbyId)
         {
             if (_hubConnection != null)
             {

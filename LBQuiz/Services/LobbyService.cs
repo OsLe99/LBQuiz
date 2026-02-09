@@ -15,7 +15,7 @@ public class LobbyService : ILobbyService
         _db = db;
     }
 
-    public async Task<QuizLobby> CreateLobbyAsync(int quizId)
+    public async Task<QuizLobby> CreateLobbyAsync(int quizId, string hostId)
     {
         var quizExists = await _db.Quiz.AnyAsync(q => q.Id == quizId);
 
@@ -30,7 +30,8 @@ public class LobbyService : ILobbyService
         {
             QuizId = quizId,
             JoinCode = joinCode,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            QuizHostId = hostId
         };
         
         _db.QuizLobby.Add(lobby);
@@ -48,9 +49,9 @@ public class LobbyService : ILobbyService
         return await _db.QuizLobby.FirstOrDefaultAsync(ql => ql.Id == lobbyId);
     }
 
-    public async Task EndQuizAsync(string lobbyId)
+    public async Task EndQuizAsync(int lobbyId)
     {
-        var lobby = await _db.QuizLobby.FirstOrDefaultAsync(q => q.Id == int.Parse(lobbyId));
+        var lobby = await _db.QuizLobby.FirstOrDefaultAsync(q => q.Id == lobbyId);
         if (lobby != null)
         {
             lobby.IsActive = false;
