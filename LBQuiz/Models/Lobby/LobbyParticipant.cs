@@ -1,4 +1,6 @@
-﻿namespace LBQuiz.Models.Lobby;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace LBQuiz.Models.Lobby;
 
 public class LobbyParticipant
 {

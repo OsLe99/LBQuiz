@@ -32,7 +32,7 @@ public class RemoveParticipantByConnectionIdTests
         };
         
         // Act
-        var participants = manager.AddParticipant(1, participant);
+        manager.AddParticipant(1, participant);
         var result = manager.RemoveParticipantByConnectionId("newCon-123");
 
         // Assert
@@ -60,12 +60,26 @@ public class RemoveParticipantByConnectionIdTests
         };
         
         // Act
-        var participants1 = manager.AddParticipant(1, participant1);
-        var participants2 = manager.AddParticipant(2, participant2);
+        manager.AddParticipant(1, participant1);
+        manager.AddParticipant(2, participant2);
         var result = manager.RemoveParticipantByConnectionId("newCon-456");
         
         // Assert
         Assert.NotEqual(participant1, result);
         Assert.Equal(participant2, result);
+        Assert.DoesNotContain(participant2, manager.GetParticipants(2));
+    }
+
+    [Fact]
+    public void RemoveParticipantByConnectionId_ReturnsNull_IfConnectionStringIsEmpty()
+    {
+        // Arrange
+        var manager = new LobbyParticipantManager();
+        
+        // Act
+        var result = manager.RemoveParticipantByConnectionId("");
+        
+        // Assert
+        Assert.Null(result);
     }
 }

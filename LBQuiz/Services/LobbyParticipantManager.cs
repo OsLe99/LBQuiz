@@ -24,6 +24,16 @@ public class LobbyParticipantManager : ILobbyParticipantManager
             throw new ArgumentNullException(nameof(participant));
         }
         
+        if (string.IsNullOrWhiteSpace(participant.ConnectionId))
+        {
+            throw new ArgumentException("ConnectionId cannot be null or empty", nameof(participant));
+        }
+
+        if (string.IsNullOrWhiteSpace(participant.Nickname))
+        {
+            throw new ArgumentException("Nickname cannot be null or empty", nameof(participant));
+        }
+        
         var participants = _lobbyParticipants.GetOrAdd(lobbyId, _ => new ConcurrentDictionary<string, LobbyParticipant>());
 
         // Add participant to lobby

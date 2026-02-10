@@ -18,7 +18,7 @@ public class GetParticipantsTests
         };
         
         // Act
-        var participants = manager.AddParticipant(1, participant);
+        manager.AddParticipant(1, participant);
         var result = manager.GetParticipants(1);
         
         // Assert
@@ -57,8 +57,8 @@ public class GetParticipantsTests
         };
         
         // Act
-        var participants1 = manager.AddParticipant(1, participant1);
-        var participants2 = manager.AddParticipant(2, participant2);
+        manager.AddParticipant(1, participant1);
+        manager.AddParticipant(2, participant2);
         var result = manager.GetParticipants(1);
         
         // Assert

@@ -126,4 +126,18 @@ public class AddParticipantTests
         var participants2 = manager.GetParticipants(2);
         Assert.Equal(2, participants2.Count);
     }
+
+    [Fact]
+    public void AddParticipant_ShouldReturnFalse_IfNoNickname()
+    {
+        var manager = new LobbyParticipantManager();
+        var participant = new LobbyParticipant
+        {
+            ConnectionId = "newCon-123",
+            Nickname = null
+        };
+        
+        //Act & Assert
+        Assert.Throws<ArgumentException>(() => manager.AddParticipant(1, participant));
+    }
 }
