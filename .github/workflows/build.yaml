@@ -3,7 +3,7 @@ name: Manual .NET Build
 on:
   workflow_dispatch:
   pull_request:
-    types: [open]
+    types: [opened]
     branches:
       - master
       - dev
@@ -34,7 +34,7 @@ jobs:
         uses: actions/checkout@v5.0.0
 
       - name: Install .NET 10
-        uses: actions/setup@v5.0.0
+        uses: actions/setup-dotnet@v5.0.0
         with:
           dotnet-version: '10.0.x'
 
@@ -47,7 +47,7 @@ jobs:
         run: echo "Failed to build project."
 
       - name: Run tests
-        if: sucess()
+        if: success()
         run: |
           dotnet test LBQuiz.Test/LBQuiz.Test.csproj \
             --logger "trx;LogFileName=test-results.trx" \
