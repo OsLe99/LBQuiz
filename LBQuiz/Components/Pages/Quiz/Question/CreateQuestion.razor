@@ -119,7 +119,6 @@ else if (picked == "Multiple Picker")
                               Required="true" />
 
                 <MudCheckBox @bind-Value="_multipleOptions[index].CorrectFalse"
-                             
                              Color="Color.Primary" />
             
         }
@@ -198,8 +197,5 @@ else if (picked == "Multiple Picker")
         .Select(_ => new MultipleOptions()).ToList(); 
     }
 
-    // private void OnChangeCheckBox(int i)
-    // {
-    //     _multipleOptions[i].CorrectFalse = false;
-    // }
+    
 }

@@ -48,7 +48,9 @@ namespace LBQuiz.Services
             var blob = new QuestionJsonBlob
             {
                 QuizId = quizId,
+                QuestionText = questionText,
                 Blob = json
+
             };
             _dbContext.QuestionJsonBlobs.Add(blob);
             await _dbContext.SaveChangesAsync();
@@ -71,6 +73,7 @@ namespace LBQuiz.Services
             var blob = new QuestionJsonBlob
             {
                 QuizId = quizId,
+                QuestionText = questionText,
                 Blob = json
             };
             _dbContext.QuestionJsonBlobs.Add(blob);
@@ -79,7 +82,19 @@ namespace LBQuiz.Services
         }
         public async Task CreateMultipleChoiceQuestion(int quizId, int questionPoints, string questionText, List<MultipleOptions> multiple)
         {
-            //var question = new Question() { QuestionText = questionText }            
+            //Skicka med en sträng innan Serializer med vilken modell objektet tillhör. För att lättare veta hur det ska deserialiseras. Split string senare
+            var jsonBlob = new QuestionJsonBlob()
+            {
+                QuizId = quizId,
+                QuestionText = questionText,
+                Blob = JsonSerializer.Serialize(multiple)
+                
+            };
+            if(jsonBlob != null)
+            {
+                _dbContext.QuestionJsonBlobs.Add(jsonBlob);
+                await _dbContext.SaveChangesAsync();
+            }
         }
 
 
