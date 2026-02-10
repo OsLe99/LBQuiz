@@ -1,5 +1,6 @@
 ﻿using LBQuiz.Data;
 using LBQuiz.Models;
+using LBQuiz.Models.Helpers;
 using LBQuiz.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
@@ -76,15 +77,9 @@ namespace LBQuiz.Services
             await _dbContext.SaveChangesAsync();
 
         }
-        public async Task CreateMultipleChoiceQuestion(List<MultipleChoiceAnswer> multiple)
+        public async Task CreateMultipleChoiceQuestion(int quizId, int questionPoints, string questionText, List<MultipleOptions> multiple)
         {
-            //.Add till denna lista 
-            var questionMultiple = new QuestionMultiple();
-            //Sånna här vi ska skapa 
-            foreach (var item in multiple)
-            {
-                questionMultiple.AllAnswers.Add(item);
-            }
+            //var question = new Question() { QuestionText = questionText }            
         }
 
 
