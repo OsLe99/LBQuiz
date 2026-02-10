@@ -64,8 +64,8 @@ public class CreateLobbyAsyncTests
         
         // Act
         var lobby1 = await service.CreateLobbyAsync(1, "host123");
-        var lobby2 = await service.CreateLobbyAsync(2, "host456");
-        var lobby3 = await service.CreateLobbyAsync(3, "host789");
+        var lobby2 = await service.CreateLobbyAsync(1, "host456");
+        var lobby3 = await service.CreateLobbyAsync(1, "host789");
         
         // Assert
         Assert.NotEqual(lobby1.JoinCode, lobby2.JoinCode);
