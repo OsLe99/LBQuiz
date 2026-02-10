@@ -1,0 +1,39 @@
+﻿@using LBQuiz.Data
+@using Models
+@using Microsoft.AspNetCore.Components.Authorization
+@inject ApplicationDbContext _dbContext
+@inject AuthenticationStateProvider AuthStateProvider
+@page "/quiz/question/choose"
+
+<h3>ChooseQuestion</h3>
+@foreach(var q in _allQuizes)
+{
+    <MudItem xs="12" md="4" Style="text-align: center">
+        <MudPaper Class="pa-16 ma-2" Style="background-color: antiquewhite">
+            <MudLink Href="@($"/quiz/{q.Id}/question/create")">
+                <MudText Typo="Typo.h6" Class="mb-3">@q.Name</MudText>
+            </MudLink>
+        </MudPaper>
+        
+    </MudItem>
+}
+
+@code {
+    private List<Quiz> _allQuizes;
+    private string _currentUserId;
+
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            _currentUserId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        }
+        _allQuizes = _dbContext.Quiz.Where(q => q.HostId == _currentUserId).ToList();
+    }
+}

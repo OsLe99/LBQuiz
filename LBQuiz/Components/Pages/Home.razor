@@ -1,7 +1,63 @@
 ﻿@page "/"
+@rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudContainer Class="mt-8" MaxWidth="MaxWidth.Large">
+    
+    <MudText Typo="Typo.h3" Class="mb-6">Welcome to LBQuiz</MudText>
+    
+    <MudGrid>
+        
+            <MudItem xs="12" md="4">
+                <MudLink Href="/Quiz/Create">
+                    <MudPaper Class="pa-4" Style="height: 250px">
+                        <MudText Typo="Typo.h6" Class="mb-3">Create Quizzes</MudText>
+                        <MudText>Build custom quizzes and share them with others.</MudText>
+                    </MudPaper>
+                </MudLink>
+            </MudItem>
+        
+            <MudItem xs="12" md="4">
+                <MudLink Href="/viewquiz" >
+                    <MudPaper Class="pa-4" Style="height: 250px">
+                        <MudText Typo="Typo.h6" Class="mb-3">Take Quizzes</MudText>
+                        <MudText>Start quizzes as a host and let other join for a live quiz session.</MudText>
+                    </MudPaper>
+                </MudLink>
+            </MudItem>
+        
+        <MudItem xs="12" md="4">
+            <MudLink Href="/lobby/join">
+                <MudPaper Class="pa-4" Style="height: 250px">
+                    <MudText Typo="Typo.h6" Class="mb-3">Anonymous Access</MudText>
+                    <MudText>No login required as a participant.</MudText>
+                </MudPaper>
+            </MudLink>
+        </MudItem>
 
-Welcome to your new app.
+        <MudItem xs="12" md="4">
+            <MudLink Href="/lobby/create">
+                <MudPaper Class="pa-4" Style="height: 250px">
+                    <MudText Typo="Typo.h6" Class="mb-3">Create Lobby</MudText>
+                    <MudText>Create a new lobby with an existing quiz.</MudText>
+                </MudPaper>
+            </MudLink>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudLink Href="/quiz/question/choose">
+                <MudPaper Class="pa-4" Style="height: 250px">
+                    <MudText Typo="Typo.h6" Class="mb-3">Create Questions</MudText>
+                    <MudText>Choose a Quiz to make questions</MudText>
+                </MudPaper>
+            </MudLink>
+        </MudItem>
+
+    </MudGrid>
+
+</MudContainer>
+
+@code {
+    
+}

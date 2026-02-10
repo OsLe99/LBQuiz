@@ -1,0 +1,32 @@
+@page "/lobby/join"
+@inject NavigationManager Navigation
+@inject ILobbyHubConnection LobbyHub
+@inject ILobbyService LobbyService
+@using LBQuiz.Services.Interfaces
+@using LBQuiz.Models.Lobby
+
+<h3>JoinLobby</h3>
+
+<MudTextField InputType="InputType.Text" @bind-Value="_joinCode">6 digit join code</MudTextField>
+<MudTextField InputType="InputType.Text" @bind-Value="_nickName">Nickname</MudTextField>
+<MudButton @onclick="AddUser">Join lobby</MudButton>
+
+
+@code {
+    private string _joinCode = string.Empty;    
+    private string _nickName = string.Empty;
+    private QuizLobby _quizLobby;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LobbyHub.InitializeAsync(Navigation);
+    }
+
+    public async Task AddUser()
+    {
+        await LobbyHub.JoinLobbyAsync(_joinCode, _nickName);
+        var quizLobby = await LobbyService.GetLobbyByJoinCodeAsync(_joinCode);
+
+        Navigation.NavigateTo($"/quiz/{quizLobby.QuizId}/{quizLobby.Id}");
+    }
+}

@@ -1,0 +1,79 @@
+﻿@page "/quiz/{QuizId:int}/question/create"
+@inject ApplicationDbContext _dbcontext
+@using LBQuiz.Models;
+@using Microsoft.EntityFrameworkCore
+@using Data
+
+<h3>Create Question</h3>
+
+<MudForm @ref="_questionForm" OnValidSubmit="SaveQuestion">
+
+    <MudTextField @bind-Value="_questionText"
+                  Label="Question"
+                  Variant="Variant.Filled"
+                  Required="true"
+                  For="@(() => _questionText)" />
+
+    <MudTextField @bind-Value="_correctAnswer"
+                  Label="Correct Answer"
+                  Variant="Variant.Filled"
+                  Required="true"
+                  For="@(() => _correctAnswer)" />
+
+    <MudNumericField @bind-Value="_questionPoints"
+                     Label="Points"
+                     Variant="Variant.Filled"
+                     Min="0"
+                     Max="1000"
+                     For="@(() => _questionPoints)" />
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
+
+</MudForm>
+
+@code {
+    ///quiz/1/question/create
+    [Parameter] public int QuizId { get; set; }
+
+    private MudForm _questionForm;
+
+    private string _questionText { get; set; } = string.Empty;
+    private string _correctAnswer { get; set; } = string.Empty;
+    private int _questionPoints { get; set; } = 1000;
+
+    private async Task SaveQuestion()
+    {
+        await _questionForm.Validate();
+
+
+        if (!_questionForm.IsValid)
+        {
+            // Implementera error vid fel värden i form
+            return;
+        }
+
+        var nextSortOrder = await _dbcontext.Question
+            .Where(q => q.QuizId == QuizId)
+            .Select(q => (int?)q.SortOrder)
+            .MaxAsync() ?? 0;
+
+        var newQuestion = new QuestionOpen
+        {
+            QuizId = QuizId,
+            QuestionText = _questionText,
+            CorrectAnswer = _correctAnswer,
+            Points = _questionPoints,
+            SortOrder = nextSortOrder + 1
+        };
+
+        _dbcontext.Question.Add(newQuestion);
+        try
+        {
+            await _dbcontext.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred while saving the question: {ex.Message}");
+        }
+    }
+}

@@ -1,0 +1,27 @@
+﻿@page "/lobby"
+@using Microsoft.AspNetCore.SignalR.Client
+@using Models.Lobby
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+
+
+<h3>QuizLobby</h3>
+
+
+
+@code {
+    private HubConnection? hub;
+    private List<LobbyParticipant> _userList = new List<LobbyParticipant>();
+    
+
+    protected override void OnInitialized()
+    {
+        hub = new HubConnectionBuilder()
+            .WithUrl(Nav.ToAbsoluteUri("/chathub"))
+            .WithAutomaticReconnect()
+            .Build();
+    }
+
+
+}

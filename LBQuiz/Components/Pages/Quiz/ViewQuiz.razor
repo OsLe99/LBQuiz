@@ -1,0 +1,113 @@
+﻿@page "/viewquiz"
+@using LBQuiz.Models
+@using Data
+<h3>ViewQuiz</h3>
+
+@if(SelectedQuiz != null)
+{
+
+    @* @foreach(var question in AllQuestions)
+    {
+        int order = question.SortOrder;
+        string answear = "";
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Style="height: 250px; background-color: antiquewhite; border: 1px solid black">
+                <MudText Typo="Typo.h6" Class="mb-3">@question.QuestionText</MudText>
+                <MudTextField @bind-Value="IdAnswer[order]" Label="Answer" Variant="Variant.Outlined"></MudTextField>
+                <MudButton @onclick="@(() => CheckAnswer(order))" >Save</MudButton>
+                <MudText>@IdAnswer.GetValueOrDefault(order)</MudText>
+            </MudPaper>
+        </MudItem>
+    } *@
+    
+    var selectedQuestion = AllQuestions[_index];
+    int order = selectedQuestion.SortOrder;
+    string answear = "";
+    if (_index == AllQuestions.Count - 1)
+    {
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Style="height: 250px; background-color: antiquewhite; border: 1px solid black">
+                @foreach (var questions in AllQuestions)
+                {
+                    if (questions is QuestionOpen openQuestion && openQuestion.CorrectAnswer  == IdAnswer[questions.SortOrder])
+                    {
+                        <MudText>Correct</MudText>
+                        <MudText>Points: @questions.Points</MudText>
+                        _score += questions.Points;
+                    }
+                    else
+                    {
+                        <MudText>False</MudText>
+                    }
+
+                    _maxScore += questions.Points;
+                }
+                <MudText>Total points: @_score out of maximum @_maxScore</MudText>
+            </MudPaper>
+        </MudItem>
+    }
+
+    if (_index != AllQuestions.Count - 1)
+    {
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Style="height: auto; background-color: antiquewhite; border: 1px solid black">
+                <MudText Typo="Typo.h6" Class="mb-3">@selectedQuestion.QuestionText</MudText>
+                <MudTextField @bind-Value="IdAnswer[order]" Label="Answer" Variant="Variant.Outlined"></MudTextField>
+                <MudButton @onclick="@(() => CheckAnswer(order))">Save</MudButton>
+                <MudText>@IdAnswer.GetValueOrDefault(order)</MudText>
+            </MudPaper>
+        </MudItem>
+    }
+}
+
+@code {
+    public Models.Quiz SelectedQuiz { get; set; }
+    private int _quizId { get; set; } = 7;
+    public List<Models.Question> AllQuestions { get; set; }
+    private readonly ApplicationDbContext _dbContext;
+    private Dictionary<int, string> IdAnswer = new Dictionary<int, string>();
+    private string _answer { get; set; }
+    private int _index = 0;
+    private int _score = 0;
+    private int _maxScore = 0;
+
+    public ViewQuiz(ApplicationDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+
+    protected override void OnInitialized()
+    {
+        //Change from First to Id from SelectedQuiz
+        var selectedQuiz = _dbContext.Quiz.FirstOrDefault(q => q.Id == _quizId);
+        if(selectedQuiz != null)
+        {
+            SelectedQuiz = selectedQuiz;
+        }
+        GetAllQuestionsFromQuiz().GetAwaiter().GetResult();
+        foreach(var q in AllQuestions)
+        {
+            IdAnswer[q.SortOrder] = "";
+        }
+    }
+
+
+
+    private async Task GetAllQuestionsFromQuiz()
+    {
+        var questions = _dbContext.Question.Where(q => q.QuizId == _quizId).ToList();
+
+        if(questions != null)
+        {
+            AllQuestions = questions;
+        }
+    }
+    private void CheckAnswer(int order)
+    {
+        var answer = IdAnswer[order];
+        if (_index != (AllQuestions.Count() - 1)) _index++;
+        
+       
+    }
+}
