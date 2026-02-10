@@ -21,7 +21,7 @@ public class LobbyService : ILobbyService
 
         if (!quizExists)
         {
-            // Error handling here
+            throw new ArgumentException($"Quiz with id {quizId} does not exist", nameof(quizId));
         }
         
         var joinCode = await GenerateUniqueJoinCodeAsync();
