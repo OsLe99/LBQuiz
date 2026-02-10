@@ -1,0 +1,90 @@
+name: Manual .NET Build
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [open]
+    branches:
+      - master
+      - dev
+
+jobs:
+  print-runtime-context:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Start build process...
+        run: echo "Build process has started."
+
+      - name: Show runtime context
+        run: |
+          echo "Runner OS: ${{ runner.os }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Triggered by: ${{ github.event.name }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "Run number: ${{ github.run_number }}"
+          echo "Branch: ${{ github.ref }}"
+
+  build-project:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5.0.0
+
+      - name: Install .NET 10
+        uses: actions/setup@v5.0.0
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build project
+        run: |
+          dotnet build
+      
+      - name: Failed to build
+        if: failure()
+        run: echo "Failed to build project."
+
+      - name: Run tests
+        if: sucess()
+        run: |
+          dotnet test LBQuiz.Test/LBQuiz.Test.csproj \
+            --logger "trx;LogFileName=test-results.trx" \
+             --logger "console;verbosity=detailed" \
+             --results-directory ./TestResults
+
+      - name: Parse test results
+        if: always()
+        id: test-results
+        run: |
+          if [ -f ./TestResults/test-results.trx ]; then
+            TOTAL=$(grep -o 'total="[0-9]*"' ./TestResults/test-results.trx | grep -o '[0-9]*' | head -1)
+            PASSED=$(grep -o 'passed="[0-9]*"' ./TestResults/test-results.trx | grep -o '[0-9]*' | head -1)
+            FAILED=$(grep -o 'failed="[0-9]*"' ./TestResults/test-results.trx | grep -o '[0-9]*' | head -1)
+            
+            echo "total=$TOTAL" >> $GITHUB_OUTPUT
+            echo "passed=$PASSED" >> $GITHUB_OUTPUT
+            echo "failed=$FAILED" >> $GITHUB_OUTPUT
+          else
+            echo "total=0" >> $GITHUB_OUTPUT
+            echo "passed=0" >> $GITHUB_OUTPUT
+            echo "failed=0" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Send results to discord
+        if: always()
+        uses: stegzilla/discord-notify@v4
+        with:
+          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          title: "🧪 Test Results"
+          message: |
+            **Total Tests:** ${{ steps.test-results.outputs.total }}
+            **Passed:** ✅ ${{ steps.test-results.outputs.passed }}
+            **Failed:** ❌ ${{ steps.test-results.outputs.failed }}
+            
+            **PR:** [View Pull Request](${{ github.event.pull_request.html_url }})
+            **Branch:** ${{ github.head_ref }} → ${{ github.base_ref }}
+          colour: ${{ steps.test-results.outputs.failed == '0' && '#00FF00' || '#FF0000' }}
+          username: ${{ github.event.pull_request.user.login || github.actor}}
+          avatar_url: ${{ github.event.pull_request.user.avatar_url || format('https://github.com/{0}.png', github.actor)}}
