@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Start build process...
-        run: echo "Build process has started."
+        run: echo "Build process has started.."
 
       - name: Show runtime context
         run: |
