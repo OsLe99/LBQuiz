@@ -64,6 +64,20 @@ public class GetParticipantsTests
         // Assert
         Assert.NotNull(result);
         Assert.Single(result);
-        Assert.True(participant1.Nickname ==  result[0].Nickname);
+        Assert.Equal(participant1.Nickname, result[0].Nickname);
+    }
+
+    [Fact]
+    public void GetParticipants_Null_ShouldReturnEmptyList()
+    {
+        // Arrange
+        var manager = new LobbyParticipantManager();
+        
+        // Act
+        var result = manager.GetParticipants(0);
+        
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
     }
 }
