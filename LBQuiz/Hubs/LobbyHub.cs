@@ -89,11 +89,6 @@ namespace LBQuiz.Hubs
         
         public async Task JoinLobbyAsHost(int lobbyId)
         {
-            // var lobby = await _lobbyService.GetLobbyByIdAsync(lobbyId);
-            // if (lobby == null)
-            // {
-            //     throw new HubException("Lobby not found");
-            // }
             // Join group as host but not as a participant
             await EnsureIsHostAsync(lobbyId);
             await Groups.AddToGroupAsync(Context.ConnectionId, lobbyId.ToString());
