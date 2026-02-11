@@ -41,7 +41,8 @@ public class LobbyService : ILobbyService
 
     public async Task<QuizLobby?> GetLobbyByJoinCodeAsync(string joinCode)
     {
-        return await _db.QuizLobby.FirstOrDefaultAsync(q => q.JoinCode == joinCode && q.IsActive);
+        var normalizedJoinCode = joinCode.ToUpperInvariant();
+        return await _db.QuizLobby.FirstOrDefaultAsync(q => q.JoinCode == normalizedJoinCode && q.IsActive);
     }
     
     public async Task<QuizLobby?> GetLobbyByIdAsync(int lobbyId)
