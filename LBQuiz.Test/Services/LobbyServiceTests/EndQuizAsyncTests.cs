@@ -1,11 +1,11 @@
 ﻿using LBQuiz.Data;
-using LBQuiz.Services;
 using LBQuiz.Models.Lobby;
+using LBQuiz.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace LBQuiz.Test.Services.LobbyServiceTests;
 
-public class GetLobbyByIdAsyncTests
+public class EndQuizAsyncTests
 {
     private ApplicationDbContext CreateInMemoryContext()
     {
@@ -16,7 +16,7 @@ public class GetLobbyByIdAsyncTests
     }
 
     [Fact]
-    public async Task GetLobbyByIdAsync_WithValidId_ShouldReturnLobby()
+    public async Task EndQuizAsync_WithExistingLobby_ShouldSetIsActiveToFalse()
     {
         // Arrange
         await using var context = CreateInMemoryContext();
@@ -25,91 +25,69 @@ public class GetLobbyByIdAsyncTests
             Id = 1,
             JoinCode = "ABC123",
             QuizHostId = "host123",
-            IsActive = true
+            IsActive = true,
         };
         context.Add(lobby);
         await context.SaveChangesAsync();
-        
-        var service = new LobbyService(context);
+        var lobbyService = new LobbyService(context);
         
         // Act
-        var result = await service.GetLobbyByIdAsync(1);
+        var result = lobbyService.EndQuizAsync(1);
+        await lobbyService.EndQuizAsync(1);
         
         // Assert
         Assert.NotNull(result);
         Assert.Equal(1, result.Id);
-    }
-    
-    [Fact]
-    public async Task GetLobbyByIdAsync_WithInvalidId_ShouldReturnNull()
-    {
-        // Arrange
-        await using var context = CreateInMemoryContext();
-        var lobby = new QuizLobby
-        {
-            Id = 1,
-            JoinCode = "ABC123",
-            QuizHostId = "host123",
-            IsActive = true
-        };
-        context.Add(lobby);
-        await context.SaveChangesAsync();
-        
-        var service = new LobbyService(context);
-        
-        // Act
-        var result = await service.GetLobbyByIdAsync(2);
-        
-        // Assert
-        Assert.Null(result);
+        var updatedLobby = await context.QuizLobby.FindAsync(1);
+        Assert.NotNull(updatedLobby);
+        Assert.False(updatedLobby.IsActive);
     }
 
     [Fact]
-    public async Task GetLobbyByIdAsync_MultipleLobbies_ShouldReturnCorrectLobby()
+    public async Task EndQuizAsync_ShouldNotAffectOtherLobbies()
     {
         // Arrange
         await using var context = CreateInMemoryContext();
         var lobby1 = new QuizLobby
         {
             Id = 1,
-            QuizId = 1,
             JoinCode = "ABC123",
             QuizHostId = "host123",
-            IsActive = true
+            IsActive = true,
         };
         var lobby2 = new QuizLobby
         {
             Id = 2,
-            QuizId = 2,
             JoinCode = "DEF123",
             QuizHostId = "host456",
             IsActive = true
         };
+        
         context.AddRange(lobby1, lobby2);
         await context.SaveChangesAsync();
         
-        var service = new LobbyService(context);
+        var lobbyService = new LobbyService(context);
         
         // Act
-        var result = await service.GetLobbyByIdAsync(1);
+        var result = lobbyService.EndQuizAsync(1);
+        await lobbyService.EndQuizAsync(1);
         
         // Assert
         Assert.NotNull(result);
         Assert.Equal(1, result.Id);
-        Assert.Equal(1, result.QuizId);
-        Assert.Equal("ABC123", result.JoinCode);
-        Assert.Equal("host123", result.QuizHostId);
+        var updatedLobby = await context.QuizLobby.FindAsync(1);
+        Assert.NotNull(updatedLobby);
+        Assert.False(updatedLobby.IsActive);
     }
 
     [Fact]
-    public async Task GetLobbyById_InactiveLobby_ShouldReturnLobby()
+    public async Task EndQuizAsync_WithAlreadyInactiveLobby_ShouldRemainInactive()
     {
         // Arrange
         await using var context = CreateInMemoryContext();
         var lobby = new QuizLobby
         {
             Id = 1,
-            QuizId = 1,
             JoinCode = "ABC123",
             QuizHostId = "host123",
             IsActive = false
@@ -117,17 +95,24 @@ public class GetLobbyByIdAsyncTests
         context.Add(lobby);
         await context.SaveChangesAsync();
         
-        var service = new LobbyService(context);
+        var lobbyService = new LobbyService(context);
         
         // Act
-        var result = await service.GetLobbyByIdAsync(1);
+        await lobbyService.EndQuizAsync(1);
         
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(1, result.Id);
-        Assert.Equal(1, result.QuizId);
-        Assert.Equal("ABC123", result.JoinCode);
-        Assert.Equal("host123", result.QuizHostId);
-        Assert.False(result.IsActive);
+        var updatedLobby = await context.QuizLobby.FindAsync(1);
+        Assert.False(updatedLobby?.IsActive);
+    }
+    
+    [Fact]
+    public async Task EndQuizAsync_NonExistentLobby_ShouldNotThrow()
+    {
+        // Arrange
+        await using var context = CreateInMemoryContext();
+        var lobbyService = new LobbyService(context);
+        
+        // Act & Assert
+        await lobbyService.EndQuizAsync(1);
     }
 }

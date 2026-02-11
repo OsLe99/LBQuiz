@@ -1,6 +1,5 @@
 ﻿using LBQuiz.Services;
 using LBQuiz.Data;
-using LBQuiz.Models;
 using LBQuiz.Models.Lobby;
 using Microsoft.EntityFrameworkCore;
 
