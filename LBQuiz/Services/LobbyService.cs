@@ -21,7 +21,7 @@ public class LobbyService : ILobbyService
 
         if (!quizExists)
         {
-            // Error handling here
+            throw new ArgumentException($"Quiz with id {quizId} does not exist", nameof(quizId));
         }
         
         var joinCode = await GenerateUniqueJoinCodeAsync();
@@ -41,7 +41,8 @@ public class LobbyService : ILobbyService
 
     public async Task<QuizLobby?> GetLobbyByJoinCodeAsync(string joinCode)
     {
-        return await _db.QuizLobby.FirstOrDefaultAsync(q => q.JoinCode == joinCode && q.IsActive);
+        var normalizedJoinCode = joinCode.ToUpperInvariant();
+        return await _db.QuizLobby.FirstOrDefaultAsync(q => q.JoinCode == normalizedJoinCode && q.IsActive);
     }
     
     public async Task<QuizLobby?> GetLobbyByIdAsync(int lobbyId)
