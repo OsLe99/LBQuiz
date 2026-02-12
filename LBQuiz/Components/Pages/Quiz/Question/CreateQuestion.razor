@@ -113,12 +113,12 @@ else if (picked == "Multiple Picker")
         @for (int i = 0; i < _numberOfOptions; i++)
         {
             var index = i;
-            <MudTextField @bind-Value="_multipleOptions[index].Text"
+            <MudTextField @bind-Value="_multipleOptions[index].AnswerText"
                               Label="Option"
                               Variant="Variant.Filled"
                               Required="true" />
 
-                <MudCheckBox @bind-Value="_multipleOptions[index].CorrectFalse"
+                <MudCheckBox @bind-Value="_multipleOptions[index].IsCorrectAnswer"
                              Color="Color.Primary" />
             
         }
@@ -138,13 +138,13 @@ else if (picked == "Multiple Picker")
     private string _questionText { get; set; } = string.Empty;
     private string _correctAnswer { get; set; } = string.Empty;
     private int _questionPoints { get; set; }
-    public List<string> questionTypes = new() { "Open Question", "Slider", "Multiple Picker"};
+    public List<string> questionTypes = new() { "Open Question", "Slider", "Multiple Picker" };
     public string picked { get; set; }
     private int _minValue;
     private int _maxValue;
     private int? _correctValue;
     private int _numberOfOptions = 0;
-    private List<MultipleOptions> _multipleOptions = new();
+    private List<MultipleChoiceAnswer> _multipleOptions = new();
 
     private async Task SaveQuestion()
     {
@@ -174,9 +174,6 @@ else if (picked == "Multiple Picker")
             await QuestionManager.CreateMultipleChoiceQuestion(QuizId, _questionPoints, _questionText, _multipleOptions);
         }
 
-
-
-
         try
         {
             await _dbcontext.SaveChangesAsync();
@@ -187,14 +184,11 @@ else if (picked == "Multiple Picker")
         }
     }
 
-
-
-
     private void UpdateMultipleOptions()
     { 
         _multipleOptions = Enumerable
         .Range(0, _numberOfOptions)
-        .Select(_ => new MultipleOptions()).ToList(); 
+        .Select(_ => new MultipleChoiceAnswer()).ToList(); 
     }
 
     

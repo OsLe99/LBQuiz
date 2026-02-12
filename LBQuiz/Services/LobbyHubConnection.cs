@@ -22,7 +22,7 @@ namespace LBQuiz.Services
         public event Func<int, Task>? OnQuestionChanged;
 
         public event Func<bool, List<LobbyParticipant>, Task>? OnResultShow;
-        public event Func<int, int, LobbyParticipant, Task>? OnShowSliderValueToHost;
+        public event Func<int, int, LobbyParticipant, string, Task>? OnShowSliderValueToHost;
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
@@ -139,11 +139,11 @@ namespace LBQuiz.Services
                 await _hubConnection.StopAsync();
             });
 
-            _hubConnection.On<int, int, LobbyParticipant>("SliderAnswerSubmit", async (sliderValue, quizId, participant) =>
+            _hubConnection.On<int, int, LobbyParticipant, string>("SliderAnswerSubmit", async (sliderValue, quizId, participant, questionText) =>
             {
                 if (OnShowSliderValueToHost != null)
                 {
-                    await OnShowSliderValueToHost.Invoke(sliderValue, quizId, participant);
+                    await OnShowSliderValueToHost.Invoke(sliderValue, quizId, participant, questionText);
                 }
             });
 
@@ -230,11 +230,11 @@ namespace LBQuiz.Services
                 await _hubConnection.InvokeAsync("EndQuiz", lobbyId);
             }
         }
-        public async Task SubmitSliderAnswer(int lobbyId, int sliderValue, int quizId)
+        public async Task SubmitSliderAnswer(int lobbyId, int sliderValue, int quizId, string questionText)
         {
             if(_hubConnection != null)
             {
-                await _hubConnection.InvokeAsync("SubmitSliderAnswer", lobbyId, sliderValue, quizId);
+                await _hubConnection.InvokeAsync("SubmitSliderAnswer", lobbyId, sliderValue, quizId, questionText);
             }
         }
 

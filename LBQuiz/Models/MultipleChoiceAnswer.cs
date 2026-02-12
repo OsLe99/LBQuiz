@@ -5,7 +5,7 @@ namespace LBQuiz.Models
     public class MultipleChoiceAnswer
     {
         public int Id { get; set; }
-    
+
         [Required]
         public int QuestionId { get; set; }
     

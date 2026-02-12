@@ -76,7 +76,7 @@ else
     private List<LobbyParticipant> _userList = new();
     private List<(LobbyParticipant Participant, string Answer)> _submittedAnswers = new();
     private int _questionIndex = 0;
-    private List<QuestionOpen> AllQuestions = new();
+    private List<QuestionJsonBlob> AllQuestions = new();
     private int? _score = 0;
     private List<string> particapantSliderList = new();
 
@@ -107,7 +107,7 @@ else
 
     private async Task GetAllQuestionsFromQuiz()
     {
-        var questions = _dbContext.QuestionOpen.Where(q => q.QuizId == int.Parse(quizId)).ToList();
+        var questions = _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == int.Parse(quizId)).ToList();
 
         if (questions != null)
         {
@@ -180,9 +180,9 @@ else
         }
         await InvokeAsync(StateHasChanged);
     }
-    private async Task HandleSliderValue(int sliderValue, int quizId, LobbyParticipant lobbyParticipant)
+    private async Task HandleSliderValue(int sliderValue, int quizId, LobbyParticipant lobbyParticipant, string questionText)
     {
-        string sliderText = lobbyParticipant.Nickname + " set their slidervalue to: " + sliderValue;
+        string sliderText = questionText + " : " + lobbyParticipant.Nickname + " set their slidervalue to: " + sliderValue;
         
         particapantSliderList.Add(sliderText);
         await InvokeAsync(StateHasChanged);

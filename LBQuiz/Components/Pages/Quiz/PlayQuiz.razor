@@ -35,9 +35,13 @@
             <MudPaper Class="pa-4" Style="height: 250px">
                 <MudText Typo="Typo.h2" Class="mb-3">@questionSlider.QuestionText</MudText>
                 <MudSlider @bind-Value="sliderValue" Min="@questionSlider.MinValue" Max="@questionSlider.MaxValue">Value: @sliderValue.ToString()</MudSlider>
-                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAnswerSlider"></MudButton>
+                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAnswerSlider">Submit answer</MudButton>
             </MudPaper>
         </MudItem>
+    }
+    else if(CurrentQuestion2 != null && CurrentQuestion2 is QuestionMultiple questionMultiple)
+    {
+        
     }
 }
 else
@@ -107,7 +111,7 @@ else
     public async Task SaveAnswerSlider()
     {
         //Todo: gör en hubconnection metod som skickar en sträng om vad användaren svarde till host...
-        await HubConnection.SubmitSliderAnswer(int.Parse(lobbyId), sliderValue, int.Parse(quizId));
+        await HubConnection.SubmitSliderAnswer(int.Parse(lobbyId), sliderValue, int.Parse(quizId), CurrentQuestion2.QuestionText);
     }
 
     public async Task FillList(string viewString)
@@ -170,8 +174,14 @@ else
             }
             else if (questionType == "Multiple")
             {
-                var question = JsonSerializer.Deserialize<MultipleOptions>(CurrentQuestion.Blob);
-                CurrentQuestion2 = question!;
+                //Plocka ut questionId för att leta upp var vi ska stoppa objekten
+                var questions = JsonSerializer.Deserialize<List<MultipleChoiceAnswer>>(CurrentQuestion.Blob);
+                int questionId = questions[0].QuestionId;
+                CurrentQuestion2 = await QuestionManager.GetQuestionMultipleFromQuestionIdAsync(questionId);
+                foreach(var q in questions)
+                {
+                    
+                }
             }
 
         }

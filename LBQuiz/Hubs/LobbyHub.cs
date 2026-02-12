@@ -174,14 +174,13 @@ namespace LBQuiz.Hubs
                 _lobbyParticipantManager.RemoveParticipantByConnectionId(participant.ConnectionId);
             }
         }
-        public async Task SubmitSliderAnswer(int lobbyId, int sliderValue, int quizId)
+        public async Task SubmitSliderAnswer(int lobbyId, int sliderValue, int quizId, string questionText)
         {
             var participant = _lobbyParticipantManager.GetLobbyParticipant(Context.ConnectionId);
             if (participant != null)
             {
                 // Send a consistent server-to-client event name and payload
-                await Clients.Group(participant.LobbyId.ToString()).SendAsync("SliderAnswerSubmit", sliderValue, quizId, participant);
-                Console.WriteLine("LobbyHub : " + participant.LobbyId);
+                await Clients.Group(participant.LobbyId.ToString()).SendAsync("SliderAnswerSubmit", sliderValue, quizId, participant, questionText);
             }
         }
 

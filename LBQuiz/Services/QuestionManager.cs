@@ -82,9 +82,24 @@ namespace LBQuiz.Services
             await _dbContext.SaveChangesAsync();
 
         }
-        public async Task CreateMultipleChoiceQuestion(int quizId, int questionPoints, string questionText, List<MultipleOptions> multiple)
+        public async Task CreateMultipleChoiceQuestion(int quizId, int questionPoints, string questionText, List<MultipleChoiceAnswer> multiple)
         {
-            //Skicka med en sträng innan Serializer med vilken modell objektet tillhör. För att lättare veta hur det ska deserialiseras. Split string senare
+            //Måste skapa en QuestionMultiple först innan vi kan spara, behöver quizId till MultipleChoicAnswer
+            var sO = await GetSortOrderAsync(quizId);
+            var multipleQuestion = new QuestionMultiple() { 
+                QuestionText = questionText,
+                QuizId = quizId,
+                Points = questionPoints,
+                SortOrder = sO,
+                AllAnswers = new List<MultipleChoiceAnswer>() };
+            _dbContext.QuestionMultiple.Add(multipleQuestion);
+            await _dbContext.SaveChangesAsync();
+            var questionId = multipleQuestion.Id;
+            foreach(var q in multiple)
+            {
+                q.QuestionId = questionId;
+            }
+
             var jsonBlob = new QuestionJsonBlob()
             {
                 QuizId = quizId,
@@ -107,7 +122,7 @@ namespace LBQuiz.Services
         }
         public async Task<QuestionJsonBlob> GetQuestionJsonBlobAsync(int quizId)
         {
-            return _dbContext.QuestionJsonBlobs.Where(q => quizId == quizId).SingleOrDefault();
+            return _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).SingleOrDefault();
         } 
 
         public async Task<string> GetQuestionTypeStringAsync(QuestionJsonBlob question)
@@ -119,6 +134,11 @@ namespace LBQuiz.Services
         public async Task<List<QuestionJsonBlob>> GetAllQuestionJsonBlobAsync(int quizId)
         {
             return await _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToListAsync();
+        }
+
+        public async Task<QuestionMultiple> GetQuestionMultipleFromQuestionIdAsync(int questionId)
+        {
+            return await _dbContext.QuestionMultiple.Include(q => q.AllAnswers).FirstOrDefaultAsync(q => q.Id == questionId);
         }
     }
 }

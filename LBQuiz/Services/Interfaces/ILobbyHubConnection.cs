@@ -17,14 +17,14 @@ namespace LBQuiz.Services.Interfaces
         event Func<string, LobbyParticipant, Task>? OnAnswerRecieved;
         event Func<bool, List<LobbyParticipant>, Task>? OnResultShow;
         event Func<string, Models.QuestionOpen, LobbyParticipant, Task>? OnCalculateScoreBoard;
-        event Func<int, int, LobbyParticipant, Task>? OnShowSliderValueToHost;
+        event Func<int, int, LobbyParticipant, string, Task>? OnShowSliderValueToHost;
         Task SubmitAnswer(int lobbyId, string answer, int quizId);
         Task UpdateScoreBoard(Models.Question question, string answer);
         Task GoToNextQuestionAsync(int questionIndex, int lobbyId);
         Task GoToPreviousQuestionAsync(int questionIndex, int lobbyId);
         Task GoToResultsAsync(bool showResults, int lobbyId, List<LobbyParticipant> lobbyScore);
         Task EndQuizAsync(int lobbyId);
-        Task SubmitSliderAnswer(int lobbyId, int sliderValue, int quizId);
+        Task SubmitSliderAnswer(int lobbyId, int sliderValue, int quizId, string questionText);
 
 
     }
