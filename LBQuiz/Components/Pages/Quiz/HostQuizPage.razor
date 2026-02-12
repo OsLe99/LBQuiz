@@ -51,6 +51,12 @@ else
                         - @user.Nickname - @user.Score points
                     </li>
                 }
+                @foreach (var text in particapantSliderList)
+                {
+                    <li>
+                        <p>@text</p>
+                    </li>
+                }
             </ul>
         </div>
     </div>
@@ -72,6 +78,7 @@ else
     private int _questionIndex = 0;
     private List<QuestionOpen> AllQuestions = new();
     private int? _score = 0;
+    private List<string> particapantSliderList = new();
 
 
     public HostQuizPage(ApplicationDbContext dbContext)
@@ -95,6 +102,7 @@ else
         LobbyHub.OnQuestionChanged += HandleNextQuestion;
         LobbyHub.OnAnswerRecieved += HandleAnswerRecieved;
         LobbyHub.OnCalculateScoreBoard += HandleScoreUpdate;
+        LobbyHub.OnShowSliderValueToHost += HandleSliderValue;
     }
 
     private async Task GetAllQuestionsFromQuiz()
@@ -162,7 +170,7 @@ else
         _submittedAnswers.Add((participant, answer));
         await InvokeAsync(StateHasChanged);
     }
-    
+
     private async Task HandleScoreUpdate(string answer, QuestionOpen question, LobbyParticipant participant)
     {
         var existing = _userList.FirstOrDefault(p => p.ConnectionId == participant.ConnectionId);
@@ -170,6 +178,13 @@ else
         {
             existing.Score = participant.Score;
         }
+        await InvokeAsync(StateHasChanged);
+    }
+    private async Task HandleSliderValue(int sliderValue, int quizId, LobbyParticipant lobbyParticipant)
+    {
+        string sliderText = lobbyParticipant.Nickname + " set their slidervalue to: " + sliderValue;
+        
+        particapantSliderList.Add(sliderText);
         await InvokeAsync(StateHasChanged);
     }
 }

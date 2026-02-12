@@ -49,7 +49,8 @@ namespace LBQuiz.Services
             {
                 QuizId = quizId,
                 QuestionText = questionText,
-                Blob = json
+                Blob = json,
+                QuestionType = "Open"
 
             };
             _dbContext.QuestionJsonBlobs.Add(blob);
@@ -74,7 +75,8 @@ namespace LBQuiz.Services
             {
                 QuizId = quizId,
                 QuestionText = questionText,
-                Blob = json
+                Blob = json,
+                QuestionType = "Slider"
             };
             _dbContext.QuestionJsonBlobs.Add(blob);
             await _dbContext.SaveChangesAsync();
@@ -87,7 +89,8 @@ namespace LBQuiz.Services
             {
                 QuizId = quizId,
                 QuestionText = questionText,
-                Blob = JsonSerializer.Serialize(multiple)
+                Blob = JsonSerializer.Serialize(multiple),
+                QuestionType = "Multiple"
                 
             };
             if(jsonBlob != null)
@@ -96,14 +99,26 @@ namespace LBQuiz.Services
                 await _dbContext.SaveChangesAsync();
             }
         }
-
-
-
         public async Task<int> GetSortOrderAsync(int quizId)
         {
             int sOrder = _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToList().Count + 1;
             return sOrder;
 
+        }
+        public async Task<QuestionJsonBlob> GetQuestionJsonBlobAsync(int quizId)
+        {
+            return _dbContext.QuestionJsonBlobs.Where(q => quizId == quizId).SingleOrDefault();
+        } 
+
+        public async Task<string> GetQuestionTypeStringAsync(QuestionJsonBlob question)
+        {
+            return question.QuestionType;
+            
+            
+        }
+        public async Task<List<QuestionJsonBlob>> GetAllQuestionJsonBlobAsync(int quizId)
+        {
+            return await _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToListAsync();
         }
     }
 }

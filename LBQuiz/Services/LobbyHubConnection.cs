@@ -22,6 +22,7 @@ namespace LBQuiz.Services
         public event Func<int, Task>? OnQuestionChanged;
 
         public event Func<bool, List<LobbyParticipant>, Task>? OnResultShow;
+        public event Func<int, int, LobbyParticipant, Task>? OnShowSliderValueToHost;
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
@@ -93,7 +94,6 @@ namespace LBQuiz.Services
                     {
                         await OnAnswerRecieved.Invoke(answer, participant);
                     }
-                    
                 });
 
             _hubConnection.On<Models.QuestionOpen, string, Models.Lobby.LobbyParticipant>("ScoreBoardCalculated",
@@ -137,6 +137,14 @@ namespace LBQuiz.Services
             {
                 navigation.NavigateTo("/");
                 await _hubConnection.StopAsync();
+            });
+
+            _hubConnection.On<int, int, LobbyParticipant>("SliderAnswerSubmit", async (sliderValue, quizId, participant) =>
+            {
+                if (OnShowSliderValueToHost != null)
+                {
+                    await OnShowSliderValueToHost.Invoke(sliderValue, quizId, participant);
+                }
             });
 
             await _hubConnection.StartAsync();
@@ -183,7 +191,7 @@ namespace LBQuiz.Services
                 await _hubConnection.InvokeAsync("ReceiveSubmittedAnswer", answer, lobbyId.ToString(), quizId);
             }
         }
-        public async Task UpdateScoreBoard(Models.QuestionOpen Question, string answer)
+        public async Task UpdateScoreBoard(Models.Question Question, string answer)
         {
             if(_hubConnection != null)
             {
@@ -220,6 +228,13 @@ namespace LBQuiz.Services
             if (_hubConnection != null)
             {
                 await _hubConnection.InvokeAsync("EndQuiz", lobbyId);
+            }
+        }
+        public async Task SubmitSliderAnswer(int lobbyId, int sliderValue, int quizId)
+        {
+            if(_hubConnection != null)
+            {
+                await _hubConnection.InvokeAsync("SubmitSliderAnswer", lobbyId, sliderValue, quizId);
             }
         }
 

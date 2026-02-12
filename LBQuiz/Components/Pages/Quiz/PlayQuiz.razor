@@ -1,9 +1,11 @@
 ﻿@using LBQuiz.Models
+@using LBQuiz.Models.Helpers
 @using Data
 @using Services.Interfaces
 @using System.Collections.Concurrent;
 @using LBQuiz.Models.Lobby
 @using LBQuiz.Hubs
+@using System.Text.Json
 @inject ApplicationDbContext DbContext
 @inject IQuestionManager QuestionManager
 @inject ILobbyHubService LobbyHub
@@ -17,13 +19,23 @@
 
 @if (_showResults == false)
 {
-    @if(CurrentQuestion != null)
+    @if(CurrentQuestion2 != null && CurrentQuestion2 is QuestionOpen questionOpen)
     {
         <MudItem xs="12" md="4">
             <MudPaper Class="pa-4" Style="height: 250px">
-                <MudText Typo="Typo.h2" Class="mb-3">@CurrentQuestion.QuestionText</MudText>
+                <MudText Typo="Typo.h2" Class="mb-3">@questionOpen.QuestionText</MudText>
                 <MudTextField @bind-Value="Answer" Label="Answer" Variant="Variant.Filled"></MudTextField>
-                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAnswer">Submit answer</MudButton>
+                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAnswerOpen">Submit answer</MudButton>
+            </MudPaper>
+        </MudItem>
+    }
+    else if (CurrentQuestion2 != null && CurrentQuestion2 is QuestionSlider questionSlider)
+    {
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Style="height: 250px">
+                <MudText Typo="Typo.h2" Class="mb-3">@questionSlider.QuestionText</MudText>
+                <MudSlider @bind-Value="sliderValue" Min="@questionSlider.MinValue" Max="@questionSlider.MaxValue">Value: @sliderValue.ToString()</MudSlider>
+                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAnswerSlider"></MudButton>
             </MudPaper>
         </MudItem>
     }
@@ -47,9 +59,9 @@ else
     [Parameter]
     public string lobbyId { get; set; }
 
-    public Models.QuestionOpen CurrentQuestion { get; set; }
-
-    public List<Models.QuestionOpen> AllQuestions { get; set; }
+    public Models.QuestionJsonBlob CurrentQuestion { get; set; }
+    public Models.Question CurrentQuestion2 { get; set; }
+    public List<Models.QuestionJsonBlob> AllQuestions { get; set; }
 
     private int _index = 0;
     private int? _score = 0;
@@ -60,11 +72,13 @@ else
     public List<Models.Lobby.LobbyParticipant> ParticipantsList { get; set; } = new List<Models.Lobby.LobbyParticipant>();
     public List<string> AllAnswers = new();
 
+    public int sliderValue { get; set; }
 
-    protected override void OnInitialized()
+
+    protected override async Task OnInitializedAsync()
     {
         int qId = int.Parse(quizId);
-        AllQuestions = QuestionManager.GetAllQuestionFromQuizId(qId);
+        AllQuestions = await QuestionManager.GetAllQuestionJsonBlobAsync(qId);
 
         ParticipantsList = LobbyManager.GetLeaderboard(int.Parse(lobbyId));
         HubConnection.OnAnswerRecieved += HandleAnswerReceived;
@@ -72,19 +86,28 @@ else
         HubConnection.OnResultShow += HandleShowResults;
 
         CurrentQuestion = AllQuestions[_index];
+
+        await GetQuestionType();
+
         if (_index < (AllQuestions.Count))
         {
             _index++;
         }
     }
 
-    public async Task SaveAnswer()
+    public async Task SaveAnswerOpen()
     {
         //Ska kalla på service
         await HubConnection.SubmitAnswer(int.Parse(lobbyId), Answer, int.Parse(quizId));
         //Borde skicka med viken user som svarade
-        await HubConnection.UpdateScoreBoard(CurrentQuestion, Answer);
+        await HubConnection.UpdateScoreBoard(CurrentQuestion2, Answer);
         answerButtonShow = true;
+    }
+
+    public async Task SaveAnswerSlider()
+    {
+        //Todo: gör en hubconnection metod som skickar en sträng om vad användaren svarde till host...
+        await HubConnection.SubmitSliderAnswer(int.Parse(lobbyId), sliderValue, int.Parse(quizId));
     }
 
     public async Task FillList(string viewString)
@@ -120,6 +143,7 @@ else
         answerButtonShow = false;
         _index = questionIndex;
         CurrentQuestion = AllQuestions[_index];
+        await GetQuestionType();
         await InvokeAsync(StateHasChanged);
     }
 
@@ -128,5 +152,32 @@ else
         ParticipantsList = scoreBoard.OrderByDescending(p => p.Score).ToList();
         _showResults = showResults;
         await InvokeAsync(StateHasChanged);
+    }
+    private async Task GetQuestionType()
+    {
+        string questionType = await QuestionManager.GetQuestionTypeStringAsync(CurrentQuestion);
+        try
+        {
+            if (questionType == "Open")
+            {
+                var question = JsonSerializer.Deserialize<QuestionOpen>(CurrentQuestion.Blob);
+                CurrentQuestion2 = question!;
+            }
+            else if (questionType == "Slider")
+            {
+                var question = JsonSerializer.Deserialize<QuestionSlider>(CurrentQuestion.Blob);
+                CurrentQuestion2 = question!;
+            }
+            else if (questionType == "Multiple")
+            {
+                var question = JsonSerializer.Deserialize<MultipleOptions>(CurrentQuestion.Blob);
+                CurrentQuestion2 = question!;
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Failed to deserialize object: " + ex);
+        }
     }
 }
