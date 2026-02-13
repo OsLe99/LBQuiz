@@ -113,12 +113,12 @@ else if (picked == "Multiple Picker")
         @for (int i = 0; i < _numberOfOptions; i++)
         {
             var index = i;
-            <MudTextField @bind-Value="_multipleOptions[index].AnswerText"
+            <MudTextField @bind-Value="_multipleOptions[index].QuestionText"
                               Label="Option"
                               Variant="Variant.Filled"
                               Required="true" />
 
-                <MudCheckBox @bind-Value="_multipleOptions[index].IsCorrectAnswer"
+                <MudCheckBox @bind-Value="_multipleOptions[index].QuestionText"
                              Color="Color.Primary" />
             
         }

@@ -97,7 +97,7 @@ namespace LBQuiz.Services
             var questionId = multipleQuestion.Id;
             foreach(var q in multiple)
             {
-                q.QuestionId = questionId;
+                q.Id = questionId;
             }
 
             var jsonBlob = new QuestionJsonBlob()

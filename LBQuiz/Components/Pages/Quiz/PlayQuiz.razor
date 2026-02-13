@@ -39,9 +39,22 @@
             </MudPaper>
         </MudItem>
     }
-    else if(CurrentQuestion2 != null && CurrentQuestion2 is QuestionMultiple questionMultiple)
+    else if(CurrentQuestion2 != null && CurrentQuestion2 is MultipleChoiceAnswer questionMultiple)
     {
-        
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Style="height: 250px">
+                <MudText Typo="Typo.h2" Class="mb-3">@questionMultiple.QuestionText</MudText>
+                @foreach(var option in questionMultiple.MultipleOptionsList)
+                {
+                    
+                    <MudLink OnClick="() => OnClickChangeColor()">
+                        <MudPaper Style=@($"background:{_colorString}")>
+                            <MudText Typo="Typo.h2" Class="mb-3">@option.Text</MudText>
+                        </MudPaper>
+                    </MudLink>
+                }
+            </MudPaper>
+        </MudItem>
     }
 }
 else
@@ -77,6 +90,8 @@ else
     public List<string> AllAnswerss = new();
 
     public int sliderValue { get; set; }
+
+    private string _colorString { get; set; } = "rgba(255,0,0,0.4)";
 
 
     protected override async Task OnInitializedAsync()
@@ -174,20 +189,35 @@ else
             }
             else if (questionType == "Multiple")
             {
-                //Plocka ut questionId för att leta upp var vi ska stoppa objekten
-                var questions = JsonSerializer.Deserialize<List<MultipleChoiceAnswer>>(CurrentQuestion.Blob);
-                int questionId = questions[0].QuestionId;
-                CurrentQuestion2 = await QuestionManager.GetQuestionMultipleFromQuestionIdAsync(questionId);
-                foreach(var q in questions)
-                {
-                    
-                }
-            }
+                var options = JsonSerializer.Deserialize<List<MultipleOptions>>(CurrentQuestion.Blob);
+                //Lagt till colorsting i MultipleChoiceAnswer
+                CurrentQuestion2 = new MultipleChoiceAnswer
+                    {
+                        Id = CurrentQuestion.Id,
+                        QuizId = CurrentQuestion.QuizId,
+                        QuestionText = CurrentQuestion.QuestionText,
+                        Points = 1000,
+                        SortOrder = 0,
+                        MultipleOptionsList = options!
 
+                    };
+            }
         }
         catch (Exception ex)
         {
             Console.WriteLine("Failed to deserialize object: " + ex);
         }
+    }
+    public void OnClickChangeColor()
+    {
+        if (_colorString == "rgba(0,255,0,0.4)")
+        {
+            _colorString = "rgba(255,0,0,0.4)";
+        }
+        else if (_colorString == "rgba(255,0,0,0.4)")
+        {
+            _colorString = "rgba(0,255,0,0.4)";
+        }
+        
     }
 }
