@@ -74,7 +74,7 @@ else
     private bool _showResults = false;
 
     public List<Models.Lobby.LobbyParticipant> ParticipantsList { get; set; } = new List<Models.Lobby.LobbyParticipant>();
-    public List<string> AllAnswers = new();
+    public List<string> AllAnswerss = new();
 
     public int sliderValue { get; set; }
 
@@ -116,7 +116,7 @@ else
 
     public async Task FillList(string viewString)
     {
-        AllAnswers.Add(viewString);
+        AllAnswerss.Add(viewString);
     }
 
     private Task HandleAnswerReceived(string answer, Models.Lobby.LobbyParticipant lobbyParticipant)

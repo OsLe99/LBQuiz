@@ -128,8 +128,6 @@ namespace LBQuiz.Services
         public async Task<string> GetQuestionTypeStringAsync(QuestionJsonBlob question)
         {
             return question.QuestionType;
-            
-            
         }
         public async Task<List<QuestionJsonBlob>> GetAllQuestionJsonBlobAsync(int quizId)
         {
@@ -138,7 +136,7 @@ namespace LBQuiz.Services
 
         public async Task<QuestionMultiple> GetQuestionMultipleFromQuestionIdAsync(int questionId)
         {
-            return await _dbContext.QuestionMultiple.Include(q => q.AllAnswers).FirstOrDefaultAsync(q => q.Id == questionId);
+            return await _dbContext.QuestionMultiple.Where(q => q.Id == questionId).FirstOrDefaultAsync();
         }
     }
 }

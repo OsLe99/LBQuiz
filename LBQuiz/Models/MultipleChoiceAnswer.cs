@@ -2,7 +2,7 @@
 
 namespace LBQuiz.Models
 {
-    public class MultipleChoiceAnswer
+    public class MultipleChoiceAnswer : Question
     {
         public int Id { get; set; }
 
