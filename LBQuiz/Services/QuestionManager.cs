@@ -82,24 +82,17 @@ namespace LBQuiz.Services
             await _dbContext.SaveChangesAsync();
 
         }
-        public async Task CreateMultipleChoiceQuestion(int quizId, int questionPoints, string questionText, List<MultipleChoiceAnswer> multiple)
+        public async Task CreateMultipleChoiceQuestion(int quizId, int questionPoints, string questionText, List<MultipleOptions> multiple)
         {
             //Måste skapa en QuestionMultiple först innan vi kan spara, behöver quizId till MultipleChoicAnswer
             var sO = await GetSortOrderAsync(quizId);
-            var multipleQuestion = new QuestionMultiple() { 
-                QuestionText = questionText,
+            var multipleQuestion = new Models.MultipleChoiceAnswer() { 
                 QuizId = quizId,
+                QuestionText = questionText,
                 Points = questionPoints,
-                SortOrder = sO,
-                AllAnswers = new List<MultipleChoiceAnswer>() };
-            _dbContext.QuestionMultiple.Add(multipleQuestion);
-            await _dbContext.SaveChangesAsync();
-            var questionId = multipleQuestion.Id;
-            foreach(var q in multiple)
-            {
-                q.Id = questionId;
-            }
-
+                SortOrder= sO,
+                MultipleOptionsList = multiple
+            };
             var jsonBlob = new QuestionJsonBlob()
             {
                 QuizId = quizId,

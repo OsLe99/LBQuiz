@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Collections.Concurrent;
 using LBQuiz.Hubs;
+using LBQuiz.Models.Helpers;
 
 namespace LBQuiz.Services
 {
@@ -23,6 +24,7 @@ namespace LBQuiz.Services
 
         public event Func<bool, List<LobbyParticipant>, Task>? OnResultShow;
         public event Func<int, int, LobbyParticipant, string, Task>? OnShowSliderValueToHost;
+        public event Func<LobbyParticipant, int, List<MultipleOptions>, List<MultipleOptions>, Task>? OnShowMultipleAnswersToHost;
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
@@ -146,6 +148,13 @@ namespace LBQuiz.Services
                     await OnShowSliderValueToHost.Invoke(sliderValue, quizId, participant, questionText);
                 }
             });
+            _hubConnection.On<LobbyParticipant, int, List<MultipleOptions>, List<MultipleOptions>>("MultipleAnswersSubmits", async (participant, quizId, options, participantAnswers) =>
+            {
+                if(OnShowMultipleAnswersToHost != null)
+                {
+                    await OnShowMultipleAnswersToHost.Invoke(participant, quizId, options, participantAnswers);
+                }
+            });
 
             await _hubConnection.StartAsync();
         }
@@ -237,7 +246,15 @@ namespace LBQuiz.Services
                 await _hubConnection.InvokeAsync("SubmitSliderAnswer", lobbyId, sliderValue, quizId, questionText);
             }
         }
+        public async Task SubmitMulitpleAnswers(int lobbyId, int quizId, List<MultipleOptions> options, List<MultipleOptions> participantAnswers)
+        {
+            if(_hubConnection != null)
+            {
+                await _hubConnection.InvokeAsync("SubmitMultipleAnswers", lobbyId, quizId, options, participantAnswers);
+            }
+        }
 
-        
+
+
     }
 }

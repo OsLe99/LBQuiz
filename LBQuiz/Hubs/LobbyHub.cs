@@ -1,4 +1,5 @@
 using LBQuiz.Models;
+using LBQuiz.Models.Helpers;
 using LBQuiz.Models.Lobby;
 using LBQuiz.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -181,6 +182,15 @@ namespace LBQuiz.Hubs
             {
                 // Send a consistent server-to-client event name and payload
                 await Clients.Group(participant.LobbyId.ToString()).SendAsync("SliderAnswerSubmit", sliderValue, quizId, participant, questionText);
+            }
+        }
+
+        public async Task SubmitMultipleAnswers(int lobbyid, int quizId, List<MultipleOptions> options, List<MultipleOptions> participantAnswers)
+        {
+            var participant = _lobbyParticipantManager.GetLobbyParticipant(Context.ConnectionId);
+            if (participant != null)
+            {
+                await Clients.Group(participant.LobbyId.ToString()).SendAsync("MultipleAnswersSubmits", participant, quizId, options, participantAnswers);
             }
         }
 

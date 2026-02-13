@@ -47,12 +47,13 @@
                 @foreach(var option in questionMultiple.MultipleOptionsList)
                 {
                     
-                    <MudLink OnClick="() => OnClickChangeColor()">
-                        <MudPaper Style=@($"background:{_colorString}")>
+                    <MudLink OnClick="() => OnClickChangeColor(option)">
+                        <MudPaper Style=@($"background:{option.ColorString}")>
                             <MudText Typo="Typo.h2" Class="mb-3">@option.Text</MudText>
                         </MudPaper>
                     </MudLink>
                 }
+                <MudButton OnClick="() => SubmitMultipleAnswers(questionMultiple.MultipleOptionsList)">Submit answers</MudButton>
             </MudPaper>
         </MudItem>
     }
@@ -92,6 +93,7 @@ else
     public int sliderValue { get; set; }
 
     private string _colorString { get; set; } = "rgba(255,0,0,0.4)";
+    public List<MultipleOptions> ParticipantAnswers = new();
 
 
     protected override async Task OnInitializedAsync()
@@ -112,6 +114,15 @@ else
         {
             _index++;
         }
+        if(CurrentQuestion2 is MultipleChoiceAnswer multiple)
+        {
+            ParticipantAnswers = multiple.MultipleOptionsList;
+        }
+        foreach(var pA in ParticipantAnswers)
+        {
+            pA.CorrectFalse = false;
+        }
+
     }
 
     public async Task SaveAnswerOpen()
@@ -189,17 +200,16 @@ else
             }
             else if (questionType == "Multiple")
             {
+                int so = await QuestionManager.GetSortOrderAsync(int.Parse(quizId));
                 var options = JsonSerializer.Deserialize<List<MultipleOptions>>(CurrentQuestion.Blob);
-                //Lagt till colorsting i MultipleChoiceAnswer
                 CurrentQuestion2 = new MultipleChoiceAnswer
                     {
                         Id = CurrentQuestion.Id,
                         QuizId = CurrentQuestion.QuizId,
                         QuestionText = CurrentQuestion.QuestionText,
-                        Points = 1000,
-                        SortOrder = 0,
+                        Points = 0,
+                        SortOrder = so,
                         MultipleOptionsList = options!
-
                     };
             }
         }
@@ -208,16 +218,26 @@ else
             Console.WriteLine("Failed to deserialize object: " + ex);
         }
     }
-    public void OnClickChangeColor()
+    public void OnClickChangeColor(MultipleOptions option)
     {
-        if (_colorString == "rgba(0,255,0,0.4)")
+        if (option.ColorString == "rgba(0,255,0,0.4)")
         {
-            _colorString = "rgba(255,0,0,0.4)";
+            option.ColorString = "rgba(255,0,0,0.4)";
         }
-        else if (_colorString == "rgba(255,0,0,0.4)")
+        else if (option.ColorString == "rgba(255,0,0,0.4)")
         {
-            _colorString = "rgba(0,255,0,0.4)";
+            option.ColorString = "rgba(0,255,0,0.4)";
         }
-        
+        //Fyll ParticipantAnswers med svar direkt så att alla har ett instansvärde
+        var result = ParticipantAnswers.Where(x => x.Text == option.Text).FirstOrDefault();
+        if(result != null)
+        {
+            result.CorrectFalse = option.ColorString == "rgba(0,255,0,0.4)" ? true : false;
+        }
+
+    }
+    public async Task SubmitMultipleAnswers(List<MultipleOptions> options)
+    {
+        await HubConnection.SubmitMulitpleAnswers(int.Parse(lobbyId), int.Parse(quizId), ParticipantAnswers, options);
     }
 }

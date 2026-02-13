@@ -1,7 +1,8 @@
 @using LBQuiz.Services.Interfaces
 @using LBQuiz.Hubs
-@using LBQuiz.Models.Lobby
 @using LBQuiz.Models
+@using LBQuiz.Models.Lobby
+@using LBQuiz.Models.Helpers
 @using Microsoft.EntityFrameworkCore
 @using LBQuiz.Data
 @inject ILobbyHubConnection LobbyHub
@@ -57,6 +58,12 @@ else
                         <p>@text</p>
                     </li>
                 }
+                @foreach (var text in _multipleAnswersList)
+                {
+                    <li>
+                        <p>@text</p>
+                    </li>
+                }
             </ul>
         </div>
     </div>
@@ -79,6 +86,7 @@ else
     private List<QuestionJsonBlob> AllQuestions = new();
     private int? _score = 0;
     private List<string> particapantSliderList = new();
+    private List<string> _multipleAnswersList = new();
 
 
     public HostQuizPage(ApplicationDbContext dbContext)
@@ -103,6 +111,7 @@ else
         LobbyHub.OnAnswerRecieved += HandleAnswerRecieved;
         LobbyHub.OnCalculateScoreBoard += HandleScoreUpdate;
         LobbyHub.OnShowSliderValueToHost += HandleSliderValue;
+        LobbyHub.OnShowMultipleAnswersToHost += HandleMultipleAnswers;
     }
 
     private async Task GetAllQuestionsFromQuiz()
@@ -183,8 +192,22 @@ else
     private async Task HandleSliderValue(int sliderValue, int quizId, LobbyParticipant lobbyParticipant, string questionText)
     {
         string sliderText = questionText + " : " + lobbyParticipant.Nickname + " set their slidervalue to: " + sliderValue;
-        
+
         particapantSliderList.Add(sliderText);
+        await InvokeAsync(StateHasChanged);
+    }
+    private async Task HandleMultipleAnswers(LobbyParticipant participant, int quizId, List<MultipleOptions> options, List<MultipleOptions> participantAnswers)
+    {
+        int numberOfCorrectAnswers = 0;
+        for(int i = 0; i < options.Count; i++)
+        {
+            if(options[i].CorrectFalse == participantAnswers[i].CorrectFalse)
+            {
+                numberOfCorrectAnswers++;
+            }
+        }
+        var text = $"{participant.Nickname} - got {numberOfCorrectAnswers} out of {options.Count}";
+        _multipleAnswersList.Add(text);
         await InvokeAsync(StateHasChanged);
     }
 }
