@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Collections.Concurrent;
 using LBQuiz.Hubs;
+using LBQuiz.Models.Helpers;
 
 namespace LBQuiz.Services
 {
@@ -22,6 +23,8 @@ namespace LBQuiz.Services
         public event Func<int, Task>? OnQuestionChanged;
 
         public event Func<bool, List<LobbyParticipant>, Task>? OnResultShow;
+        public event Func<int, int, LobbyParticipant, string, Task>? OnShowSliderValueToHost;
+        public event Func<LobbyParticipant, int, List<MultipleOptions>, int, Task>? OnShowMultipleAnswersToHost;
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
@@ -93,7 +96,6 @@ namespace LBQuiz.Services
                     {
                         await OnAnswerRecieved.Invoke(answer, participant);
                     }
-                    
                 });
 
             _hubConnection.On<Models.QuestionOpen, string, Models.Lobby.LobbyParticipant>("ScoreBoardCalculated",
@@ -137,6 +139,21 @@ namespace LBQuiz.Services
             {
                 navigation.NavigateTo("/");
                 await _hubConnection.StopAsync();
+            });
+
+            _hubConnection.On<int, int, LobbyParticipant, string>("SliderAnswerSubmit", async (sliderValue, quizId, participant, questionText) =>
+            {
+                if (OnShowSliderValueToHost != null)
+                {
+                    await OnShowSliderValueToHost.Invoke(sliderValue, quizId, participant, questionText);
+                }
+            });
+            _hubConnection.On<LobbyParticipant, int, List<MultipleOptions>, int>("MultipleAnswersSubmits", async (participant, quizId, participantAnswers, questionId) =>
+            {
+                if(OnShowMultipleAnswersToHost != null)
+                {
+                    await OnShowMultipleAnswersToHost.Invoke(participant, quizId, participantAnswers, questionId);
+                }
             });
 
             await _hubConnection.StartAsync();
@@ -183,7 +200,7 @@ namespace LBQuiz.Services
                 await _hubConnection.InvokeAsync("ReceiveSubmittedAnswer", answer, lobbyId.ToString(), quizId);
             }
         }
-        public async Task UpdateScoreBoard(Models.QuestionOpen Question, string answer)
+        public async Task UpdateScoreBoard(Models.Question Question, string answer)
         {
             if(_hubConnection != null)
             {
@@ -222,7 +239,22 @@ namespace LBQuiz.Services
                 await _hubConnection.InvokeAsync("EndQuiz", lobbyId);
             }
         }
+        public async Task SubmitSliderAnswer(int lobbyId, int sliderValue, int quizId, string questionText)
+        {
+            if(_hubConnection != null)
+            {
+                await _hubConnection.InvokeAsync("SubmitSliderAnswer", lobbyId, sliderValue, quizId, questionText);
+            }
+        }
+        public async Task SubmitMulitpleAnswers(int lobbyId, int quizId, List<MultipleOptions> participantAnswers, int questionId)
+        {
+            if(_hubConnection != null)
+            {
+                await _hubConnection.InvokeAsync("SubmitMultipleAnswers", lobbyId, quizId, participantAnswers, questionId);
+            }
+        }
 
-        
+
+
     }
 }

@@ -1,8 +1,10 @@
-using System.Security.Claims;
+using LBQuiz.Models;
+using LBQuiz.Models.Helpers;
 using LBQuiz.Models.Lobby;
-using Microsoft.AspNetCore.SignalR;
 using LBQuiz.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
+using System.Security.Claims;
 
 namespace LBQuiz.Hubs
 {
@@ -168,6 +170,25 @@ namespace LBQuiz.Hubs
                 _lobbyParticipantManager.RemoveParticipantByConnectionId(participant.ConnectionId);
             }
         }
-        
+        public async Task SubmitSliderAnswer(int lobbyId, int sliderValue, int quizId, string questionText)
+        {
+            var participant = _lobbyParticipantManager.GetLobbyParticipant(Context.ConnectionId);
+            if (participant != null)
+            {
+                // Send a consistent server-to-client event name and payload
+                await Clients.Group(participant.LobbyId.ToString()).SendAsync("SliderAnswerSubmit", sliderValue, quizId, participant, questionText);
+            }
+        }
+
+        public async Task SubmitMultipleAnswers(int lobbyid, int quizId, List<MultipleOptions> participantAnswers, int questionId)
+        {
+            var participant = _lobbyParticipantManager.GetLobbyParticipant(Context.ConnectionId);
+            if (participant != null)
+            {
+                await Clients.Group(participant.LobbyId.ToString()).SendAsync("MultipleAnswersSubmits", participant, quizId, participantAnswers, questionId);
+            }
+        }
+
+
     }
 }

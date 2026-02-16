@@ -1,11 +1,14 @@
 @using LBQuiz.Services.Interfaces
 @using LBQuiz.Hubs
-@using LBQuiz.Models.Lobby
 @using LBQuiz.Models
+@using LBQuiz.Models.Lobby
+@using LBQuiz.Models.Helpers
 @using Microsoft.EntityFrameworkCore
 @using LBQuiz.Data
+@using System.Text.Json
 @inject ILobbyHubConnection LobbyHub
 @inject ILobbyParticipantManager LobbyManager
+@inject IQuestionManager questionManager
 
 
 @page "/quiz/host/{quizId}/{lobbyId}"
@@ -51,6 +54,18 @@ else
                         - @user.Nickname - @user.Score points
                     </li>
                 }
+                @foreach (var text in particapantSliderList)
+                {
+                    <li>
+                        <p>@text</p>
+                    </li>
+                }
+                @foreach (var text in _multipleAnswersList)
+                {
+                    <li>
+                        <p>@text</p>
+                    </li>
+                }
             </ul>
         </div>
     </div>
@@ -70,8 +85,10 @@ else
     private List<LobbyParticipant> _userList = new();
     private List<(LobbyParticipant Participant, string Answer)> _submittedAnswers = new();
     private int _questionIndex = 0;
-    private List<QuestionOpen> AllQuestions = new();
+    private List<QuestionJsonBlob> AllQuestions = new();
     private int? _score = 0;
+    private List<string> particapantSliderList = new();
+    private List<string> _multipleAnswersList = new();
 
 
     public HostQuizPage(ApplicationDbContext dbContext)
@@ -95,11 +112,13 @@ else
         LobbyHub.OnQuestionChanged += HandleNextQuestion;
         LobbyHub.OnAnswerRecieved += HandleAnswerRecieved;
         LobbyHub.OnCalculateScoreBoard += HandleScoreUpdate;
+        LobbyHub.OnShowSliderValueToHost += HandleSliderValue;
+        LobbyHub.OnShowMultipleAnswersToHost += HandleMultipleAnswers;
     }
 
     private async Task GetAllQuestionsFromQuiz()
     {
-        var questions = _dbContext.QuestionOpen.Where(q => q.QuizId == int.Parse(quizId)).ToList();
+        var questions = _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == int.Parse(quizId)).ToList();
 
         if (questions != null)
         {
@@ -162,7 +181,7 @@ else
         _submittedAnswers.Add((participant, answer));
         await InvokeAsync(StateHasChanged);
     }
-    
+
     private async Task HandleScoreUpdate(string answer, QuestionOpen question, LobbyParticipant participant)
     {
         var existing = _userList.FirstOrDefault(p => p.ConnectionId == participant.ConnectionId);
@@ -170,6 +189,32 @@ else
         {
             existing.Score = participant.Score;
         }
+        await InvokeAsync(StateHasChanged);
+    }
+    private async Task HandleSliderValue(int sliderValue, int quizId, LobbyParticipant lobbyParticipant, string questionText)
+    {
+        string sliderText = questionText + " : " + lobbyParticipant.Nickname + " set their slidervalue to: " + sliderValue;
+
+        particapantSliderList.Add(sliderText);
+        await InvokeAsync(StateHasChanged);
+    }
+    private async Task HandleMultipleAnswers(LobbyParticipant participant, int quizId, List<MultipleOptions> participantAnswers, int questionId)
+    {
+        int numberOfCorrectAnswers = 0;
+        
+        var question = await questionManager.GetQuestionJsonBlobFromQuestionIdAsync(questionId);
+        var optionsList = JsonSerializer.Deserialize<List<MultipleOptions>>(question.Blob);
+        foreach(var result in optionsList)
+        {
+            foreach(var partAns in participantAnswers)
+            {
+                if(partAns.Text == result.Text)
+                {
+                    if (partAns.CorrectFalse == result.CorrectFalse) numberOfCorrectAnswers++;
+                }
+            }
+        }
+        _multipleAnswersList.Add($"{participant.Nickname} got {numberOfCorrectAnswers} correct answers out of {optionsList.Count}");
         await InvokeAsync(StateHasChanged);
     }
 }
