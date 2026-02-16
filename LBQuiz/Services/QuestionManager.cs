@@ -131,5 +131,9 @@ namespace LBQuiz.Services
         {
             return await _dbContext.QuestionMultiple.Where(q => q.Id == questionId).FirstOrDefaultAsync();
         }
+        public async Task<QuestionJsonBlob> GetQuestionJsonBlobFromQuestionIdAsync(int questionId)
+        {
+            return await _dbContext.QuestionJsonBlobs.Where(q => q.Id == questionId).SingleOrDefaultAsync();
+        }
     }
 }

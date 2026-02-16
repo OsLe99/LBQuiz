@@ -24,7 +24,7 @@ namespace LBQuiz.Services
 
         public event Func<bool, List<LobbyParticipant>, Task>? OnResultShow;
         public event Func<int, int, LobbyParticipant, string, Task>? OnShowSliderValueToHost;
-        public event Func<LobbyParticipant, int, List<MultipleOptions>, List<MultipleOptions>, Task>? OnShowMultipleAnswersToHost;
+        public event Func<LobbyParticipant, int, List<MultipleOptions>, int, Task>? OnShowMultipleAnswersToHost;
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
@@ -148,11 +148,11 @@ namespace LBQuiz.Services
                     await OnShowSliderValueToHost.Invoke(sliderValue, quizId, participant, questionText);
                 }
             });
-            _hubConnection.On<LobbyParticipant, int, List<MultipleOptions>, List<MultipleOptions>>("MultipleAnswersSubmits", async (participant, quizId, options, participantAnswers) =>
+            _hubConnection.On<LobbyParticipant, int, List<MultipleOptions>, int>("MultipleAnswersSubmits", async (participant, quizId, participantAnswers, questionId) =>
             {
                 if(OnShowMultipleAnswersToHost != null)
                 {
-                    await OnShowMultipleAnswersToHost.Invoke(participant, quizId, options, participantAnswers);
+                    await OnShowMultipleAnswersToHost.Invoke(participant, quizId, participantAnswers, questionId);
                 }
             });
 
@@ -246,11 +246,11 @@ namespace LBQuiz.Services
                 await _hubConnection.InvokeAsync("SubmitSliderAnswer", lobbyId, sliderValue, quizId, questionText);
             }
         }
-        public async Task SubmitMulitpleAnswers(int lobbyId, int quizId, List<MultipleOptions> options, List<MultipleOptions> participantAnswers)
+        public async Task SubmitMulitpleAnswers(int lobbyId, int quizId, List<MultipleOptions> participantAnswers, int questionId)
         {
             if(_hubConnection != null)
             {
-                await _hubConnection.InvokeAsync("SubmitMultipleAnswers", lobbyId, quizId, options, participantAnswers);
+                await _hubConnection.InvokeAsync("SubmitMultipleAnswers", lobbyId, quizId, participantAnswers, questionId);
             }
         }
 

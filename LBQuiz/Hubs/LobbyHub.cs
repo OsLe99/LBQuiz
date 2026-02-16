@@ -185,12 +185,12 @@ namespace LBQuiz.Hubs
             }
         }
 
-        public async Task SubmitMultipleAnswers(int lobbyid, int quizId, List<MultipleOptions> options, List<MultipleOptions> participantAnswers)
+        public async Task SubmitMultipleAnswers(int lobbyid, int quizId, List<MultipleOptions> participantAnswers, int questionId)
         {
             var participant = _lobbyParticipantManager.GetLobbyParticipant(Context.ConnectionId);
             if (participant != null)
             {
-                await Clients.Group(participant.LobbyId.ToString()).SendAsync("MultipleAnswersSubmits", participant, quizId, options, participantAnswers);
+                await Clients.Group(participant.LobbyId.ToString()).SendAsync("MultipleAnswersSubmits", participant, quizId, participantAnswers, questionId);
             }
         }
 

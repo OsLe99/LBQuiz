@@ -5,8 +5,10 @@
 @using LBQuiz.Models.Helpers
 @using Microsoft.EntityFrameworkCore
 @using LBQuiz.Data
+@using System.Text.Json
 @inject ILobbyHubConnection LobbyHub
 @inject ILobbyParticipantManager LobbyManager
+@inject IQuestionManager questionManager
 
 
 @page "/quiz/host/{quizId}/{lobbyId}"
@@ -196,18 +198,23 @@ else
         particapantSliderList.Add(sliderText);
         await InvokeAsync(StateHasChanged);
     }
-    private async Task HandleMultipleAnswers(LobbyParticipant participant, int quizId, List<MultipleOptions> options, List<MultipleOptions> participantAnswers)
+    private async Task HandleMultipleAnswers(LobbyParticipant participant, int quizId, List<MultipleOptions> participantAnswers, int questionId)
     {
         int numberOfCorrectAnswers = 0;
-        for(int i = 0; i < options.Count; i++)
+        
+        var question = await questionManager.GetQuestionJsonBlobFromQuestionIdAsync(questionId);
+        var optionsList = JsonSerializer.Deserialize<List<MultipleOptions>>(question.Blob);
+        foreach(var result in optionsList)
         {
-            if(options[i].CorrectFalse == participantAnswers[i].CorrectFalse)
+            foreach(var partAns in participantAnswers)
             {
-                numberOfCorrectAnswers++;
+                if(partAns.Text == result.Text)
+                {
+                    if (partAns.CorrectFalse == result.CorrectFalse) numberOfCorrectAnswers++;
+                }
             }
         }
-        var text = $"{participant.Nickname} - got {numberOfCorrectAnswers} out of {options.Count}";
-        _multipleAnswersList.Add(text);
+        _multipleAnswersList.Add($"{participant.Nickname} got {numberOfCorrectAnswers} correct answers out of {optionsList.Count}");
         await InvokeAsync(StateHasChanged);
     }
 }
