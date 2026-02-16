@@ -15,5 +15,6 @@ namespace LBQuiz.Services.Interfaces
         Task<List<QuestionJsonBlob>> GetAllQuestionJsonBlobAsync(int quizId);
         Task<QuestionMultiple> GetQuestionMultipleFromQuestionIdAsync(int questionId);
         Task<QuestionJsonBlob> GetQuestionJsonBlobFromQuestionIdAsync(int questionId);
+        Task<int> GetNumberOfQuestionInQuizAsync(int quizId);
     }
 }

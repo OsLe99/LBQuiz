@@ -135,5 +135,9 @@ namespace LBQuiz.Services
         {
             return await _dbContext.QuestionJsonBlobs.Where(q => q.Id == questionId).SingleOrDefaultAsync();
         }
+        public async Task<int> GetNumberOfQuestionInQuizAsync(int quizId)
+        {
+            return _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToList().Count;
+        }
     }
 }
