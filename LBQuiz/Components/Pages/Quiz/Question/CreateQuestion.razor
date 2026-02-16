@@ -1,6 +1,7 @@
 ﻿@page "/quiz/{QuizId:int}/question/create"
 @inject ApplicationDbContext _dbcontext
 @inject IQuestionManager QuestionManager
+@inject NavigationManager NavigationManager
 @using LBQuiz.Models;
 @using Microsoft.EntityFrameworkCore
 @using Data
@@ -73,7 +74,7 @@ else if (picked == "Slider")
                          Variant="Variant.Filled"
                          Min="_minValue"
                          Max="_maxValue"
-                         Label="Maximal value">
+                         Label="Correct Value">
 
         </MudNumericField>
 
@@ -119,7 +120,9 @@ else if (picked == "Multiple Picker")
                               Required="true" />
 
                 <MudCheckBox @bind-Value="_multipleOptions[index].CorrectFalse"
-                             Color="Color.Primary" />
+                         CheckedIcon="@Icons.Material.Filled.Bookmark"
+                             Color="Color.Tertiary"
+                             Label="True/False"/>
             
         }
 
@@ -127,6 +130,8 @@ else if (picked == "Multiple Picker")
 
     </MudForm>
 }
+<h6 style="text-decoration: underline; text-align:center; margin-top:20px">Number of Quetions in Quiz: @_numberOfQuestionsInQuiz</h6>
+
 
 
 @code {
@@ -145,6 +150,13 @@ else if (picked == "Multiple Picker")
     private int? _correctValue;
     private int _numberOfOptions = 0;
     private List<MultipleOptions> _multipleOptions = new();
+    private int _numberOfQuestionsInQuiz;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _numberOfQuestionsInQuiz = await QuestionManager.GetNumberOfQuestionInQuizAsync(QuizId);
+        StateHasChanged();
+    }
 
     private async Task SaveQuestion()
     {
@@ -186,6 +198,9 @@ else if (picked == "Multiple Picker")
         {
             Console.WriteLine($"An error occurred while saving the question: {ex.Message}");
         }
+        picked = "";
+        StateHasChanged();
+
     }
 
     private void UpdateMultipleOptions()

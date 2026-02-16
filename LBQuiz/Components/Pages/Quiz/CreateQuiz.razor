@@ -2,6 +2,7 @@
 @using Data
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
 
 
 @using Microsoft.AspNetCore.Components
@@ -69,6 +70,8 @@ else
         {
             await _dbContext.SaveChangesAsync();
             _quizSaved = true;
+            NavigationManager.NavigateTo($"/quiz/{newQuiz.Id}/question/create");
+
         }
         catch (Exception ex)
         {

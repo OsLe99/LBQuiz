@@ -41,21 +41,29 @@
     }
     else if(CurrentQuestion2 != null && CurrentQuestion2 is MultipleChoiceAnswer questionMultiple)
     {
-        <MudItem xs="12" md="4">
+        <MudItem xs="12" md="4" Style="linear-gradient(90deg,rgba(255, 106, 0, 1) 0%, rgba(87, 199, 133, 1) 56%, rgba(0, 0, 0, 1) 100%);">
             <MudPaper Class="pa-4" Style="height: 250px">
                 <MudText Typo="Typo.h2" Class="mb-3">@questionMultiple.QuestionText</MudText>
-                @foreach(var option in questionMultiple.MultipleOptionsList)
-                {
-                    
-                    <MudLink OnClick="() => OnClickChangeColor(option)">
-                        <MudPaper Style=@($"background:{option.ColorString}")>
-                            <MudText Typo="Typo.h2" Class="mb-3">@option.Text</MudText>
-                        </MudPaper>
-                    </MudLink>
-                }
+                
                 <MudButton OnClick="() => SubmitMultipleAnswers(questionMultiple)">Submit answers</MudButton>
             </MudPaper>
         </MudItem>
+        <MudGrid Style="margin-top: 20px;">
+            @foreach (var option in questionMultiple.MultipleOptionsList)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudLink OnClick="() => OnClickChangeColor(option)" Style="text-align: center;">
+                        <MudCard Outlined="true" Class="pa-2">
+                            <MudCardContent Style=@($"background:{option.ColorString}")>
+                                <MudText Typo="Typo.body2">
+                                    @option.Text
+                                </MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudLink>
+                </MudItem>
+            }
+        </MudGrid>
     }
 }
 else
