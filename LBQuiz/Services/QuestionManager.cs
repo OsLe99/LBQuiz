@@ -139,5 +139,55 @@ namespace LBQuiz.Services
         {
             return _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToList().Count;
         }
+
+        //QuestionCrud
+        #region CRUD Operations
+        public async Task<QuestionJsonBlob> UpdateQuestionTextAsync(Question question, string questionText)
+        {
+            var updateQuestion = await _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.QuizId).FirstOrDefaultAsync();
+            if(updateQuestion != null)
+            {
+                updateQuestion.QuestionText = questionText;
+            }
+            _dbContext.QuestionJsonBlobs.Update(updateQuestion);
+            await _dbContext.SaveChangesAsync();
+            return updateQuestion;
+        }
+        public async Task<QuestionJsonBlob> UpdateQuestionPointsAsync(Question question, int points)
+        {
+            var updateQuestion = await _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.QuizId).FirstOrDefaultAsync();
+            if(updateQuestion.QuestionType == "Open")
+            {
+                var openQuestion = JsonSerializer.Deserialize<QuestionOpen>(updateQuestion.Blob);
+                openQuestion.Points = points;
+                var json = JsonSerializer.Serialize(openQuestion);
+                updateQuestion.Blob = json;
+            }
+            if(updateQuestion.QuestionType == "Slider")
+            {
+                var sliderQuestion = JsonSerializer.Deserialize<QuestionSlider>(updateQuestion.Blob);
+                sliderQuestion.Points = points;
+                var json = JsonSerializer.Serialize(sliderQuestion);
+                updateQuestion.Blob = json;
+
+            }
+            if(updateQuestion.QuestionType == "Multiple")
+            {
+                var multipleQuestion = JsonSerializer.Deserialize<QuestionMultiple>(updateQuestion.Blob);
+                multipleQuestion.Points = points;
+                var json = JsonSerializer.Serialize(multipleQuestion);
+                updateQuestion.Blob = json;
+            }
+            return updateQuestion;
+        }
+
+        public async Task DeleteQuestionAsync(Question question)
+        {
+            var deleteQuestion = await _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefaultAsync();
+            _dbContext.Remove(deleteQuestion);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        #endregion
     }
 }
