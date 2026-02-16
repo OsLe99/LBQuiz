@@ -50,13 +50,13 @@
         
         try
         {
-            if (string.IsNullOrEmpty(_joinCode) || _joinCode.Length <= 5)
+            if (_joinCode.Length != 6 || string.IsNullOrEmpty(_joinCode))
             {
                 _errorMessage = "Invalid join code.";
             }
             else if (string.IsNullOrEmpty(_participant.Nickname))
             {
-                _errorMessage = "Invalid nickname";
+                _errorMessage = "Invalid nickname.";
             }
             
             await LobbyHub.JoinLobbyAsync(_joinCode, _participant.Nickname);
