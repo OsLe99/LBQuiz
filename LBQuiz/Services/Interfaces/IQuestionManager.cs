@@ -16,5 +16,10 @@ namespace LBQuiz.Services.Interfaces
         Task<QuestionMultiple> GetQuestionMultipleFromQuestionIdAsync(int questionId);
         Task<QuestionJsonBlob> GetQuestionJsonBlobFromQuestionIdAsync(int questionId);
         Task<int> GetNumberOfQuestionInQuizAsync(int quizId);
+        Task<QuestionJsonBlob> UpdateQuestionTextAsync(Question question, string questionText);
+        Task<QuestionJsonBlob> UpdateQuestionPointsAsync(Question question, int points);
+        Task DeleteQuestionAsync(Question question);
+        Task UpdateSortOrderAsync(int quizId, int oldIndex, int newIndex);
+
     }
 }
