@@ -49,6 +49,7 @@ namespace LBQuiz.Services
             {
                 QuizId = quizId,
                 QuestionText = questionText,
+                SortOrder = question.SortOrder,
                 Blob = json,
                 QuestionType = "Open"
 
@@ -75,6 +76,7 @@ namespace LBQuiz.Services
             {
                 QuizId = quizId,
                 QuestionText = questionText,
+                SortOrder = question.SortOrder,
                 Blob = json,
                 QuestionType = "Slider"
             };
@@ -97,6 +99,7 @@ namespace LBQuiz.Services
             {
                 QuizId = quizId,
                 QuestionText = questionText,
+                SortOrder = multipleQuestion.SortOrder,
                 Blob = JsonSerializer.Serialize(multiple),
                 QuestionType = "Multiple"
                 
@@ -187,6 +190,39 @@ namespace LBQuiz.Services
             _dbContext.Remove(deleteQuestion);
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task UpdateSortOrderAsync(int quizId, int oldIndex, int newIndex)
+        {
+            //List of all questions wich need sortorder updated
+            var allQuestion = await _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToListAsync();
+            foreach(var question in allQuestion)
+            {
+                if (question == null) continue;
+
+                if(question.SortOrder == oldIndex)
+                {
+                    question.SortOrder = newIndex;
+                }
+                else if(oldIndex < newIndex)
+                {
+                    if(question.SortOrder > oldIndex && question.SortOrder <= newIndex)
+                    {
+                        question.SortOrder--;
+                    }
+                }
+                else if(oldIndex > newIndex)
+                {
+                    if(question.SortOrder >= newIndex && question.SortOrder < oldIndex)
+                    {
+                        question.SortOrder++;
+                    }
+                    
+                }                    
+            }
+            await _dbContext.SaveChangesAsync();
+        }
+
+       
 
         #endregion
     }
