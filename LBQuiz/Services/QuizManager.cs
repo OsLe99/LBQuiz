@@ -1,9 +1,11 @@
 ﻿using LBQuiz.Data;
+using LBQuiz.Models;
+using LBQuiz.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace LBQuiz.Services
 {
-    public class QuizManager
+    public class QuizManager : IQuizManager
     {
         private readonly ApplicationDbContext _dbContext;
         public QuizManager(ApplicationDbContext dbContext)
@@ -11,9 +13,9 @@ namespace LBQuiz.Services
             _dbContext = dbContext;
         }
 
-        public async Task CreateQuiz(string questionText, int points)
+        public async Task<List<Quiz>> GetAllQuizesFromHostAsync(string hostId) 
         {
-            //Hämta listan med quesiton och sätt sortOrder till count + 1
+            return await _dbContext.Quiz.Where(q => q.HostId == hostId).ToListAsync();
         }
 
 

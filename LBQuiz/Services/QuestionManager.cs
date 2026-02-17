@@ -221,9 +221,57 @@ namespace LBQuiz.Services
             }
             await _dbContext.SaveChangesAsync();
         }
+        public async Task UpdateQuestionText(Question question)
+        {
+            if(question is Models.QuestionOpen quest)
+            {
+                var textBlob = JsonSerializer.Serialize<QuestionOpen>(quest);
+                var q = new QuestionJsonBlob()
+                {
+                    Id = quest.Id,
+                    QuizId = quest.QuizId,
+                    Blob = textBlob,
+                    QuestionText = quest.QuestionText,
+                    QuestionType = "Open",
+                    SortOrder = quest.SortOrder
+                };
+                _dbContext.Update(q);
+                await _dbContext.SaveChangesAsync();
+            }
+        }
 
-       
+
 
         #endregion
+
+        public async Task<Question> GetQuestionFromBlob(QuestionJsonBlob blob)
+        {
+            if (blob.QuestionType == "Open")
+            {
+                return JsonSerializer.Deserialize<QuestionOpen>(blob.Blob);
+            }
+            if (blob.QuestionType == "Slider")
+            {
+                return JsonSerializer.Deserialize<QuestionSlider>(blob.Blob);
+            }
+            if (blob.QuestionType == "Multiple")
+            {
+                var newBlob = JsonSerializer.Deserialize<List<MultipleOptions>>(blob.Blob);
+                var question = new MultipleChoiceAnswer()
+                {
+                    Id = blob.Id,
+                    QuizId = blob.QuizId,
+                    QuestionText = blob.QuestionText,
+                    Points = 0,
+                    SortOrder = blob.SortOrder,
+                    MultipleOptionsList = newBlob
+                };
+                return question;
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }
