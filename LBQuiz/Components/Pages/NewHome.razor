@@ -52,12 +52,15 @@
             </div>
         </ItemTemplate>
     </MudCarousel>
+    
 </MudContainer>
 
+<CookieBanner Show="_showCookieBanner" OnAccept="HandleCookieAccept"></CookieBanner>
 
 @code {
-    private record CarouselItem(string Title, string Description, string Color);
+    private bool _showCookieBanner = true;
     
+    private record CarouselItem(string Title, string Description, string Color);
     private readonly List<CarouselItem> _carouselItems = new()
     {
         new("Create Quizzes", "Create custom quizzes as a member and share them with others.", "var(--mud-palette-primary)"),
@@ -72,10 +75,9 @@
         return DialogService.ShowAsync<JoinLobby>("JoinLobby");
     }
 
-    private bool _showCookieBanner = true;
-
-    private void AcceptCookies()
+    private async Task HandleCookieAccept()
     {
         _showCookieBanner = false;
+        StateHasChanged();
     }
 }

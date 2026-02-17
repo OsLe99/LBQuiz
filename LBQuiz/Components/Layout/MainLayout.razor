@@ -18,8 +18,11 @@
 
 <MudLayout>
     <MudAppBar Elevation="1">
+        
+        <MudIconButton OnClick="@(() => OpenDrawer())" Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"></MudIconButton>
+        
         <MudText Typo="Typo.h6" Class="ml-3">LBQuiz</MudText>
-        <MudSpacer />
+        <MudSpacer/>
         <AuthorizeView>
             <Authorized>
                 <form method="post" action="/logout" style="display:inline">
@@ -40,7 +43,18 @@
             </NotAuthorized>
         </AuthorizeView>
     </MudAppBar>
-   
+    
+    <MudDrawer @bind-Open="_open" OverlayAutoClose="true" Elevation="1" ClipMode="DrawerClipMode.Docked">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h5">LBQuiz</MudText>
+        </MudDrawerHeader>
+        <MudNavMenu>
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Home">Home</MudNavLink>
+            <MudNavLink Href="/quiz/create" Match="NavLinkMatch.All">Create Quiz</MudNavLink>
+            <MudNavLink Href="/lobby/create" Match="NavLinkMatch.All">Host Quiz</MudNavLink>
+            <MudNavLink Href="/about-us" Match="NavLinkMatch.All">About Us</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
     
     <MudMainContent>
         @Body
@@ -49,4 +63,10 @@
 
 
 @code{
+    private bool _open = false;
+    
+    private void OpenDrawer()
+    {
+        _open = !_open;
+    }
 }

@@ -1,0 +1,26 @@
+﻿
+@if (Show)
+{
+    <MudPaper Elevation="6" Class="pa-4 d-flex align-items-center justify-content-between"
+              Style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999; background-color: #a6b5cc">
+        
+        <MudText Typo="Typo.body1">We use cookies to improve your experience. By using this site, you agree to our cookie policy.</MudText>
+        
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AcceptCookies">Accept Cookies</MudButton>
+    </MudPaper>
+}
+    
+    
+@code {
+    [Parameter] public bool Show { get; set; }
+
+    [Parameter] public EventCallback OnAccept { get; set; }
+
+    private async Task AcceptCookies()
+    {
+        if (OnAccept.HasDelegate)
+        {
+            await OnAccept.InvokeAsync(null);
+        }
+    }
+}
