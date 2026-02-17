@@ -17,14 +17,53 @@
 <h3>Host View</h3>
 @if (_showResults == true)
 {
-    <ul>
-        @foreach (var part in _userList)
+    <MudGrid Class="mb-4">
+        
+        @foreach (var part in _userList.Take(3).Select((p, index) => new {Player= p, Rank = index}))
         {
-            <li>
-                @part.Nickname -- @part.Score points
-            </li>
+            <MudItem xs="4">
+                <MudPaper Class="ps-4 text-center">
+                    <MudText Typo="Typo.h3">@part.Rank</MudText>
+                    <MudText Typo="Typo.h4">@part.Player.Nickname</MudText>
+                    <MudText Typo="Typo.body1" Color="Color.Primary">@part.Player.Score</MudText>
+                </MudPaper>
+            </MudItem>
         }
-    </ul>
+
+    </MudGrid>
+    
+    <MudStack Spacing="2">
+        @foreach (var part in _userList.Skip(3).Select((p, index) => new {Player= p, Rank = index + 4}))
+        {
+            <MudPaper Class="pe-2 d-flex align-items-center">
+                
+                <MudItem xs="4">
+                    
+                    <div style="width: 50px;">
+                        @part.Rank
+                    </div>
+
+                    <div class="flex-grow-1">
+                        @part.Player.Nickname
+                    </div>
+
+                    <div style="width: 100px; text-align: right">
+                        @part.Player.Score
+                    </div>
+
+                </MudItem>
+                
+            </MudPaper>
+        }
+    </MudStack>
+    @* <ul> *@
+    @*     @foreach (var part in _userList) *@
+    @*     { *@
+    @*         <li> *@
+    @*             @part.Nickname -- @part.Score points *@
+    @*         </li> *@
+    @*     } *@
+    @* </ul> *@
     <MudButton OnClick="EndQuiz">End Quiz</MudButton>
 }
 else
@@ -128,7 +167,7 @@ else
 
     private async Task HandleNextQuestion(int questionIndex)
     {
-        //Skapa logik för om man bara har en quetion i ett quiz.
+        //Skapa logik fï¿½r om man bara har en quetion i ett quiz.
         _questionIndex = questionIndex;
         if (_questionIndex == 0) previousButton = true;
         else if (_questionIndex == AllQuestions.Count - 1)

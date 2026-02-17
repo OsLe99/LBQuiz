@@ -87,6 +87,35 @@ namespace LBQuiz.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("LBQuiz.Models.Helpers.MultipleOptions", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ColorString")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("CorrectFalse")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("MultipleChoiceAnswerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MultipleChoiceAnswerId");
+
+                    b.ToTable("MultipleOptions");
+                });
+
             modelBuilder.Entity("LBQuiz.Models.Lobby.QuizLobby", b =>
                 {
                     b.Property<int>("Id")
@@ -116,32 +145,6 @@ namespace LBQuiz.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("QuizLobby");
-                });
-
-            modelBuilder.Entity("LBQuiz.Models.MultipleChoiceAnswer", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AnswerText")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool>("IsCorrectAnswer")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("QuestionId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("QuestionId");
-
-                    b.ToTable("MultipleChoiceAnswer");
                 });
 
             modelBuilder.Entity("LBQuiz.Models.Question", b =>
@@ -373,6 +376,18 @@ namespace LBQuiz.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("LBQuiz.Models.MultipleChoiceAnswer", b =>
+                {
+                    b.HasBaseType("LBQuiz.Models.Question");
+
+                    b.Property<int?>("QuestionMultipleId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("QuestionMultipleId");
+
+                    b.HasDiscriminator().HasValue("MultipleChoiceAnswer");
+                });
+
             modelBuilder.Entity("LBQuiz.Models.QuestionMultiple", b =>
                 {
                     b.HasBaseType("LBQuiz.Models.Question");
@@ -408,15 +423,11 @@ namespace LBQuiz.Migrations
                     b.HasDiscriminator().HasValue("QuestionSlider");
                 });
 
-            modelBuilder.Entity("LBQuiz.Models.MultipleChoiceAnswer", b =>
+            modelBuilder.Entity("LBQuiz.Models.Helpers.MultipleOptions", b =>
                 {
-                    b.HasOne("LBQuiz.Models.QuestionMultiple", "Question")
-                        .WithMany("AllAnswers")
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Question");
+                    b.HasOne("LBQuiz.Models.MultipleChoiceAnswer", null)
+                        .WithMany("MultipleOptionsList")
+                        .HasForeignKey("MultipleChoiceAnswerId");
                 });
 
             modelBuilder.Entity("LBQuiz.Models.Question", b =>
@@ -479,9 +490,21 @@ namespace LBQuiz.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("LBQuiz.Models.MultipleChoiceAnswer", b =>
+                {
+                    b.HasOne("LBQuiz.Models.QuestionMultiple", null)
+                        .WithMany("AllAnswers")
+                        .HasForeignKey("QuestionMultipleId");
+                });
+
             modelBuilder.Entity("LBQuiz.Models.Quiz", b =>
                 {
                     b.Navigation("Questions");
+                });
+
+            modelBuilder.Entity("LBQuiz.Models.MultipleChoiceAnswer", b =>
+                {
+                    b.Navigation("MultipleOptionsList");
                 });
 
             modelBuilder.Entity("LBQuiz.Models.QuestionMultiple", b =>
