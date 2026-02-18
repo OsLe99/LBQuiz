@@ -62,6 +62,51 @@
                     </MudPaper>
                 </MudItem>
             }
+            else if(SelectedQuestion is QuestionSlider questionSlider)
+            {
+                <MudItem>
+                    <MudPaper>
+                        <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;">
+                            <MudText @onclick="() => ToggleOpen()">@questionSlider.QuestionText</MudText>
+                            <MudPopover Open="@_open" Fixed="true" Class="px-6 pt-6">
+                                <div class="d-flex flex-column">
+                                    <MudText>New question-text: </MudText>
+                                    <MudTextField @bind-Value="@questionSlider.QuestionText"></MudTextField>
+                                    <MudInput T="int" @bind-Value="@questionSlider.MinValue" Label="Minimum Value"></MudInput>
+                                    <MudInput T="int" @bind-Value="@questionSlider.MaxValue" Label="Maximum Value"></MudInput>
+                                    <MudInput T="int?" @bind-Value="@questionSlider.CorrectValue" Label="Set a correct value (optional)"></MudInput>
+                                </div>
+                            </MudPopover>
+                        </MudPaper>
+                    </MudPaper>
+                </MudItem>
+            }
+            else if(SelectedQuestion is MultipleChoiceAnswer multipleQuestion)
+            {
+                <MudItem>
+                    <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;">
+                        <MudText @onclick="() => ToggleOpen()">@multipleQuestion.QuestionText</MudText>
+                        <MudPopover Open="@_open" Fixed="true" Class="px-4 pt-4">
+                            <div class="d-flex flex-column">
+                                <MudText>New question-text: </MudText>
+                                <MudTextField @bind-Value="@multipleQuestion.QuestionText"></MudTextField>
+                            </div>
+                        </MudPopover>
+                    </MudPaper>
+                </MudItem>
+                <MudPaper>
+                    <MudList T="String">
+                        @foreach(var item in multipleQuestion.MultipleOptionsList)
+                        {
+                            <MudListItem Text="@item.Text"></MudListItem>
+                            <MudInput @bind-Value="@item.Text"></MudInput>
+                            <MudCheckBox @bind-Value="item.CorrectFalse"></MudCheckBox>
+                        }
+                    </MudList>
+                    <MudButton @onclick="() => SaveNewQuestionProps(multipleQuestion)">Save</MudButton>
+                </MudPaper>
+                
+            }
         }
 
     </Authorized>
@@ -110,18 +155,17 @@
     {
         int newIndex = oldIndex - 1;
         await QuestionManager.UpdateSortOrderAsync(quizId, oldIndex, newIndex);
-        AllQuestions.OrderBy(q => q.SortOrder);
         await OnInitializedAsync();
     }
     public async Task SortOrderUp(int oldIndex, int quizId)
     {
         int newIndex = oldIndex + 1;
         await QuestionManager.UpdateSortOrderAsync(quizId, oldIndex, newIndex);
-        AllQuestions.OrderBy(q => q.SortOrder);
         await OnInitializedAsync();
     }
     public async Task SaveNewQuestionProps(Models.Question question)
     {
         await QuestionManager.UpdateQuestionText(question);
+        _open = false;
     }
 }
