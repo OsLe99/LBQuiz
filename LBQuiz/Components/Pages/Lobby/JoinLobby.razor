@@ -48,8 +48,8 @@
         {
             string email = user.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
             string nickName = email.Split("@")[0];
-            _currentUserEmail = nickName;
-            _nickName = nickName;
+            // _currentUserEmail = nickName;
+            // _nickName = nickName;
         }
 
         await LobbyHub.InitializeAsync(Navigation);

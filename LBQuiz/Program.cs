@@ -7,6 +7,7 @@ using LBQuiz.Data;
 using LBQuiz.Services;
 using LBQuiz.Services.Interfaces;
 using MudBlazor.Services;
+using LBQuiz.Services.ChatHub;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +53,7 @@ builder.Services.AddScoped<ILobbyHubConnection, LobbyHubConnection>();
 builder.Services.AddScoped<IQuestionManager, QuestionManager>();
 builder.Services.AddScoped<ILobbyHubService, LobbyHubService>();
 builder.Services.AddScoped<IQuizManager, QuizManager>();
+builder.Services.AddScoped<IChatHubConnection, ChatHubConnection>();
 
 var app = builder.Build();
 
