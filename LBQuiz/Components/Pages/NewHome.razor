@@ -42,7 +42,7 @@
         
     </MudGrid>
     
-    <MudCarousel Style="height: 200px; width: 100%" Class="mt-auto" ShowArrows="true" ShowBullets="@true" EnableSwipeGesture="true" AutoCycle="true" AutoCycleTime="@TimeSpan.FromSeconds(5)" TData="CarouselItem" ItemsSource="@_carouselItems">
+    <MudCarousel Style="height: 200px; width: 100%" Class="mt-auto" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="true" AutoCycle="true" AutoCycleTime="@TimeSpan.FromSeconds(5)" TData="CarouselItem" ItemsSource="@_carouselItems">
         <ItemTemplate>
             <div class="d-flex align-items-center justify-content-center" style="height: 100%; background-color: @context.Color;">
                 <MudStack>
@@ -55,7 +55,7 @@
     
 </MudContainer>
 
-<CookieBanner Show="_showCookieBanner" OnAccept="HandleCookieAccept"></CookieBanner>
+@* <CookieBanner Show="_showCookieBanner" OnAccept="HandleCookieAccept"></CookieBanner> *@
 
 @code {
     private bool _showCookieBanner = true;
