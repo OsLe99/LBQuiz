@@ -3,9 +3,6 @@ using LBQuiz.Models.Lobby;
 using LBQuiz.Services.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System.Collections.Concurrent;
-using LBQuiz.Hubs;
 using LBQuiz.Models.Helpers;
 
 namespace LBQuiz.Services
@@ -28,9 +25,10 @@ namespace LBQuiz.Services
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
+        public string? ConnectionId => _hubConnection?.ConnectionId;
 
-        public event Func<string, Models.Lobby.LobbyParticipant, Task>? OnAnswerRecieved;
-        public event Func<string, Models.QuestionOpen, Models.Lobby.LobbyParticipant, Task>? OnCalculateScoreBoard;
+        public event Func<string, LobbyParticipant, Task>? OnAnswerRecieved;
+        public event Func<string, QuestionOpen, LobbyParticipant, Task>? OnCalculateScoreBoard;
 
         public LobbyHubConnection(IHttpContextAccessor httpContextAccessor)
         {
@@ -89,7 +87,7 @@ namespace LBQuiz.Services
                 });
 
             // Listen for server event with corrected name and payload
-            _hubConnection.On<string, int, Models.Lobby.LobbyParticipant>("AnswerReceived",
+            _hubConnection.On<string, int, LobbyParticipant>("AnswerReceived",
                 async (answer, questionId, participant) =>
                 {
                     if(OnAnswerRecieved != null)
@@ -98,7 +96,7 @@ namespace LBQuiz.Services
                     }
                 });
 
-            _hubConnection.On<Models.QuestionOpen, string, Models.Lobby.LobbyParticipant>("ScoreBoardCalculated",
+            _hubConnection.On<QuestionOpen, string, LobbyParticipant>("ScoreBoardCalculated",
                 async (question, answer, participant) =>
                 {
                     // Score is now calculated server-side, just pass it through
@@ -200,11 +198,11 @@ namespace LBQuiz.Services
                 await _hubConnection.InvokeAsync("ReceiveSubmittedAnswer", answer, lobbyId.ToString(), quizId);
             }
         }
-        public async Task UpdateScoreBoard(Models.Question Question, string answer)
+        public async Task UpdateScoreBoard(Question question, string answer)
         {
             if(_hubConnection != null)
             {
-                await _hubConnection.InvokeAsync("CalculateScoreBoard", Question, answer);
+                await _hubConnection.InvokeAsync("CalculateScoreBoard", question, answer);
             }
         }
 
@@ -246,7 +244,7 @@ namespace LBQuiz.Services
                 await _hubConnection.InvokeAsync("SubmitSliderAnswer", lobbyId, sliderValue, quizId, questionText);
             }
         }
-        public async Task SubmitMulitpleAnswers(int lobbyId, int quizId, List<MultipleOptions> participantAnswers, int questionId)
+        public async Task SubmitMultitpleAnswers(int lobbyId, int quizId, List<MultipleOptions> participantAnswers, int questionId)
         {
             if(_hubConnection != null)
             {
