@@ -10,59 +10,7 @@ namespace LBQuiz.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "MultipleChoiceAnswer");
-
-            migrationBuilder.AddColumn<int>(
-                name: "SortOrder",
-                table: "QuestionJsonBlobs",
-                type: "int",
-                nullable: false,
-                defaultValue: 0);
-
-            migrationBuilder.AddColumn<int>(
-                name: "QuestionMultipleId",
-                table: "Question",
-                type: "int",
-                nullable: true);
-
-            migrationBuilder.CreateTable(
-                name: "MultipleOptions",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Text = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CorrectFalse = table.Column<bool>(type: "bit", nullable: false),
-                    ColorString = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MultipleChoiceAnswerId = table.Column<int>(type: "int", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_MultipleOptions", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_MultipleOptions_Question_MultipleChoiceAnswerId",
-                        column: x => x.MultipleChoiceAnswerId,
-                        principalTable: "Question",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Question_QuestionMultipleId",
-                table: "Question",
-                column: "QuestionMultipleId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_MultipleOptions_MultipleChoiceAnswerId",
-                table: "MultipleOptions",
-                column: "MultipleChoiceAnswerId");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Question_Question_QuestionMultipleId",
-                table: "Question",
-                column: "QuestionMultipleId",
-                principalTable: "Question",
-                principalColumn: "Id");
+            // All changes already exist in database - this is a no-op to sync migration history
         }
 
         /// <inheritdoc />
