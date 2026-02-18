@@ -17,6 +17,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+builder.Services.AddMudServices();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -50,6 +51,7 @@ builder.Services.AddScoped<ILobbyService, LobbyService>();
 builder.Services.AddScoped<ILobbyHubConnection, LobbyHubConnection>();
 builder.Services.AddScoped<IQuestionManager, QuestionManager>();
 builder.Services.AddScoped<ILobbyHubService, LobbyHubService>();
+builder.Services.AddScoped<IQuizManager, QuizManager>();
 
 var app = builder.Build();
 
@@ -72,6 +74,8 @@ else
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
+app.UseAntiforgery();
+
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
@@ -84,9 +88,6 @@ app.MapPost("/logout", async (SignInManager<ApplicationUser> signInManager, Http
     await signInManager.SignOutAsync();
     return Results.Redirect("/"); // redirect efter logout
 });
-
-
-app.UseAntiforgery();
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();

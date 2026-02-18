@@ -7,24 +7,32 @@
 
 @using Microsoft.AspNetCore.Components
 @using System.Globalization;
+@using LBQuiz.Components.Helpers
 
+<AuthorizeView>
+    <Authorized>
+        <MudTextField @bind-Value="_quizName" Label="Quiz Name" Variant="Variant.Filled" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"></MudTextField>
+        <MudTextField @bind-Value="_quizDescription" Label="Quiz Description" Variant="Variant.Filled" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"></MudTextField>
 
-<h1>CreateQuiz</h1>
+        <MudSelect T="string" @bind-Value="_quizTypeValue" Label="Select QuestionType" HelperText="String" Placeholder="Please Select" AdornmentColor="Color.Primary" AdornmentIcon="@Icons.Material.Filled.Quiz">
+            <MudSelectItem T="string" Value="@("Competition")">Competition</MudSelectItem>
+            <MudSelectItem T="string" Value="@("Educational")">Educational</MudSelectItem>
+        </MudSelect>
+        @if (_quizSaved == false)
+        {
+            <MudButton Variant="Variant.Filled" OnClick="SaveQuizToDatabase">Save Quiz</MudButton>
+        }
+        else
+        {
+            <MudText Typo="Typo.h4">Your quiz was saved successfully <MudIcon Icon="@Icons.Material.Filled.GppGood" Color="Color.Success"></MudIcon></MudText>
+        }
+    </Authorized>
 
-<MudTextField @bind-Value="_quizName" Label="Quiz Name" Variant="Variant.Filled" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"></MudTextField>
-<MudTextField @bind-Value="_quizDescription" Label="Quiz Description" Variant="Variant.Filled" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"></MudTextField>
+    <NotAuthorized>
+        <NotAuthorizedHelper/>
+    </NotAuthorized>
 
-<MudSelect T="string" @bind-Value="_quizTypeValue" Label="Select QuestionType" HelperText="String" Placeholder="Please Select" AdornmentColor="Color.Primary" AdornmentIcon="@Icons.Material.Filled.Quiz">
-    <MudSelectItem T="string" Value="@("Competition")">Competition</MudSelectItem>
-    <MudSelectItem T="string" Value="@("Educational")">Educational</MudSelectItem>
-</MudSelect>
-@if(_quizSaved == false){
-    <MudButton Variant="Variant.Filled" OnClick="SaveQuizToDatabase">Save Quiz</MudButton>
-}
-else
-{
-    <MudText Typo="Typo.h4">Your quiz was saved successfully <MudIcon Icon="@Icons.Material.Filled.GppGood" Color="Color.Success"></MudIcon></MudText>
-}
+</AuthorizeView>
 
     
 

@@ -20,6 +20,8 @@ namespace LBQuiz.Services.Interfaces
         Task<QuestionJsonBlob> UpdateQuestionPointsAsync(Question question, int points);
         Task DeleteQuestionAsync(Question question);
         Task UpdateSortOrderAsync(int quizId, int oldIndex, int newIndex);
+        Task<Question> GetQuestionFromBlob(QuestionJsonBlob blob);
+        Task UpdateQuestionText(Question question);
 
     }
 }

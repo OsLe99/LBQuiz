@@ -1,21 +1,43 @@
-@page "/lobby/join"
 @inject NavigationManager Navigation
 @inject ILobbyHubConnection LobbyHub
 @inject ILobbyService LobbyService
 @using LBQuiz.Services.Interfaces
 @using LBQuiz.Models.Lobby
+@inject ISnackbar Snackbar
 
-<h3>JoinLobby</h3>
-
-<MudTextField InputType="InputType.Text" @bind-Value="_joinCode">6 digit join code</MudTextField>
-<MudTextField InputType="InputType.Text" @bind-Value="_nickName">Nickname</MudTextField>
-<MudButton @onclick="AddUser">Join lobby</MudButton>
+<MudDialog>
+    <TitleContent>
+        Join a lobby
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="2">
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" ShowCloseIcon="true" CloseIconClicked="() => _errorMessage = null">@_errorMessage</MudAlert>
+            }
+            <MudTextField InputType="InputType.Text" @bind-Value="_joinCode" Label="Join Code for lobby" Placeholder="6-digit code" Required="true" RequiredError="Join code is required"></MudTextField>
+            
+            <MudTextField InputType="InputType.Text" @bind-Value="_participant.Nickname" Label="Your nickname" Placeholder="Nickname" For="@(() => _participant.Nickname)"></MudTextField>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton @onclick="Cancel" Variant="Variant.Outlined" Color="Color.Error">Cancel</MudButton>
+        <MudButton @onclick="AddUser" Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true">Join lobby</MudButton>
+    </DialogActions>
+</MudDialog>
 
 
 @code {
-    private string _joinCode = string.Empty;    
-    private string _nickName = string.Empty;
-    private QuizLobby _quizLobby;
+    private string _joinCode = string.Empty;
+    private LobbyParticipant _participant = new() { Nickname = string.Empty, ConnectionId = string.Empty };
+    private string? _errorMessage;
+    
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    private void Close() => MudDialog.Close(DialogResult.Ok(true));
+
+    private void Cancel() => MudDialog.Cancel();
 
     protected override async Task OnInitializedAsync()
     {
@@ -24,9 +46,29 @@
 
     public async Task AddUser()
     {
-        await LobbyHub.JoinLobbyAsync(_joinCode, _nickName);
-        var quizLobby = await LobbyService.GetLobbyByJoinCodeAsync(_joinCode);
-
-        Navigation.NavigateTo($"/quiz/{quizLobby.QuizId}/{quizLobby.Id}");
+        _errorMessage = null;
+        
+        try
+        {
+            if (_joinCode.Length != 6 || string.IsNullOrEmpty(_joinCode))
+            {
+                _errorMessage = "Invalid join code.";
+            }
+            else if (string.IsNullOrEmpty(_participant.Nickname))
+            {
+                _errorMessage = "Invalid nickname.";
+            }
+            
+            await LobbyHub.JoinLobbyAsync(_joinCode, _participant.Nickname);
+            var quizLobby = await LobbyService.GetLobbyByJoinCodeAsync(_joinCode);
+            
+            MudDialog.Close();
+            Navigation.NavigateTo($"/quiz/{quizLobby.QuizId}/{quizLobby.Id}");
+        }
+        
+        catch (Exception ex)
+        {
+            // Do something
+        }
     }
 }
