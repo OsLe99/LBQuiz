@@ -3,75 +3,81 @@
 @inject IDialogService DialogService
 @rendermode InteractiveServer
 
-<PageTitle>Home</PageTitle>
 
-<MudContainer Class="mt-8" MaxWidth="MaxWidth.Large">
+<MudContainer Class="d-flex flex-column" Style="min-height: calc(100vh - 64px); overflow: hidden;">
     
-    <MudText Typo="Typo.h3" Class="mb-6">Welcome to LBQuiz</MudText>
+    <MudText Typo="Typo.h3" Class="mb-6">LBQuiz</MudText>
+    <MudText Typo="Typo.subtitle1" class="mb-8">Create, host and take quizzes live</MudText>
     
-    <MudGrid>
-        
-            <MudItem xs="12" md="4">
-                <MudLink Href="/Quiz/Create">
-                    <MudPaper Class="pa-4" Style="height: 250px">
-                        <MudText Typo="Typo.h6" Class="mb-3">Create Quizzes</MudText>
-                        <MudText>Build custom quizzes and share them with others.</MudText>
-                    </MudPaper>
-                </MudLink>
-            </MudItem>
-        
-            <MudItem xs="12" md="4">
-                <MudLink Href="/viewquiz" >
-                    <MudPaper Class="pa-4" Style="height: 250px">
-                        <MudText Typo="Typo.h6" Class="mb-3">Take Quizzes</MudText>
-                        <MudText>Start quizzes as a host and let other join for a live quiz session.</MudText>
-                    </MudPaper>
-                </MudLink>
-            </MudItem>
+    <MudStack Row="true" Spacing="2" Class="mb-lg-1" Justify="Justify.FlexStart">
+        <MudButton OnClick="@(() => OpenJoinDialogueAsync())" Variant="Variant.Filled" Color="Color.Primary">Join a lobby</MudButton>
+        <MudDivider Vertical="true" FlexItem="true"></MudDivider>
+        <MudButton Href="/quiz/create" Variant="Variant.Filled" Color="Color.Primary">Create Quiz</MudButton>
+    </MudStack>
+    
+    <MudDivider DividerType="DividerType.Middle" Class="my-auto"></MudDivider>
+    
+    <MudGrid class="d-flex" Justify="Justify.SpaceBetween">
         
         <MudItem xs="12" md="4">
-            <MudPaper Class="pa-4" Style="height: 250px">
-                <MudText Typo="Typo.h6" Class="mb-3">Anonymous Access</MudText>
-                <MudText>No login required as a participant.</MudText>
-                <MudButton OnClick="@(() => OpenJoinDialogueAsync())" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd">Join Lobby</MudButton>
+            <MudPaper Class="p-4" Style="height: 250px">
+                <MudText Typo="Typo.h6" Class="mb-3">Create Quizzes</MudText>
+                <MudText Typo="Typo.body1">Create custom quizzes as a member and share them with others.</MudText>
+            </MudPaper>
+        </MudItem>
+        
+        <MudItem xs="12" md="4">
+            <MudPaper Class="p-4" Style=" height: 250px">
+                <MudText Typo="Typo.h6" Class="mb-3">Create Questions</MudText>
+                <MudText Typo="Typo.body1">Create different questions for your quiz. Questions with sliders, open ended and multiple choice.</MudText>
             </MudPaper>
         </MudItem>
 
         <MudItem xs="12" md="4">
-            <MudLink Href="/lobby/create">
-                <MudPaper Class="pa-4" Style="height: 250px">
-                    <MudText Typo="Typo.h6" Class="mb-3">Create Lobby</MudText>
-                    <MudText>Create a new lobby with an existing quiz.</MudText>
-                </MudPaper>
-            </MudLink>
+            <MudPaper Class="p-4" Style="height: 250px">
+                <MudText Typo="Typo.h6" Class="mb-3"> Take Quizzes</MudText>
+                <MudText Typo="Typo.body1">Start quizzes as a host and let others join in on a live quiz session.</MudText>
+            </MudPaper>
         </MudItem>
-
-        <MudItem xs="12" md="4">
-            <MudLink Href="/quiz/question/choose">
-                <MudPaper Class="pa-4" Style="height: 250px">
-                    <MudText Typo="Typo.h6" Class="mb-3">Create Questions</MudText>
-                    <MudText>Choose a Quiz to make questions</MudText>
-                </MudPaper>
-            </MudLink>
-        </MudItem>
-
-        <MudItem xs="12" md="4">
-            <MudLink Href="/quiz/question/update">
-                <MudPaper Class="pa-4" Style="height: 250px">
-                    <MudText Typo="Typo.h6" Class="mb-3">Update/remove Questions</MudText>
-                    <MudText>Choose a Quiz to edit</MudText>
-                </MudPaper>
-            </MudLink>
-        </MudItem>
-
+        
     </MudGrid>
-
+    
+    <MudCarousel Style="height: 200px; width: 100%" Class="mt-auto" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="true" AutoCycle="true" AutoCycleTime="@TimeSpan.FromSeconds(5)" TData="CarouselItem" ItemsSource="@_carouselItems">
+        <ItemTemplate>
+            <div class="d-flex align-items-center justify-content-center" style="height: 100%; background-color: @context.Color;">
+                <MudStack>
+                    <MudText Typo="Typo.h6">@context.Title</MudText>
+                    <MudText Typo="Typo.body1">@context.Description</MudText>
+                </MudStack>
+            </div>
+        </ItemTemplate>
+    </MudCarousel>
+    
 </MudContainer>
 
-@code {
+@* <CookieBanner Show="_showCookieBanner" OnAccept="HandleCookieAccept"></CookieBanner> *@
 
+@code {
+    private bool _showCookieBanner = true;
+    
+    private record CarouselItem(string Title, string Description, string Color);
+    private readonly List<CarouselItem> _carouselItems = new()
+    {
+        new("Create Quizzes", "Create custom quizzes as a member and share them with others.", "var(--mud-palette-primary)"),
+        new("Create Questions", "Create different question types: sliders, open ended, multiple choice.", "var(--mud-palette-secondary)"),
+        new("Take Quizzes", "Start quizzes as a host and let others join live sessions.", "var(--mud-palette-tertiary)"),
+        new("Anonymous Access", "No login required as a participant.", "var(--mud-palette-info)"),
+        new CarouselItem("Register Account", "Create an account and start your quiz making today.", "#D4E157")
+    };
+    
     private Task OpenJoinDialogueAsync()
     {
-        return DialogService.ShowAsync<JoinLobby>("Join Lobby");
+        return DialogService.ShowAsync<JoinLobby>("JoinLobby");
+    }
+
+    private async Task HandleCookieAccept()
+    {
+        _showCookieBanner = false;
+        StateHasChanged();
     }
 }
