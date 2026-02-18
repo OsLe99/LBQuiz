@@ -147,7 +147,7 @@ namespace LBQuiz.Services
         #region CRUD Operations
         public async Task<QuestionJsonBlob> UpdateQuestionTextAsync(Question question, string questionText)
         {
-            var updateQuestion = await _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.QuizId).FirstOrDefaultAsync();
+            var updateQuestion = await _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefaultAsync();
             if(updateQuestion != null)
             {
                 updateQuestion.QuestionText = questionText;
@@ -221,9 +221,111 @@ namespace LBQuiz.Services
             }
             await _dbContext.SaveChangesAsync();
         }
+        public async Task UpdateQuestionText(Question question)
+        {
+            if(question is QuestionOpen quest)
+            {
+                var questionUpdate = _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefault();
+                questionUpdate.QuestionText = question.QuestionText;
+                
 
-       
+
+                var json = JsonSerializer.Serialize(question);
+                var openQuest = JsonSerializer.Deserialize<QuestionOpen>(json);
+                openQuest.QuestionText = question.QuestionText;
+                openQuest.Points = question.Points;
+                openQuest.CorrectAnswer = quest.CorrectAnswer;
+                var newJson = JsonSerializer.Serialize(openQuest);
+                questionUpdate.Blob = newJson;
+
+
+                _dbContext.Update(questionUpdate);
+                await _dbContext.SaveChangesAsync();
+            }
+            else if(question is QuestionSlider slider)
+            {
+                var questionUpdate = _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefault();
+                questionUpdate.QuestionText = question.QuestionText;
+
+
+                var json = JsonSerializer.Serialize(question);
+                var openQuest = JsonSerializer.Deserialize<QuestionSlider>(json);
+                openQuest.QuestionText = slider.QuestionText;
+                openQuest.MaxValue = slider.MaxValue;
+                openQuest.MinValue = slider.MinValue;
+                openQuest.CorrectValue = slider.CorrectValue;
+
+
+                _dbContext.Update(questionUpdate);
+                await _dbContext.SaveChangesAsync();
+            }
+            else if(question is MultipleChoiceAnswer multiple)
+            {
+                var questionUpdate = _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefault();
+                questionUpdate.QuestionText = question.QuestionText;
+
+
+                var json = JsonSerializer.Serialize(multiple.MultipleOptionsList);
+                var options = JsonSerializer.Deserialize<List<MultipleOptions>>(json);
+
+                
+                foreach(var option in options)
+                {
+                    foreach(var item in multiple.MultipleOptionsList)
+                    {
+                        if(option.Id == item.Id)
+                        {
+                            option.Text = item.Text;
+                        }
+                    }
+                }
+
+                var newJson = JsonSerializer.Serialize(options);
+                questionUpdate.Blob = newJson;
+
+                _dbContext.Update(questionUpdate);
+                await _dbContext.SaveChangesAsync();
+            }
+            
+            
+        }
+
+
 
         #endregion
+
+        public async Task<Question> GetQuestionFromBlob(QuestionJsonBlob blob)
+        {
+            if (blob.QuestionType == "Open")
+            {
+                var question = JsonSerializer.Deserialize<QuestionOpen>(blob.Blob);
+                question.Id = blob.Id;
+                return question;
+            }
+            if (blob.QuestionType == "Slider")
+            {
+                var question = JsonSerializer.Deserialize<QuestionSlider>(blob.Blob);
+                question.Id = blob.Id;
+                return question;
+            }
+            if (blob.QuestionType == "Multiple")
+            {
+                var newBlob = JsonSerializer.Deserialize<List<MultipleOptions>>(blob.Blob);
+                var question = new MultipleChoiceAnswer()
+                {
+                    Id = blob.Id,
+                    QuizId = blob.QuizId,
+                    QuestionText = blob.QuestionText,
+                    Points = 0,
+                    SortOrder = blob.SortOrder,
+                    MultipleOptionsList = newBlob
+                };
+                return question;
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }

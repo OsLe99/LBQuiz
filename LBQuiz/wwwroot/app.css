@@ -71,3 +71,10 @@ h1:focus {
     padding: 10px;
     border: 1px solid gray;
 }
+
+.editPaper{
+
+}
+.editPaper:Hover {
+    background-color: antiquewhite;
+}

@@ -183,9 +183,12 @@ else if (picked == "Multiple Picker")
         }
         else if (picked == "Multiple Picker")
         {
+            int id = 1;
             foreach(var m in _multipleOptions)
             {
+                m.Id = id;
                 m.ColorString = "rgba(255,0,0,0.4)";
+                id++;
             }
             await QuestionManager.CreateMultipleChoiceQuestion(QuizId, _questionPoints, _questionText, _multipleOptions);
         }
