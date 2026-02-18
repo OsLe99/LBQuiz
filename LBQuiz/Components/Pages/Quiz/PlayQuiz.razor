@@ -72,7 +72,10 @@
     {
         <MudChat ChatPosition="ChatBubblePosition.Start">
             <MudChatBubble>
-                @mess
+                <MudAvatar Color="Color.Default"
+                           Size="Size.Small">
+                    @mess[0]
+                </MudAvatar>  @mess
             </MudChatBubble>
         </MudChat>
     }
@@ -299,9 +302,6 @@ else
         {
             result.CorrectFalse = option.ColorString == "rgba(0,255,0,0.4)" ? true : false;
         }
-
-
-
     }
     public async Task SubmitMultipleAnswers(MultipleChoiceAnswer questionMultiple)
     {
@@ -310,13 +310,21 @@ else
     }
     public async Task OnHandleChatSend()
     {
-        
-        await ChatHubConnection.SendMessage("MittNamn", _messageString);
-        
+        string nickName = "Nickname";
+        try
+        {
+            _currentParticipant = LobbyManager.GetLobbyParticipant(HubConnection.ConnectionId);
+            nickName = _currentParticipant.Nickname == null ? "Nickname" : _currentParticipant.Nickname;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+        await ChatHubConnection.SendMessage(nickName, _messageString);
     }
     public async Task HandleAnswerReceived(string userName, string message)
     {
-        string text = $"{userName}: {message}";
+        string text = $"{userName}:  {message}";
         AllMesseages.Add(text);
         await InvokeAsync(StateHasChanged);
     }
