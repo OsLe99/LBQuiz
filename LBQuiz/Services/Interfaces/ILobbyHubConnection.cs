@@ -27,7 +27,7 @@ namespace LBQuiz.Services.Interfaces
         Task GoToResultsAsync(bool showResults, int lobbyId, List<LobbyParticipant> lobbyScore);
         Task EndQuizAsync(int lobbyId);
         Task SubmitSliderAnswer(int lobbyId, int sliderValue, int quizId, string questionText);
-        Task SubmitMulitpleAnswers(int lobbyId, int quizId, List<MultipleOptions> participantAnswers, int questionId);
+        Task SubmitMultitpleAnswers(int lobbyId, int quizId, List<MultipleOptions> participantAnswers, int questionId);
 
 
     }

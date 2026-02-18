@@ -239,6 +239,6 @@ else
     public async Task SubmitMultipleAnswers(MultipleChoiceAnswer questionMultiple)
     {
         //Skicka inte med options, hämta denna lista från DB senare och jämför dessa senare
-        await HubConnection.SubmitMulitpleAnswers(int.Parse(lobbyId), int.Parse(quizId), ParticipantAnswers, questionMultiple.Id);
+        await HubConnection.SubmitMultitpleAnswers(int.Parse(lobbyId), int.Parse(quizId), ParticipantAnswers, questionMultiple.Id);
     }
 }

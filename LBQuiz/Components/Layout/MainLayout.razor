@@ -49,10 +49,18 @@
             <MudText Typo="Typo.h5">LBQuiz</MudText>
         </MudDrawerHeader>
         <MudNavMenu>
-            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Home">Home</MudNavLink>
-            <MudNavLink Href="/quiz/create" Match="NavLinkMatch.All">Create Quiz</MudNavLink>
-            <MudNavLink Href="/lobby/create" Match="NavLinkMatch.All">Host Quiz</MudNavLink>
-            <MudNavLink Href="/about-us" Match="NavLinkMatch.All">About Us</MudNavLink>
+            <MudNavLink Href="/" Icon="@Icons.Material.Outlined.Home">Home</MudNavLink>
+            
+            <MudNavGroup Title="Quiz Options">
+                <MudNavLink Href="/quiz/create" Match="NavLinkMatch.All">Create Quiz</MudNavLink>
+                <MudNavGroup Title="Edit A Quiz">
+                    <MudNavLink Href=""></MudNavLink>
+                </MudNavGroup>
+            </MudNavGroup>
+            
+            <MudNavLink Href="/lobby/create">Host Quiz</MudNavLink>
+            
+            <MudNavLink Href="/about-us" Disabled="true">About Us</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
     
