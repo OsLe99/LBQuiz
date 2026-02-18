@@ -1,5 +1,4 @@
-﻿using LBQuiz.Models;
-using LBQuiz.Models.Helpers;
+﻿using LBQuiz.Models.Helpers;
 using LBQuiz.Models.Lobby;
 using Microsoft.AspNetCore.Components;
 
@@ -13,6 +12,7 @@ namespace LBQuiz.Services.Interfaces
         Task LeaveLobbyAsync();
         Task StartQuizAsync(int lobbyId, int quizId);
         List<LobbyParticipant> Participants { get; }
+        string? ConnectionId { get; }
         event Func<Task>? OnParticipantsChanged;
         event Func<int, Task>? OnQuestionChanged;
         event Func<string, LobbyParticipant, Task>? OnAnswerRecieved;
@@ -27,7 +27,7 @@ namespace LBQuiz.Services.Interfaces
         Task GoToResultsAsync(bool showResults, int lobbyId, List<LobbyParticipant> lobbyScore);
         Task EndQuizAsync(int lobbyId);
         Task SubmitSliderAnswer(int lobbyId, int sliderValue, int quizId, string questionText);
-        Task SubmitMulitpleAnswers(int lobbyId, int quizId, List<MultipleOptions> participantAnswers, int questionId);
+        Task SubmitMultitpleAnswers(int lobbyId, int quizId, List<MultipleOptions> participantAnswers, int questionId);
 
 
     }
