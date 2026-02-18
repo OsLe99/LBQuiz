@@ -2,23 +2,45 @@
 @inject NavigationManager Navigation
 @inject ILobbyHubConnection LobbyHub
 @inject ILobbyService LobbyService
+@inject AuthenticationStateProvider AuthStateProvider
 @using LBQuiz.Services.Interfaces
 @using LBQuiz.Models.Lobby
 
 <h3>JoinLobby</h3>
+<AuthorizeView>
+    <Authorized>
+        <MudTextField InputType="InputType.Text" @bind-Value="_joinCode" Label="Joincode">6 digit join code</MudTextField>
+        <MudTextField @bind-Value="_currentUserEmail" Label="Username" ReadOnly="true" Variant="Variant.Text"></MudTextField>
+        
+        <MudButton @onclick="AddUser">Join lobby</MudButton>
+    </Authorized>
+    <NotAuthorized>
+        <MudTextField InputType="InputType.Text" @bind-Value="_joinCode" Label="Joincode">6 digit join code</MudTextField>
+        <MudTextField InputType="InputType.Text" @bind-Value="_nickName" Label="Nickname">Nickname</MudTextField>
+        <MudButton @onclick="AddUser">Join lobby</MudButton>
+    </NotAuthorized>
+</AuthorizeView>
 
-<MudTextField InputType="InputType.Text" @bind-Value="_joinCode">6 digit join code</MudTextField>
-<MudTextField InputType="InputType.Text" @bind-Value="_nickName">Nickname</MudTextField>
-<MudButton @onclick="AddUser">Join lobby</MudButton>
 
 
 @code {
     private string _joinCode = string.Empty;    
     private string _nickName = string.Empty;
     private QuizLobby _quizLobby;
+    private string _currentUserEmail;
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            string email = user.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+            string nickName = email.Split("@")[0];
+            _currentUserEmail = nickName;
+            _nickName = nickName;
+        }
+
         await LobbyHub.InitializeAsync(Navigation);
     }
 
