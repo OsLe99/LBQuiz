@@ -51,6 +51,7 @@ builder.Services.AddScoped<ILobbyService, LobbyService>();
 builder.Services.AddScoped<ILobbyHubConnection, LobbyHubConnection>();
 builder.Services.AddScoped<IQuestionManager, QuestionManager>();
 builder.Services.AddScoped<ILobbyHubService, LobbyHubService>();
+builder.Services.AddScoped<IQuizManager, QuizManager>();
 
 var app = builder.Build();
 

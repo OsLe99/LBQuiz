@@ -1,5 +1,4 @@
-﻿using LBQuiz.Models;
-using LBQuiz.Models.Helpers;
+﻿using LBQuiz.Models.Helpers;
 using LBQuiz.Models.Lobby;
 using Microsoft.AspNetCore.Components;
 
@@ -13,6 +12,7 @@ namespace LBQuiz.Services.Interfaces
         Task LeaveLobbyAsync();
         Task StartQuizAsync(int lobbyId, int quizId);
         List<LobbyParticipant> Participants { get; }
+        string? ConnectionId { get; }
         event Func<Task>? OnParticipantsChanged;
         event Func<int, Task>? OnQuestionChanged;
         event Func<string, LobbyParticipant, Task>? OnAnswerRecieved;

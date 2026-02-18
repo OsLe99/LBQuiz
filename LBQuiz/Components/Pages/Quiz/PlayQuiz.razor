@@ -2,9 +2,7 @@
 @using LBQuiz.Models.Helpers
 @using Data
 @using Services.Interfaces
-@using System.Collections.Concurrent;
 @using LBQuiz.Models.Lobby
-@using LBQuiz.Hubs
 @using System.Text.Json
 @inject ApplicationDbContext DbContext
 @inject IQuestionManager QuestionManager
@@ -42,32 +40,62 @@
     else if(CurrentQuestion2 != null && CurrentQuestion2 is MultipleChoiceAnswer questionMultiple)
     {
         <MudItem xs="12" md="4">
-            <MudPaper Class="pa-4" Style="height: 250px">
+            <MudPaper Class="pa-4" Style="height: 250px; background:linear-gradient(90deg,rgba(0, 200, 0, 0.4) 0%, rgba(200, 0, 0, 0.4) 100%);">
                 <MudText Typo="Typo.h2" Class="mb-3">@questionMultiple.QuestionText</MudText>
-                @foreach(var option in questionMultiple.MultipleOptionsList)
-                {
-                    
-                    <MudLink OnClick="() => OnClickChangeColor(option)">
-                        <MudPaper Style=@($"background:{option.ColorString}")>
-                            <MudText Typo="Typo.h2" Class="mb-3">@option.Text</MudText>
-                        </MudPaper>
-                    </MudLink>
-                }
+                
                 <MudButton OnClick="() => SubmitMultipleAnswers(questionMultiple)">Submit answers</MudButton>
             </MudPaper>
         </MudItem>
+        <MudGrid Style="margin-top: 20px;">
+            @foreach (var option in questionMultiple.MultipleOptionsList)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudLink OnClick="() => OnClickChangeColor(option)" Style="text-align: center;">
+                        <MudCard Outlined="true" Class="pa-2">
+                            <MudCardContent Style=@($"background:{option.ColorString}")>
+                                <MudText Typo="Typo.body2">
+                                    @option.Text
+                                </MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudLink>
+                </MudItem>
+            }
+        </MudGrid>
     }
 }
 else
 {
-    <ul>
-        @foreach (var part in ParticipantsList)
-        {
-            <li>
-                @part.Nickname -- @part.Score points
-            </li>
-        }
-    </ul>
+    // Display scoreboard
+    <MudText Typo="Typo.h2" Align="Align.Center">Results</MudText>
+    
+    @if (_currentParticipant != null)
+    {
+        <MudContainer Class="mb-5">
+            <MudPaper Class="pa-4 text-center" Style="background-color: lightblue">
+                <MudText Typo="Typo.h3">Rank: @_currentParticipantRank</MudText>
+                <MudText Typo="Typo.h4">@_currentParticipant.Nickname</MudText>
+                <MudText Typo="Typo.body1" Color="Color.Primary">Score: @_currentParticipant.Score</MudText>
+            </MudPaper>
+            <MudFab Class="mt-3" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Groups" Label="@(_showScoreboard ? "Hide Scoreboard" : "View Scoreboard")" OnClick="() => _showScoreboard = !_showScoreboard"></MudFab>
+        </MudContainer>
+    }
+    
+    @if (_showScoreboard || _currentParticipant == null)
+    {
+        <MudContainer Class="mb-5">
+            <MudStack Spacing="2">
+                @foreach (var part in ParticipantsList.Select((p, index) => new { Player = p, Rank = index + 1 }))
+                {
+                    <MudPaper Class="pa-2 d-flex justify-content-between align-items-center" Style="background-color: lightblue">
+                        <MudText Typo="Typo.body1" Class="me-3">@part.Rank</MudText>
+                        <MudText Typo="Typo.body1" Class="flex-grow-1">@part.Player.Nickname</MudText>
+                        <MudText Typo="Typo.body1" Color="Color.Primary">@part.Player.Score</MudText>
+                    </MudPaper>
+                }
+            </MudStack>
+        </MudContainer>
+    }
 }
 
 
@@ -77,15 +105,18 @@ else
     [Parameter]
     public string lobbyId { get; set; }
 
-    public Models.QuestionJsonBlob CurrentQuestion { get; set; }
+    public QuestionJsonBlob CurrentQuestion { get; set; }
     public Models.Question CurrentQuestion2 { get; set; }
-    public List<Models.QuestionJsonBlob> AllQuestions { get; set; }
+    public List<QuestionJsonBlob> AllQuestions { get; set; }
 
     private int _index = 0;
     private int? _score = 0;
     public string Answer { get; set; }
     private bool answerButtonShow = false;
     private bool _showResults = false;
+    private bool _showScoreboard = false;
+    private LobbyParticipant? _currentParticipant;
+    private int _currentParticipantRank;
 
     public List<Models.Lobby.LobbyParticipant> ParticipantsList { get; set; } = new List<Models.Lobby.LobbyParticipant>();
     public List<string> AllAnswerss = new();
@@ -95,6 +126,7 @@ else
     private string _colorString { get; set; } = "rgba(255,0,0,0.4)";
     public List<MultipleOptions> ParticipantAnswers = new();
 
+    
 
     protected override async Task OnInitializedAsync()
     {
@@ -181,6 +213,18 @@ else
     {
         ParticipantsList = scoreBoard.OrderByDescending(p => p.Score).ToList();
         _showResults = showResults;
+        
+        // Get current participant using connection ID
+        if (HubConnection.ConnectionId != null)
+        {
+            try
+            {
+                _currentParticipant = LobbyManager.GetLobbyParticipant(HubConnection.ConnectionId);
+                _currentParticipantRank = ParticipantsList.FindIndex(p => p.ConnectionId == HubConnection.ConnectionId) + 1;
+            }
+            catch { /* Participant not found */ }
+        }
+        
         await InvokeAsync(StateHasChanged);
     }
     private async Task GetQuestionType()
@@ -234,6 +278,8 @@ else
         {
             result.CorrectFalse = option.ColorString == "rgba(0,255,0,0.4)" ? true : false;
         }
+
+       
 
     }
     public async Task SubmitMultipleAnswers(MultipleChoiceAnswer questionMultiple)
