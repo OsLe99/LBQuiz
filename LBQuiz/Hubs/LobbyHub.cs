@@ -103,7 +103,6 @@ namespace LBQuiz.Hubs
             {
                 // Send a consistent server-to-client event name and payload
                 await Clients.Group(participant.LobbyId.ToString()).SendAsync("AnswerReceived", answer, quizId, participant);
-                Console.WriteLine("LobbyHub : " + participant.LobbyId);
             }
         }
 

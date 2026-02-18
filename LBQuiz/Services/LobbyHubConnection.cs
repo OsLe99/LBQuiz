@@ -99,8 +99,6 @@ namespace LBQuiz.Services
             _hubConnection.On<QuestionOpen, string, LobbyParticipant>("ScoreBoardCalculated",
                 async (question, answer, participant) =>
                 {
-                    // Score is now calculated server-side, just pass it through
-                    Console.WriteLine($"{participant.Nickname}: {participant.Score} points");
                     if (OnCalculateScoreBoard != null)
                     {
                         await OnCalculateScoreBoard.Invoke(answer, question, participant);

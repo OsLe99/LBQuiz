@@ -110,7 +110,6 @@ else
     public List<QuestionJsonBlob> AllQuestions { get; set; }
 
     private int _index = 0;
-    private int? _score = 0;
     public string Answer { get; set; }
     private bool answerButtonShow = false;
     private bool _showResults = false;
@@ -181,21 +180,6 @@ else
     {
         string viewString = $"{lobbyParticipant.Nickname} answered: {answer}";
         FillList(viewString);
-        InvokeAsync(StateHasChanged);
-        return Task.CompletedTask;
-    }
-    private Task HandleScoreBoard(string answer, Models.QuestionOpen question, Models.Lobby.LobbyParticipant lobbyParticipant)
-    {
-        var existing = ParticipantsList.FirstOrDefault(p => p.ConnectionId == lobbyParticipant.ConnectionId);
-        if (existing != null)
-        {
-            existing.Score = lobbyParticipant.Score;
-        }
-        else
-        {
-            ParticipantsList.Add(lobbyParticipant);
-        }
-        ParticipantsList = ParticipantsList.OrderByDescending(p => p.Score).ToList();
         InvokeAsync(StateHasChanged);
         return Task.CompletedTask;
     }
