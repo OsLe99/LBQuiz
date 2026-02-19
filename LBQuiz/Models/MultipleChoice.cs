@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace LBQuiz.Models
 {
-    public class MultipleChoiceAnswer : Question
+    public class MultipleChoice : Question
     {
         public List<MultipleOptions> MultipleOptionsList { get; set; }
     }

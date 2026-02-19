@@ -4,6 +4,7 @@
 @using Services.Interfaces
 @using LBQuiz.Models.Lobby
 @using System.Text.Json
+@using LBQuiz.Models.Helpers.AnswerDTO
 @inject ApplicationDbContext DbContext
 @inject IQuestionManager QuestionManager
 @inject ILobbyHubService LobbyHub
@@ -23,7 +24,7 @@
             <MudPaper Class="pa-4" Style="height: 250px">
                 <MudText Typo="Typo.h2" Class="mb-3">@questionOpen.QuestionText</MudText>
                 <MudTextField @bind-Value="Answer" Label="Answer" Variant="Variant.Filled"></MudTextField>
-                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAnswerOpen">Submit answer</MudButton>
+                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SaveAnswer(Answer))">Submit answer</MudButton>
             </MudPaper>
         </MudItem>
     }
@@ -33,17 +34,17 @@
             <MudPaper Class="pa-4" Style="height: 250px">
                 <MudText Typo="Typo.h2" Class="mb-3">@questionSlider.QuestionText</MudText>
                 <MudSlider @bind-Value="sliderValue" Min="@questionSlider.MinValue" Max="@questionSlider.MaxValue">Value: @sliderValue.ToString()</MudSlider>
-                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAnswerSlider">Submit answer</MudButton>
+                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() =>SaveAnswer(sliderValue.ToString()))">Submit answer</MudButton>
             </MudPaper>
         </MudItem>
     }
-    else if(CurrentQuestion2 != null && CurrentQuestion2 is MultipleChoiceAnswer questionMultiple)
+    else if(CurrentQuestion2 != null && CurrentQuestion2 is MultipleChoice questionMultiple)
     {
         <MudItem xs="12" md="4">
             <MudPaper Class="pa-4" Style="height: 250px; background:linear-gradient(90deg,rgba(0, 200, 0, 0.4) 0%, rgba(200, 0, 0, 0.4) 100%);">
                 <MudText Typo="Typo.h2" Class="mb-3">@questionMultiple.QuestionText</MudText>
                 
-                <MudButton OnClick="() => SubmitMultipleAnswers(questionMultiple)">Submit answers</MudButton>
+                <MudButton OnClick="() => SubmitMulipleChoice()">Submit answers</MudButton>
             </MudPaper>
         </MudItem>
         <MudGrid Style="margin-top: 20px;">
@@ -117,13 +118,13 @@ else
     private LobbyParticipant? _currentParticipant;
     private int _currentParticipantRank;
 
-    public List<Models.Lobby.LobbyParticipant> ParticipantsList { get; set; } = new List<Models.Lobby.LobbyParticipant>();
-    public List<string> AllAnswerss = new();
+    private List<LobbyParticipant> ParticipantsList { get; set; } = new();
 
     public int sliderValue { get; set; }
 
     private string _colorString { get; set; } = "rgba(255,0,0,0.4)";
     public List<MultipleOptions> ParticipantAnswers = new();
+    private HashSet<int> SelectedOptionIds = new();
 
     
 
@@ -145,7 +146,7 @@ else
         {
             _index++;
         }
-        if(CurrentQuestion2 is MultipleChoiceAnswer multiple)
+        if(CurrentQuestion2 is MultipleChoice multiple)
         {
             ParticipantAnswers = multiple.MultipleOptionsList;
         }
@@ -156,30 +157,19 @@ else
 
     }
 
-    public async Task SaveAnswerOpen()
+    public async Task SaveAnswer(string formattedAnswer)
     {
-        //Ska kalla på service
-        await HubConnection.SubmitAnswer(int.Parse(lobbyId), Answer, int.Parse(quizId));
-        //Borde skicka med viken user som svarade
-        await HubConnection.UpdateScoreBoard(CurrentQuestion2, Answer);
+        var lobby = int.Parse(lobbyId);
+        var quiz = int.Parse(quizId);
+
+        await HubConnection.SubmitAnswer(lobby, formattedAnswer, quiz);
+        await HubConnection.UpdateScoreBoard(CurrentQuestion.Id, formattedAnswer);
+
         answerButtonShow = true;
     }
 
-    public async Task SaveAnswerSlider()
+    private Task HandleAnswerReceived(string answer, LobbyParticipant lobbyParticipant)
     {
-        //Todo: gör en hubconnection metod som skickar en sträng om vad användaren svarde till host...
-        await HubConnection.SubmitSliderAnswer(int.Parse(lobbyId), sliderValue, int.Parse(quizId), CurrentQuestion2.QuestionText);
-    }
-
-    public async Task FillList(string viewString)
-    {
-        AllAnswerss.Add(viewString);
-    }
-
-    private Task HandleAnswerReceived(string answer, Models.Lobby.LobbyParticipant lobbyParticipant)
-    {
-        string viewString = $"{lobbyParticipant.Nickname} answered: {answer}";
-        FillList(viewString);
         InvokeAsync(StateHasChanged);
         return Task.CompletedTask;
     }
@@ -229,15 +219,15 @@ else
             else if (questionType == "Multiple")
             {
                 int so = await QuestionManager.GetSortOrderAsync(int.Parse(quizId));
-                var options = JsonSerializer.Deserialize<List<MultipleOptions>>(CurrentQuestion.Blob);
-                CurrentQuestion2 = new MultipleChoiceAnswer
+                var multiple = JsonSerializer.Deserialize<MultipleChoiceQuestionDTO>(CurrentQuestion.Blob);
+                CurrentQuestion2 = new MultipleChoice
                     {
                         Id = CurrentQuestion.Id,
                         QuizId = CurrentQuestion.QuizId,
                         QuestionText = CurrentQuestion.QuestionText,
-                        Points = 0,
+                        Points = multiple.Points,
                         SortOrder = so,
-                        MultipleOptionsList = options!
+                        MultipleOptionsList = multiple.MultipleOptionsList
                     };
             }
         }
@@ -246,29 +236,40 @@ else
             Console.WriteLine("Failed to deserialize object: " + ex);
         }
     }
+
+    private async Task SubmitMulipleChoice()
+    {
+        var formattedAnswer = JsonSerializer.Serialize(SelectedOptionIds.ToList());
+        await SaveAnswer(formattedAnswer);
+    }
+    
     public void OnClickChangeColor(MultipleOptions option)
     {
-        if (option.ColorString == "rgba(0,255,0,0.4)")
+        bool isSelected = SelectedOptionIds.Contains(option.Id);
+
+        if (isSelected)
         {
+            SelectedOptionIds.Remove(option.Id);
             option.ColorString = "rgba(255,0,0,0.4)";
         }
-        else if (option.ColorString == "rgba(255,0,0,0.4)")
+        else
         {
+            SelectedOptionIds.Add(option.Id);
             option.ColorString = "rgba(0,255,0,0.4)";
         }
-        //Fyll ParticipantAnswers med svar direkt så att alla har ett instansvärde
-        var result = ParticipantAnswers.Where(x => x.Text == option.Text).FirstOrDefault();
-        if(result != null)
-        {
-            result.CorrectFalse = option.ColorString == "rgba(0,255,0,0.4)" ? true : false;
-        }
-
-       
-
-    }
-    public async Task SubmitMultipleAnswers(MultipleChoiceAnswer questionMultiple)
-    {
-        //Skicka inte med options, hämta denna lista från DB senare och jämför dessa senare
-        await HubConnection.SubmitMultitpleAnswers(int.Parse(lobbyId), int.Parse(quizId), ParticipantAnswers, questionMultiple.Id);
+        // if (option.ColorString == "rgba(0,255,0,0.4)")
+        // {
+        //     option.ColorString = "rgba(255,0,0,0.4)";
+        // }
+        // else if (option.ColorString == "rgba(255,0,0,0.4)")
+        // {
+        //     option.ColorString = "rgba(0,255,0,0.4)";
+        // }
+        // //Fyll ParticipantAnswers med svar direkt så att alla har ett instansvärde
+        // var result = ParticipantAnswers.Where(x => x.Text == option.Text).FirstOrDefault();
+        // if(result != null)
+        // {
+        //     result.CorrectFalse = option.ColorString == "rgba(0,255,0,0.4)" ? true : false;
+        // }
     }
 }

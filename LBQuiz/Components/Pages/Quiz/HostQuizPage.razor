@@ -211,7 +211,7 @@ else // Questions
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task HandleScoreUpdate(string answer, QuestionOpen question, LobbyParticipant participant)
+    private async Task HandleScoreUpdate(string answer, QuestionJsonBlob question, LobbyParticipant participant)
     {
         var existing = _userList.FirstOrDefault(p => p.ConnectionId == participant.ConnectionId);
         if (existing != null)

@@ -159,7 +159,7 @@
     public string picked { get; set; }
     private int _minValue;
     private int _maxValue;
-    private int? _correctValue;
+    private int _correctValue;
     private int _numberOfOptions = 0;
     private List<MultipleOptions> _multipleOptions = new();
     private int _numberOfQuestionsInQuiz;
@@ -191,7 +191,7 @@
         }
         else if(picked == "Slider")
         {
-            await QuestionManager.CreateSliderQuestion(QuizId, _minValue, _maxValue,_correctValue, _questionText);
+            await QuestionManager.CreateSliderQuestion(QuizId, _minValue, _maxValue,_correctValue, _questionPoints, _questionText);
         }
         else if (picked == "Multiple Picker")
         {

@@ -15,7 +15,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Question> Question { get; set; }
     public DbSet<QuestionOpen> QuestionOpen { get; set; }
     public DbSet<QuestionSlider> QuestionSlider { get; set; }
-    public DbSet<QuestionMultiple> QuestionMultiple { get; set; }
+    // public DbSet<QuestionMultiple> QuestionMultiple { get; set; }
     
     // Lobby DbSets go here
     public DbSet<QuizLobby> QuizLobby { get; set; }

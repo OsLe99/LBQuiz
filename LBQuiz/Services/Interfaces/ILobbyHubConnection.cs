@@ -1,4 +1,5 @@
-﻿using LBQuiz.Models.Helpers;
+﻿using LBQuiz.Models;
+using LBQuiz.Models.Helpers;
 using LBQuiz.Models.Lobby;
 using Microsoft.AspNetCore.Components;
 
@@ -17,11 +18,11 @@ namespace LBQuiz.Services.Interfaces
         event Func<int, Task>? OnQuestionChanged;
         event Func<string, LobbyParticipant, Task>? OnAnswerRecieved;
         event Func<bool, List<LobbyParticipant>, Task>? OnResultShow;
-        event Func<string, Models.QuestionOpen, LobbyParticipant, Task>? OnCalculateScoreBoard;
+        event Func<string, QuestionJsonBlob, LobbyParticipant, Task>? OnCalculateScoreBoard;
         event Func<int, int, LobbyParticipant, string, Task>? OnShowSliderValueToHost;
         event Func<LobbyParticipant, int, List<MultipleOptions>, int, Task>? OnShowMultipleAnswersToHost;
         Task SubmitAnswer(int lobbyId, string answer, int quizId);
-        Task UpdateScoreBoard(Models.Question question, string answer);
+        Task UpdateScoreBoard(int questionId, string answer);
         Task GoToNextQuestionAsync(int questionIndex, int lobbyId);
         Task GoToPreviousQuestionAsync(int questionIndex, int lobbyId);
         Task GoToResultsAsync(bool showResults, int lobbyId, List<LobbyParticipant> lobbyScore);

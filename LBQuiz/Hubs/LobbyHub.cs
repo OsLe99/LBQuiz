@@ -5,6 +5,8 @@ using LBQuiz.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
+using LBQuiz.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace LBQuiz.Hubs
 {
@@ -12,11 +14,15 @@ namespace LBQuiz.Hubs
     {
         private readonly ILobbyParticipantManager _lobbyParticipantManager;
         private readonly ILobbyService _lobbyService;
+        private readonly IQuestionScoringService _scoringService;
+        private readonly ApplicationDbContext _dbContext;
         private string? GetUserId() => Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        public LobbyHub(ILobbyParticipantManager lobbyParticipantManager, ILobbyService lobbyService)
+        public LobbyHub(ILobbyParticipantManager lobbyParticipantManager, ILobbyService lobbyService, IQuestionScoringService scoringService, ApplicationDbContext dbContext)
         {
             _lobbyParticipantManager = lobbyParticipantManager;
             _lobbyService = lobbyService;
+            _scoringService = scoringService;
+            _dbContext = dbContext;
         }
 
         public override async Task OnConnectedAsync()
@@ -118,24 +124,46 @@ namespace LBQuiz.Hubs
         }
 
         //H�r ska logiken f�r att r�kna ut po�ngst�llningen in
-        public async Task CalculateScoreBoard(Models.QuestionOpen Question, string answer)
+        public async Task CalculateScoreBoard(int questionId, string answer)
         {
-            var participant = _lobbyParticipantManager.GetLobbyParticipant(Context.ConnectionId);
-            if (participant == null) return;
-            if(Question.CorrectAnswer.Equals(answer, StringComparison.OrdinalIgnoreCase))
-            {
-                if (string.Equals(Question.CorrectAnswer, answer, StringComparison.OrdinalIgnoreCase))
-                {
-                    participant.Score += Question.Points;
-                }
-                
-                await Clients.Group(participant.LobbyId.ToString()).SendAsync("ScoreBoardCalculated", Question, answer, participant);
-            }
-
-            var participants = _lobbyParticipantManager.GetParticipants(participant.LobbyId);
-
-            await Clients.Group(participant.LobbyId.ToString()).SendAsync("ScoreBoardUpdated", participants);
+            Console.WriteLine($"Incoming questionId: {questionId}");
             
+            var participant =  _lobbyParticipantManager.GetLobbyParticipant(Context.ConnectionId);
+            
+            var question = await _dbContext.QuestionJsonBlobs.FirstOrDefaultAsync(q => q.Id == questionId);
+            
+            Console.WriteLine(question == null 
+                ? "QUESTION NOT FOUND" 
+                : "Question found");
+
+            var result = _scoringService.IsCorrect(question, answer, out int points);
+
+            if (result)
+            {
+                participant.Score += points;
+                await Clients.Group(participant.LobbyId.ToString()).SendAsync("ScoreBoardCalculated", question, answer, participant);
+            }
+            
+            var participants = _lobbyParticipantManager.GetParticipants(participant.LobbyId);
+            
+            await Clients.Group(participant.LobbyId.ToString()).SendAsync("ScoreBoardUpdated", participants);
+
+            // var participant = _lobbyParticipantManager.GetLobbyParticipant(Context.ConnectionId);
+            // if (participant == null) return;
+            // if(Question.CorrectAnswer.Equals(formattedAnswer, StringComparison.OrdinalIgnoreCase))
+            // {
+            //     if (string.Equals(Question.CorrectAnswer, formattedAnswer, StringComparison.OrdinalIgnoreCase))
+            //     {
+            //         participant.Score += Question.Points;
+            //     }
+            //     
+            //     await Clients.Group(participant.LobbyId.ToString()).SendAsync("ScoreBoardCalculated", Question, answer, participant);
+            // }
+            //
+            // var participants = _lobbyParticipantManager.GetParticipants(participant.LobbyId);
+            //
+            // await Clients.Group(participant.LobbyId.ToString()).SendAsync("ScoreBoardUpdated", participants);
+            //
         }
 
         public async Task GoToNextQuestionAsync(int questionIndex, int lobbyId)
