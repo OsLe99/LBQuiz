@@ -12,6 +12,7 @@
 @inject ILobbyHubConnection HubConnection
 @inject ISnackbar Snackbar
 @inject IChatHubConnection ChatHubConnection
+@inject IQuizManager QuizManager
 @inject NavigationManager Navigation
 
 
@@ -67,17 +68,36 @@
             }
         </MudGrid>
     }
-    <MudInputLabel>Message: <MudInput @bind-Value="_messageString"></MudInput><MudButton OnClick="OnHandleChatSend">Send</MudButton></MudInputLabel>
+    <MudInputLabel>Message: <MudInput @bind-Value="playerMessage.Message" OnKeyUp="HandleKeyDown"></MudInput><MudButton OnClick="OnHandleChatSend">Send</MudButton></MudInputLabel>
     @foreach(var mess in AllMesseages)
     {
-        <MudChat ChatPosition="ChatBubblePosition.Start">
-            <MudChatBubble>
-                <MudAvatar Color="Color.Default"
-                           Size="Size.Small">
-                    @mess[0]
-                </MudAvatar>  @mess
-            </MudChatBubble>
-        </MudChat>
+        @if (_currentHostId != null)
+        {
+            if(_currentHostId == mess.SenderId)
+            {
+                <MudChat ChatPosition="ChatBubblePosition.Start">
+                    <MudChatBubble Color="Color.Success">
+                        <MudAvatar Color="Color.Default"
+                                   Size="Size.Small">
+                            @mess.SenderName[0]
+                        </MudAvatar><MudText>@mess.SenderName | @mess.Message</MudText>
+                    </MudChatBubble>
+                </MudChat>
+            }
+            else
+            {
+                <MudChat ChatPosition="ChatBubblePosition.End">
+                    <MudChatBubble>
+                        <MudAvatar Color="Color.Default"
+                                   Size="Size.Small">
+                            @mess.SenderName[0]
+                        </MudAvatar><MudText><span style="opacity: 0.5;">@mess.SenderName |</span> @mess.Message</MudText>
+                        
+                    </MudChatBubble>
+                </MudChat>
+            }
+        }
+        
     }
     
 }
@@ -125,7 +145,10 @@ else
     public QuestionJsonBlob CurrentQuestion { get; set; }
     public Models.Question CurrentQuestion2 { get; set; }
     public List<QuestionJsonBlob> AllQuestions { get; set; }
-    public List<string> AllMesseages { get; set; } = new List<string>();
+
+    private string _currentHostId;
+
+    public List<ChatMessage> AllMesseages { get; set; } = new List<ChatMessage>();
 
     private int _index = 0;
     private int? _score = 0;
@@ -144,7 +167,7 @@ else
     private string _colorString { get; set; } = "rgba(255,0,0,0.4)";
     public List<MultipleOptions> ParticipantAnswers = new();
 
-    private string _messageString = "";
+    private ChatMessage playerMessage = new();
 
 
 
@@ -163,6 +186,8 @@ else
 
 
         CurrentQuestion = AllQuestions[_index];
+        //Hämta HostId från quizmanager. GetHostIdFromQuiz metod.
+        _currentHostId = await QuizManager.GetHostIdFromQuiz(CurrentQuestion.QuizId);
 
         await GetQuestionType();
 
@@ -310,22 +335,36 @@ else
     }
     public async Task OnHandleChatSend()
     {
+
         string nickName = "Nickname";
+        string userId = "";
+
         try
         {
             _currentParticipant = LobbyManager.GetLobbyParticipant(HubConnection.ConnectionId);
-            nickName = _currentParticipant.Nickname == null ? "Nickname" : _currentParticipant.Nickname;
+            nickName = string.IsNullOrEmpty(_currentParticipant.Nickname) ? "Nickname" : _currentParticipant.Nickname;
+            userId = _currentParticipant.ConnectionId;
+            playerMessage.SenderName = nickName;
+            playerMessage.SenderId = userId;
+            playerMessage.TimeSent = DateTime.UtcNow;
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
         }
-        await ChatHubConnection.SendMessage(nickName, _messageString);
+        await ChatHubConnection.SendMessage(playerMessage);
     }
-    public async Task HandleAnswerReceived(string userName, string message)
+    public async Task HandleAnswerReceived(ChatMessage chatMessage)
     {
-        string text = $"{userName}:  {message}";
-        AllMesseages.Add(text);
+        AllMesseages.Add(chatMessage);
+        AllMesseages = AllMesseages.OrderByDescending(q => q.TimeSent).ToList();
         await InvokeAsync(StateHasChanged);
+    }
+    public async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if(e.Key == "Enter")
+        {
+            await OnHandleChatSend();
+        }
     }
 }

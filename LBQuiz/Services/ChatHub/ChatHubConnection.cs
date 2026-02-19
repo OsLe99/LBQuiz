@@ -1,4 +1,5 @@
 ﻿using LBQuiz.Models;
+using LBQuiz.Models.Helpers;
 using LBQuiz.Services.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR;
@@ -11,7 +12,7 @@ namespace LBQuiz.Services.ChatHub
         private HubConnection? _hubConnection;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private string? _currentUserId;
-        public event Func<string, string, Task>? OnMessageRecived;
+        public event Func<ChatMessage, Task>? OnMessageRecived;
 
         public ChatHubConnection(IHttpContextAccessor httpContextAccessor)
         {
@@ -38,22 +39,22 @@ namespace LBQuiz.Services.ChatHub
                 .WithAutomaticReconnect()
                 .Build();
 
-            _hubConnection.On<string, string>("ReceiveMessage", async (user, message) =>
+            _hubConnection.On<ChatMessage>("ReceiveMessage", async (playMessage) =>
             {
                 if(OnMessageRecived != null)
                 {
-                    await OnMessageRecived.Invoke(user, message);
+                    await OnMessageRecived.Invoke(playMessage);
                 }
             });
 
             await _hubConnection.StartAsync();
         }
 
-        public async Task SendMessage(string userName, string message)
+        public async Task SendMessage(ChatMessage playMessage)
         {
             if (_hubConnection != null)
             {
-                await _hubConnection.InvokeAsync("SendMessages", userName, message);
+                await _hubConnection.InvokeAsync("SendMessages", playMessage);
             }
         }
     }

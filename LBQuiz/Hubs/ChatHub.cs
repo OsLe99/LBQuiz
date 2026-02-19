@@ -1,4 +1,5 @@
 ﻿using LBQuiz.Data;
+using LBQuiz.Models.Helpers;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 
@@ -18,9 +19,9 @@ namespace LBQuiz.Hubs
             await base.OnConnectedAsync();
         }
 
-        public async Task SendMessages(string user, string message)
+        public async Task SendMessages(ChatMessage playMessage)
         {
-            await Clients.All.SendAsync("ReceiveMessage", user, message);
+            await Clients.All.SendAsync("ReceiveMessage", playMessage);
         }
     }
 }
