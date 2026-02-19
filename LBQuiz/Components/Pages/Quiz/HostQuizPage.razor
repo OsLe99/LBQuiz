@@ -6,9 +6,14 @@
 @using Microsoft.EntityFrameworkCore
 @using LBQuiz.Data
 @using System.Text.Json
+@using System.Security.Claims
 @inject ILobbyHubConnection LobbyHub
 @inject ILobbyParticipantManager LobbyManager
 @inject IQuestionManager questionManager
+@inject IQuizManager QuizManager
+@inject IChatHubConnection ChatHubConnection
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
 
 
 @page "/quiz/host/{quizId}/{lobbyId}"
@@ -99,7 +104,18 @@ else // Questions
             </ul>
         </div>
     </div>
+
+    <MudGrid Spacing="2" Style="margin-top: 20px; height:100vh">
+        <MudItem xs="12" md="8">
+
+        </MudItem>
+        <MudItem xs="12" md="4" Style="border: 1px solid rgba(255,144,0,0.6); box-shadow: 4px 4px 2px orange inset; background-color: rgba(147,202,237,0.1);">
+            <LBQuiz.Components.Pages.Chat.ChatComponent HostId="@_currentHostId" LobbyId="@lobbyId"></LBQuiz.Components.Pages.Chat.ChatComponent>
+        </MudItem>
+    </MudGrid>
+
 }
+
 
 @code {
     [Parameter] public string quizId { get; set; }
@@ -118,25 +134,33 @@ else // Questions
     private List<string> particapantSliderList = new();
     private List<string> _multipleAnswersList = new();
     private List<LobbyParticipant> TopThree => _userList.Take(3).ToList();
+    private string? _currentHostId;
 
 
     public HostQuizPage(ApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
     }
-
     protected override void OnInitialized()
     {
+        GetAllQuestionsFromQuiz().GetAwaiter().GetResult();
+        var result = QuizManager.GetHostIdFromQuiz(int.Parse(quizId));
+        _currentHostId = result.GetAwaiter().GetResult();
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        //Jag vill kolla om senderId är samma som hostId. Då vet jag att det är svar från host.
         @foreach (var participant in LobbyHub.Participants)
         {
             _userList.Add(participant);
         }
-
+        
+        await ChatHubConnection.InitializeAsync(Navigation);
 
 
         var selectedQuiz = _dbContext.Quiz.FirstOrDefault(q => q.Id == int.Parse(quizId));
 
-        GetAllQuestionsFromQuiz().GetAwaiter().GetResult();
+        await GetAllQuestionsFromQuiz();
 
         LobbyHub.OnQuestionChanged += HandleNextQuestion;
         LobbyHub.OnAnswerRecieved += HandleAnswerRecieved;

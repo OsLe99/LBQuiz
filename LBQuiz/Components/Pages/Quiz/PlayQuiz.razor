@@ -68,38 +68,15 @@
             }
         </MudGrid>
     }
-    <MudInputLabel>Message: <MudInput @bind-Value="playerMessage.Message" OnKeyUp="HandleKeyDown"></MudInput><MudButton OnClick="OnHandleChatSend">Send</MudButton></MudInputLabel>
-    @foreach(var mess in AllMesseages)
-    {
-        @if (_currentHostId != null)
-        {
-            if(_currentHostId == mess.SenderId)
-            {
-                <MudChat ChatPosition="ChatBubblePosition.Start">
-                    <MudChatBubble Color="Color.Success">
-                        <MudAvatar Color="Color.Default"
-                                   Size="Size.Small">
-                            @mess.SenderName[0]
-                        </MudAvatar><MudText>@mess.SenderName | @mess.Message</MudText>
-                    </MudChatBubble>
-                </MudChat>
-            }
-            else
-            {
-                <MudChat ChatPosition="ChatBubblePosition.End">
-                    <MudChatBubble>
-                        <MudAvatar Color="Color.Default"
-                                   Size="Size.Small">
-                            @mess.SenderName[0]
-                        </MudAvatar><MudText><span style="opacity: 0.5;">@mess.SenderName |</span> @mess.Message</MudText>
-                        
-                    </MudChatBubble>
-                </MudChat>
-            }
-        }
-        
-    }
-    
+    @* ChatComponent *@
+    <MudGrid Spacing="2" Style="margin-top: 20px; height:100vh">
+        <MudItem xs="12" md="8">
+
+        </MudItem>
+        <MudItem xs="12" md="4" Style="border: 1px solid rgba(255,144,0,0.6); box-shadow: 10px 10px 5px orange inset; background-color: rgba(147,202,237,0.1);">
+            <LBQuiz.Components.Pages.Chat.ChatComponent HostId="@_currentHostId" LobbyId="@lobbyId"></LBQuiz.Components.Pages.Chat.ChatComponent>
+        </MudItem>
+    </MudGrid>
 }
 else
 {
@@ -146,7 +123,7 @@ else
     public Models.Question CurrentQuestion2 { get; set; }
     public List<QuestionJsonBlob> AllQuestions { get; set; }
 
-    private string _currentHostId;
+    public string _currentHostId { get; set; }
 
     public List<ChatMessage> AllMesseages { get; set; } = new List<ChatMessage>();
 
@@ -167,7 +144,7 @@ else
     private string _colorString { get; set; } = "rgba(255,0,0,0.4)";
     public List<MultipleOptions> ParticipantAnswers = new();
 
-    private ChatMessage playerMessage = new();
+    public ChatMessage playerMessage { get; set; } = new();
 
 
 
@@ -348,9 +325,9 @@ else
             playerMessage.SenderId = userId;
             playerMessage.TimeSent = DateTime.UtcNow;
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Console.WriteLine(e);
+            Console.WriteLine(ex);
         }
         await ChatHubConnection.SendMessage(playerMessage);
     }
