@@ -23,7 +23,5 @@ namespace LBQuiz.Services
             var result = _dbContext.Quiz.Where(q => q.Id == quizId).FirstOrDefault();
             return result.HostId;
         }
-
-
     }
 }
