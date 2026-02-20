@@ -262,24 +262,31 @@ namespace LBQuiz.Services
                 var questionUpdate = _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefault();
                 questionUpdate.QuestionText = question.QuestionText;
 
+                var dto = new MultipleChoiceQuestionDTO
+                {
+                    Points = multiple.Points,
+                    MultipleOptionsList = multiple.MultipleOptionsList
+                };
 
-                var json = JsonSerializer.Serialize(multiple.MultipleOptionsList);
-                var options = JsonSerializer.Deserialize<List<MultipleOptions>>(json);
+                questionUpdate.Blob = JsonSerializer.Serialize(dto);
+
+                //var json = JsonSerializer.Serialize(multiple.MultipleOptionsList);
+                //var options = JsonSerializer.Deserialize<List<MultipleOptions>>(json);
 
                 
-                foreach(var option in options)
-                {
-                    foreach(var item in multiple.MultipleOptionsList)
-                    {
-                        if(option.Id == item.Id)
-                        {
-                            option.Text = item.Text;
-                        }
-                    }
-                }
+                //foreach(var option in options)
+                //{
+                //    foreach(var item in multiple.MultipleOptionsList)
+                //    {
+                //        if(option.Id == item.Id)
+                //        {
+                //            option.Text = item.Text;
+                //        }
+                //    }
+                //}
 
-                var newJson = JsonSerializer.Serialize(options);
-                questionUpdate.Blob = newJson;
+                //var newJson = JsonSerializer.Serialize(options);
+                //questionUpdate.Blob = newJson;
 
                 _dbContext.Update(questionUpdate);
                 await _dbContext.SaveChangesAsync();
@@ -308,25 +315,35 @@ namespace LBQuiz.Services
             }
             if (questionJsonBlob.QuestionType == "Multiple")
             {
-                var multiple = JsonSerializer.Deserialize<MultipleChoice>(questionJsonBlob.Blob);
+                //var multiple = JsonSerializer.Deserialize<MultipleChoice>(questionJsonBlob.Blob);
 
-                var dto = new MultipleChoiceQuestionDTO()
-                {
-                    Points = multiple.Points,
-                    MultipleOptionsList = multiple.MultipleOptionsList
-                };
+                //var dto = new MultipleChoiceQuestionDTO()
+                //{
+                //    Points = multiple.Points,
+                //    MultipleOptionsList = multiple.MultipleOptionsList
+                //};
 
-                var result = new MultipleChoice()
+                //var result = new MultipleChoice()
+                //{
+                //    Id = questionJsonBlob.Id,
+                //    QuizId = questionJsonBlob.QuizId,
+                //    QuestionText = questionJsonBlob.QuestionText,
+                //    SortOrder = questionJsonBlob.SortOrder,
+                //    Points = multiple.Points,
+                //    MultipleOptionsList = multiple.MultipleOptionsList
+                //};
+
+                var dto = JsonSerializer.Deserialize<MultipleChoiceQuestionDTO>(questionJsonBlob.Blob);
+
+                var result = new MultipleChoice
                 {
                     Id = questionJsonBlob.Id,
                     QuizId = questionJsonBlob.QuizId,
                     QuestionText = questionJsonBlob.QuestionText,
                     SortOrder = questionJsonBlob.SortOrder,
-                    Points = multiple.Points,
-                    MultipleOptionsList = multiple.MultipleOptionsList
+                    Points = dto.Points,
+                    MultipleOptionsList = dto.MultipleOptionsList
                 };
-
-
 
                 return result;
             }
