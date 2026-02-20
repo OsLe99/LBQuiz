@@ -1,50 +1,182 @@
 ﻿@page "/quiz/{QuizId:int}/question/create"
 @inject ApplicationDbContext _dbcontext
+@inject IQuestionManager QuestionManager
+@inject NavigationManager NavigationManager
 @using LBQuiz.Models;
 @using Microsoft.EntityFrameworkCore
 @using Data
+@using Services.Interfaces
+@using Models.Helpers
 
-<h3>Create Question</h3>
+<AuthorizeView>
+    <Authorized>
+        
+        <h3>Create Question</h3>
 
-<MudForm @ref="_questionForm" OnValidSubmit="SaveQuestion">
+        @if (string.IsNullOrEmpty(picked))
+        {
+            <MudSelect T="string" @bind-Value="picked" Label="Select QuestionType" HelperText="String" Placeholder="Please Select" AdornmentColor="Color.Primary" AdornmentIcon="@Icons.Material.Filled.Quiz">
+                @foreach (var qt in questionTypes)
+                {
+                    <MudSelectItem T="string" Value="@(qt)">@qt</MudSelectItem>
+                }
 
-    <MudTextField @bind-Value="_questionText"
-                  Label="Question"
-                  Variant="Variant.Filled"
-                  Required="true"
-                  For="@(() => _questionText)" />
+            </MudSelect>
+        }
+        else if (picked == "Open Question")
+        {
+            <MudForm @ref="_questionForm" OnValidSubmit="SaveQuestion">
 
-    <MudTextField @bind-Value="_correctAnswer"
-                  Label="Correct Answer"
-                  Variant="Variant.Filled"
-                  Required="true"
-                  For="@(() => _correctAnswer)" />
+                <MudTextField @bind-Value="_questionText"
+                              Label="Question"
+                              Variant="Variant.Filled"
+                              Required="true"
+                              For="@(() => _questionText)"/>
 
-    <MudNumericField @bind-Value="_questionPoints"
-                     Label="Points"
-                     Variant="Variant.Filled"
-                     Min="0"
-                     Max="1000"
-                     For="@(() => _questionPoints)" />
+                <MudTextField @bind-Value="_correctAnswer"
+                              Label="Correct Answer"
+                              Variant="Variant.Filled"
+                              Required="true"
+                              For="@(() => _correctAnswer)"/>
 
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
+                <MudNumericField @bind-Value="_questionPoints"
+                                 Label="Points"
+                                 Variant="Variant.Filled"
+                                 Min="0"
+                                 Max="1000"
+                                 For="@(() => _questionPoints)"/>
 
-</MudForm>
+
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
+
+            </MudForm>
+        }
+        else if (picked == "Slider")
+        {
+            <MudForm @ref="_questionForm" OnValidSubmit="SaveQuestion">
+
+                <MudTextField @bind-Value="_questionText"
+                              Label="Question"
+                              Variant="Variant.Filled"
+                              Required="true"
+                              For="@(() => _questionText)"/>
+
+                <MudNumericField @bind-Value="_minValue"
+                                 Variant="Variant.Filled"
+                                 Min="0"
+                                 Max="1000000"
+                                 Label="Minimal value">
+                </MudNumericField>
+                <MudNumericField @bind-Value="_maxValue"
+                                 Variant="Variant.Filled"
+                                 Min="0"
+                                 Max="1000000">
+
+                </MudNumericField>
+                <MudNumericField @bind-Value="_correctValue"
+                                 Variant="Variant.Filled"
+                                 Min="_minValue"
+                                 Max="_maxValue"
+                                 Label="Correct Value">
+
+                </MudNumericField>
+
+                <MudNumericField @bind-Value="_questionPoints"
+                                 Label="Points"
+                                 Variant="Variant.Filled"
+                                 Min="0"
+                                 Max="1000"
+                                 For="@(() => _questionPoints)"/>
+
+
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
+
+            </MudForm>
+        }
+        else if (picked == "Multiple Picker")
+        {
+            <MudForm @ref="_questionForm" OnValidSubmit="SaveQuestion">
+
+                <MudTextField @bind-Value="_questionText"
+                              Label="Question"
+                              Variant="Variant.Filled"
+                              Required="true"/>
+                <MudNumericField @bind-Value="_questionPoints"
+                                 Label="Points"
+                                 Variant="Variant.Filled">
+                </MudNumericField>
+                <MudNumericField
+                    @bind-Value="_numberOfOptions"
+                    Variant="Variant.Filled"
+                    Min="0"
+                    Max="10"
+                    Label="Number of options"
+                    @bind-Value:after="UpdateMultipleOptions">
+                </MudNumericField>
+                @for (int i = 0; i < _numberOfOptions; i++)
+                {
+                    var index = i;
+                    <MudTextField @bind-Value="_multipleOptions[index].Text"
+                                  Label="Option"
+                                  Variant="Variant.Filled"
+                                  Required="true"/>
+
+                    <MudCheckBox @bind-Value="_multipleOptions[index].CorrectFalse"
+                                 CheckedIcon="@Icons.Material.Filled.Bookmark"
+                                 Color="Color.Tertiary"
+                                 Label="True/False"/>
+
+                }
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
+
+            </MudForm>
+        }
+        <h6 style="text-decoration: underline; text-align:center; margin-top:20px">Number of Quetions in Quiz: @_numberOfQuestionsInQuiz</h6>
+
+    </Authorized>
+    
+    <NotAuthorized>
+        <NotAuthorized/>
+    </NotAuthorized>
+
+</AuthorizeView>
+
+
 
 @code {
-    ///quiz/1/question/create
     [Parameter] public int QuizId { get; set; }
 
     private MudForm _questionForm;
 
     private string _questionText { get; set; } = string.Empty;
     private string _correctAnswer { get; set; } = string.Empty;
-    private int _questionPoints { get; set; } = 1000;
+    private int _questionPoints { get; set; }
+    public List<string> questionTypes = new() { "Open Question", "Slider", "Multiple Picker" };
+    public string picked { get; set; }
+    private int _minValue;
+    private int _maxValue;
+    private int _correctValue;
+    private int _numberOfOptions = 0;
+    private List<MultipleOptions> _multipleOptions = new();
+    private int _numberOfQuestionsInQuiz;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _numberOfQuestionsInQuiz = await QuestionManager.GetNumberOfQuestionInQuizAsync(QuizId);
+        StateHasChanged();
+    }
 
     private async Task SaveQuestion()
     {
         await _questionForm.Validate();
-
+        if (picked == "Slider" && _minValue > _maxValue)
+        {
+            _questionText = "Your max value can not be lesser than your min value, try again";
+            return;
+        }
 
         if (!_questionForm.IsValid)
         {
@@ -52,21 +184,26 @@
             return;
         }
 
-        var nextSortOrder = await _dbcontext.Question
-            .Where(q => q.QuizId == QuizId)
-            .Select(q => (int?)q.SortOrder)
-            .MaxAsync() ?? 0;
-
-        var newQuestion = new QuestionOpen
+        if (picked == "Open Question")
         {
-            QuizId = QuizId,
-            QuestionText = _questionText,
-            CorrectAnswer = _correctAnswer,
-            Points = _questionPoints,
-            SortOrder = nextSortOrder + 1
-        };
+            await QuestionManager.CreateOpenQuestion(QuizId, _questionText, _correctAnswer, _questionPoints);
+        }
+        else if(picked == "Slider")
+        {
+            await QuestionManager.CreateSliderQuestion(QuizId, _minValue, _maxValue,_correctValue, _questionPoints, _questionText);
+        }
+        else if (picked == "Multiple Picker")
+        {
+            int id = 1;
+            foreach(var m in _multipleOptions)
+            {
+                m.Id = id;
+                m.ColorString = "rgba(255,0,0,0.4)";
+                id++;
+            }
+            await QuestionManager.CreateMultipleChoiceQuestion(QuizId, _questionPoints, _questionText, _multipleOptions);
+        }
 
-        _dbcontext.Question.Add(newQuestion);
         try
         {
             await _dbcontext.SaveChangesAsync();
@@ -75,5 +212,17 @@
         {
             Console.WriteLine($"An error occurred while saving the question: {ex.Message}");
         }
+        picked = "";
+        StateHasChanged();
+
     }
+
+    private void UpdateMultipleOptions()
+    { 
+        _multipleOptions = Enumerable
+        .Range(0, _numberOfOptions)
+        .Select(_ => new MultipleOptions()).ToList(); 
+    }
+
+    
 }

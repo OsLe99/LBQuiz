@@ -1,14 +1,20 @@
 ﻿@using LBQuiz.Models
+@using LBQuiz.Models.Helpers
 @using Data
 @using Services.Interfaces
-@using System.Collections.Concurrent;
 @using LBQuiz.Models.Lobby
-@using LBQuiz.Hubs
+@using System.Text.Json
+@using LBQuiz.Models.Helpers.AnswerDTO
+@using Microsoft.AspNetCore.Components.Web
 @inject ApplicationDbContext DbContext
 @inject IQuestionManager QuestionManager
 @inject ILobbyHubService LobbyHub
 @inject ILobbyParticipantManager LobbyManager
 @inject ILobbyHubConnection HubConnection
+@inject ISnackbar Snackbar
+@inject IChatHubConnection ChatHubConnection
+@inject IQuizManager QuizManager
+@inject NavigationManager Navigation
 
 
 @page "/quiz/play/{quizId}/{lobbyId}"
@@ -17,27 +23,94 @@
 
 @if (_showResults == false)
 {
-    @if(CurrentQuestion != null)
+    @if(CurrentQuestion2 != null && CurrentQuestion2 is QuestionOpen questionOpen)
     {
         <MudItem xs="12" md="4">
             <MudPaper Class="pa-4" Style="height: 250px">
-                <MudText Typo="Typo.h2" Class="mb-3">@CurrentQuestion.QuestionText</MudText>
+                <MudText Typo="Typo.h2" Class="mb-3">@questionOpen.QuestionText</MudText>
                 <MudTextField @bind-Value="Answer" Label="Answer" Variant="Variant.Filled"></MudTextField>
-                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAnswer">Submit answer</MudButton>
+                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SaveAnswer(Answer))">Submit answer</MudButton>
             </MudPaper>
         </MudItem>
     }
+    else if (CurrentQuestion2 != null && CurrentQuestion2 is QuestionSlider questionSlider)
+    {
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Style="height: 250px">
+                <MudText Typo="Typo.h2" Class="mb-3">@questionSlider.QuestionText</MudText>
+                <MudSlider @bind-Value="sliderValue" Min="@questionSlider.MinValue" Max="@questionSlider.MaxValue">Value: @sliderValue.ToString()</MudSlider>
+                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() =>SaveAnswer(sliderValue.ToString()))">Submit answer</MudButton>
+            </MudPaper>
+        </MudItem>
+    }
+    else if(CurrentQuestion2 != null && CurrentQuestion2 is MultipleChoice questionMultiple)
+    {
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Style="height: 250px; background:linear-gradient(90deg,rgba(0, 200, 0, 0.4) 0%, rgba(200, 0, 0, 0.4) 100%);">
+                <MudText Typo="Typo.h2" Class="mb-3">@questionMultiple.QuestionText</MudText>
+                
+                <MudButton OnClick="() => SubmitMulipleChoice()">Submit answers</MudButton>
+            </MudPaper>
+        </MudItem>
+        <MudGrid Style="margin-top: 20px;">
+            @foreach (var option in questionMultiple.MultipleOptionsList)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudLink OnClick="() => OnClickChangeColor(option)" Style="text-align: center;">
+                        <MudCard Outlined="true" Class="pa-2">
+                            <MudCardContent Style=@($"background:{option.ColorString}")>
+                                <MudText Typo="Typo.body2">
+                                    @option.Text
+                                </MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudLink>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+    @* ChatComponent *@
+    <MudGrid Spacing="2" Style="margin-top: 20px; height:100vh">
+        <MudItem xs="12" md="8">
+
+        </MudItem>
+        <MudItem xs="12" md="4" Style="border: 1px solid rgba(255,144,0,0.6); box-shadow: 10px 10px 5px orange inset; background-color: rgba(147,202,237,0.4);">
+            <LBQuiz.Components.Pages.Chat.ChatComponent HostId="@_currentHostId" LobbyId="@lobbyId"></LBQuiz.Components.Pages.Chat.ChatComponent>
+        </MudItem>
+    </MudGrid>
 }
 else
 {
-    <ul>
-        @foreach (var part in ParticipantsList)
-        {
-            <li>
-                @part.Nickname -- @part.Score points
-            </li>
-        }
-    </ul>
+    // Display scoreboard
+    <MudText Typo="Typo.h2" Align="Align.Center">Results</MudText>
+    
+    @if (_currentParticipant != null)
+    {
+        <MudContainer Class="mb-5">
+            <MudPaper Class="pa-4 text-center" Style="background-color: lightblue">
+                <MudText Typo="Typo.h3">Rank: @_currentParticipantRank</MudText>
+                <MudText Typo="Typo.h4">@_currentParticipant.Nickname</MudText>
+                <MudText Typo="Typo.body1" Color="Color.Primary">Score: @_currentParticipant.Score</MudText>
+            </MudPaper>
+            <MudFab Class="mt-3" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Groups" Label="@(_showScoreboard ? "Hide Scoreboard" : "View Scoreboard")" OnClick="() => _showScoreboard = !_showScoreboard"></MudFab>
+        </MudContainer>
+    }
+    
+    @if (_showScoreboard || _currentParticipant == null)
+    {
+        <MudContainer Class="mb-5">
+            <MudStack Spacing="2">
+                @foreach (var part in ParticipantsList.Select((p, index) => new { Player = p, Rank = index + 1 }))
+                {
+                    <MudPaper Class="pa-2 d-flex justify-content-between align-items-center" Style="background-color: lightblue">
+                        <MudText Typo="Typo.body1" Class="me-3">@part.Rank</MudText>
+                        <MudText Typo="Typo.body1" Class="flex-grow-1">@part.Player.Nickname</MudText>
+                        <MudText Typo="Typo.body1" Color="Color.Primary">@part.Player.Score</MudText>
+                    </MudPaper>
+                }
+            </MudStack>
+        </MudContainer>
+    }
 }
 
 
@@ -47,70 +120,82 @@ else
     [Parameter]
     public string lobbyId { get; set; }
 
-    public Models.QuestionOpen CurrentQuestion { get; set; }
+    public QuestionJsonBlob CurrentQuestion { get; set; }
+    public Models.Question CurrentQuestion2 { get; set; }
+    public List<QuestionJsonBlob> AllQuestions { get; set; }
 
-    public List<Models.QuestionOpen> AllQuestions { get; set; }
+    public string _currentHostId { get; set; }
+
+    public List<ChatMessage> AllMesseages { get; set; } = new List<ChatMessage>();
 
     private int _index = 0;
-    private int? _score = 0;
     public string Answer { get; set; }
     private bool answerButtonShow = false;
     private bool _showResults = false;
+    private bool _showScoreboard = false;
+    private LobbyParticipant? _currentParticipant;
+    private int _currentParticipantRank;
 
-    public List<Models.Lobby.LobbyParticipant> ParticipantsList { get; set; } = new List<Models.Lobby.LobbyParticipant>();
-    public List<string> AllAnswers = new();
+    private List<LobbyParticipant> ParticipantsList { get; set; } = new();
+
+    public int sliderValue { get; set; }
+
+    private string _colorString { get; set; } = "rgba(255,0,0,0.4)";
+    public List<MultipleOptions> ParticipantAnswers = new();
+    private HashSet<int> SelectedOptionIds = new();
+
+    public ChatMessage playerMessage { get; set; } = new();
 
 
-    protected override void OnInitialized()
+
+    protected override async Task OnInitializedAsync()
     {
         int qId = int.Parse(quizId);
-        AllQuestions = QuestionManager.GetAllQuestionFromQuizId(qId);
+        AllQuestions = await QuestionManager.GetAllQuestionJsonBlobAsync(qId);
+
+        await ChatHubConnection.InitializeAsync(Navigation);
 
         ParticipantsList = LobbyManager.GetLeaderboard(int.Parse(lobbyId));
         HubConnection.OnAnswerRecieved += HandleAnswerReceived;
         HubConnection.OnQuestionChanged += HandleNextQuestion;
         HubConnection.OnResultShow += HandleShowResults;
+        ChatHubConnection.OnMessageRecived += HandleAnswerReceived;
+
 
         CurrentQuestion = AllQuestions[_index];
+        //Hämta HostId från quizmanager. GetHostIdFromQuiz metod.
+        _currentHostId = await QuizManager.GetHostIdFromQuiz(CurrentQuestion.QuizId);
+
+        await GetQuestionType();
+
         if (_index < (AllQuestions.Count))
         {
             _index++;
         }
+        if(CurrentQuestion2 is MultipleChoice multiple)
+        {
+            ParticipantAnswers = multiple.MultipleOptionsList;
+        }
+        foreach(var pA in ParticipantAnswers)
+        {
+            pA.CorrectFalse = false;
+        }
+
     }
 
-    public async Task SaveAnswer()
+    public async Task SaveAnswer(string formattedAnswer)
     {
-        //Ska kalla på service
-        await HubConnection.SubmitAnswer(int.Parse(lobbyId), Answer, int.Parse(quizId));
-        //Borde skicka med viken user som svarade
-        await HubConnection.UpdateScoreBoard(CurrentQuestion, Answer);
+        var lobby = int.Parse(lobbyId);
+        var quiz = int.Parse(quizId);
+
+        await HubConnection.SubmitAnswer(lobby, formattedAnswer, quiz);
+        await HubConnection.UpdateScoreBoard(CurrentQuestion.Id, formattedAnswer);
+
         answerButtonShow = true;
     }
 
-    public async Task FillList(string viewString)
+    private Task HandleAnswerReceived(string answer, LobbyParticipant lobbyParticipant)
     {
-        AllAnswers.Add(viewString);
-    }
-
-    private Task HandleAnswerReceived(string answer, Models.Lobby.LobbyParticipant lobbyParticipant)
-    {
-        string viewString = $"{lobbyParticipant.Nickname} answered: {answer}";
-        FillList(viewString);
-        InvokeAsync(StateHasChanged);
-        return Task.CompletedTask;
-    }
-    private Task HandleScoreBoard(string answer, Models.QuestionOpen question, Models.Lobby.LobbyParticipant lobbyParticipant)
-    {
-        var existing = ParticipantsList.FirstOrDefault(p => p.ConnectionId == lobbyParticipant.ConnectionId);
-        if (existing != null)
-        {
-            existing.Score = lobbyParticipant.Score;
-        }
-        else
-        {
-            ParticipantsList.Add(lobbyParticipant);
-        }
-        ParticipantsList = ParticipantsList.OrderByDescending(p => p.Score).ToList();
         InvokeAsync(StateHasChanged);
         return Task.CompletedTask;
     }
@@ -120,6 +205,7 @@ else
         answerButtonShow = false;
         _index = questionIndex;
         CurrentQuestion = AllQuestions[_index];
+        await GetQuestionType();
         await InvokeAsync(StateHasChanged);
     }
 
@@ -127,6 +213,109 @@ else
     {
         ParticipantsList = scoreBoard.OrderByDescending(p => p.Score).ToList();
         _showResults = showResults;
+        
+        // Get current participant using connection ID
+        if (HubConnection.ConnectionId != null)
+        {
+            try
+            {
+                _currentParticipant = LobbyManager.GetLobbyParticipant(HubConnection.ConnectionId);
+                _currentParticipantRank = ParticipantsList.FindIndex(p => p.ConnectionId == HubConnection.ConnectionId) + 1;
+            }
+            catch { /* Participant not found */ }
+        }
+        
         await InvokeAsync(StateHasChanged);
+    }
+    private async Task GetQuestionType()
+    {
+        string questionType = await QuestionManager.GetQuestionTypeStringAsync(CurrentQuestion);
+        try
+        {
+            if (questionType == "Open")
+            {
+                var question = JsonSerializer.Deserialize<QuestionOpen>(CurrentQuestion.Blob);
+                CurrentQuestion2 = question!;
+            }
+            else if (questionType == "Slider")
+            {
+                var question = JsonSerializer.Deserialize<QuestionSlider>(CurrentQuestion.Blob);
+                CurrentQuestion2 = question!;
+            }
+            else if (questionType == "Multiple")
+            {
+                int so = await QuestionManager.GetSortOrderAsync(int.Parse(quizId));
+                var multiple = JsonSerializer.Deserialize<MultipleChoiceQuestionDTO>(CurrentQuestion.Blob);
+                CurrentQuestion2 = new MultipleChoice
+                    {
+                        Id = CurrentQuestion.Id,
+                        QuizId = CurrentQuestion.QuizId,
+                        QuestionText = CurrentQuestion.QuestionText,
+                        Points = multiple.Points,
+                        SortOrder = so,
+                        MultipleOptionsList = multiple.MultipleOptionsList
+                    };
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Failed to deserialize object: " + ex);
+        }
+    }
+
+    private async Task SubmitMulipleChoice()
+    {
+        var formattedAnswer = JsonSerializer.Serialize(SelectedOptionIds.ToList());
+        await SaveAnswer(formattedAnswer);
+    }
+    
+    public void OnClickChangeColor(MultipleOptions option)
+    {
+        bool isSelected = SelectedOptionIds.Contains(option.Id);
+
+        if (isSelected)
+        {
+            SelectedOptionIds.Remove(option.Id);
+            option.ColorString = "rgba(255,0,0,0.4)";
+        }
+        else
+        {
+            SelectedOptionIds.Add(option.Id);
+            option.ColorString = "rgba(0,255,0,0.4)";
+        }
+    }
+    public async Task OnHandleChatSend()
+    {
+
+        string nickName = "Nickname";
+        string userId = "";
+
+        try
+        {
+            _currentParticipant = LobbyManager.GetLobbyParticipant(HubConnection.ConnectionId);
+            nickName = string.IsNullOrEmpty(_currentParticipant.Nickname) ? "Nickname" : _currentParticipant.Nickname;
+            userId = _currentParticipant.ConnectionId;
+            playerMessage.SenderName = nickName;
+            playerMessage.SenderId = userId;
+            playerMessage.TimeSent = DateTime.UtcNow;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+        await ChatHubConnection.SendMessage(playerMessage);
+    }
+    public async Task HandleAnswerReceived(ChatMessage chatMessage)
+    {
+        AllMesseages.Add(chatMessage);
+        AllMesseages = AllMesseages.OrderByDescending(q => q.TimeSent).ToList();
+        await InvokeAsync(StateHasChanged);
+    }
+    public async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if(e.Key == "Enter")
+        {
+            await OnHandleChatSend();
+        }
     }
 }

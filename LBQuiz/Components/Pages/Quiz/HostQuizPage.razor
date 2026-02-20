@@ -1,30 +1,68 @@
 @using LBQuiz.Services.Interfaces
 @using LBQuiz.Hubs
-@using LBQuiz.Models.Lobby
 @using LBQuiz.Models
+@using LBQuiz.Models.Lobby
+@using LBQuiz.Models.Helpers
 @using Microsoft.EntityFrameworkCore
 @using LBQuiz.Data
+@using System.Text.Json
+@using System.Security.Claims
 @inject ILobbyHubConnection LobbyHub
 @inject ILobbyParticipantManager LobbyManager
+@inject IQuestionManager questionManager
+@inject IQuizManager QuizManager
+@inject IChatHubConnection ChatHubConnection
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
 
 
 @page "/quiz/host/{quizId}/{lobbyId}"
-
-
-<h3>Host View</h3>
-@if (_showResults == true)
+@if (_showResults == true) // Show scoreboard
 {
-    <ul>
-        @foreach (var part in _userList)
-        {
-            <li>
-                @part.Nickname -- @part.Score points
-            </li>
-        }
-    </ul>
-    <MudButton OnClick="EndQuiz">End Quiz</MudButton>
+    <div style="background-color: aliceblue; min-height: 100vh; width: 100%;">
+        <MudText Typo="Typo.h2" Align="Align.Center">Results</MudText>
+
+        <MudContainer>
+            <MudGrid Class="mb-4">
+                
+                @foreach (var part in _userList.Take(3).Select((p, index) => new {Player= p, Rank = index + 1}))
+                {
+                    <MudItem xs="4">
+                        <MudPaper Class="ps-4 text-center" Style="background-color: lightblue">
+                            <MudText Typo="Typo.h3">@part.Rank</MudText>
+                            <MudText Typo="Typo.h4">@part.Player.Nickname</MudText>
+                            <MudText Typo="Typo.body1" Color="Color.Primary">@part.Player.Score</MudText>
+                        </MudPaper>
+                    </MudItem>
+                }
+
+            </MudGrid>
+        </MudContainer>
+        
+        <MudDivider DividerType="DividerType.Middle" Class="my-5"></MudDivider>
+        
+        <MudContainer Class="mb-5">
+            <MudStack Spacing="2">
+                @foreach (var part in _userList.Skip(3).Select((p, index) => new { Player = p, Rank = index + 4 }))
+                {
+                    <MudPaper Class="pe-2 d-flex justify-content-between align-items-center" Style="background-color: lightblue">
+                        <MudText Typo="Typo.body1" Class="me-3">@part.Rank</MudText>
+                        <MudText Typo="Typo.body1" Class="m3-3 flex-grow-1">@part.Player.Nickname</MudText>
+                        <MudText Typo="Typo.body1" Color="Color.Primary">@part.Player.Score</MudText>
+                    </MudPaper>
+                    <MudDivider DividerType="DividerType.Middle"></MudDivider>
+                }
+            </MudStack>
+        </MudContainer>
+        
+        <MudContainer Class="d-flex justify-center mb-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="EndQuiz">End Quiz</MudButton>
+        </MudContainer>
+    </div>
+
+    
 }
-else
+else // Questions
 {
 
     <div class="hostPageContainer">
@@ -51,11 +89,32 @@ else
                         - @user.Nickname - @user.Score points
                     </li>
                 }
+                @foreach (var text in particapantSliderList)
+                {
+                    <li>
+                        <p>@text</p>
+                    </li>
+                }
+                @foreach (var text in _multipleAnswersList)
+                {
+                    <li>
+                        <p>@text</p>
+                    </li>
+                }
             </ul>
         </div>
     </div>
-}
 
+    <MudGrid Spacing="2" Style="margin-top: 20px; height:100vh">
+        <MudItem xs="12" md="8">
+
+        </MudItem>
+        <MudItem xs="12" md="4" Style="border: 1px solid rgba(255,144,0,0.6); box-shadow: 4px 4px 2px orange inset; background-color: rgba(147,202,237,0.4);">
+            <LBQuiz.Components.Pages.Chat.ChatComponent HostId="@_currentHostId" LobbyId="@lobbyId"></LBQuiz.Components.Pages.Chat.ChatComponent>
+        </MudItem>
+    </MudGrid>
+
+}
 
 
 @code {
@@ -70,36 +129,49 @@ else
     private List<LobbyParticipant> _userList = new();
     private List<(LobbyParticipant Participant, string Answer)> _submittedAnswers = new();
     private int _questionIndex = 0;
-    private List<QuestionOpen> AllQuestions = new();
+    private List<QuestionJsonBlob> AllQuestions = new();
     private int? _score = 0;
+    private List<string> particapantSliderList = new();
+    private List<string> _multipleAnswersList = new();
+    private List<LobbyParticipant> TopThree => _userList.Take(3).ToList();
+    private string? _currentHostId;
 
 
     public HostQuizPage(ApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
     }
-
     protected override void OnInitialized()
     {
+        GetAllQuestionsFromQuiz().GetAwaiter().GetResult();
+        var result = QuizManager.GetHostIdFromQuiz(int.Parse(quizId));
+        _currentHostId = result.GetAwaiter().GetResult();
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        //Jag vill kolla om senderId är samma som hostId. Då vet jag att det är svar från host.
         @foreach (var participant in LobbyHub.Participants)
         {
             _userList.Add(participant);
         }
-
+        
+        await ChatHubConnection.InitializeAsync(Navigation);
 
 
         var selectedQuiz = _dbContext.Quiz.FirstOrDefault(q => q.Id == int.Parse(quizId));
 
-        GetAllQuestionsFromQuiz().GetAwaiter().GetResult();
+        await GetAllQuestionsFromQuiz();
 
         LobbyHub.OnQuestionChanged += HandleNextQuestion;
         LobbyHub.OnAnswerRecieved += HandleAnswerRecieved;
         LobbyHub.OnCalculateScoreBoard += HandleScoreUpdate;
+        LobbyHub.OnShowSliderValueToHost += HandleSliderValue;
+        LobbyHub.OnShowMultipleAnswersToHost += HandleMultipleAnswers;
     }
 
     private async Task GetAllQuestionsFromQuiz()
     {
-        var questions = _dbContext.QuestionOpen.Where(q => q.QuizId == int.Parse(quizId)).ToList();
+        var questions = _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == int.Parse(quizId)).ToList();
 
         if (questions != null)
         {
@@ -109,7 +181,7 @@ else
 
     private async Task HandleNextQuestion(int questionIndex)
     {
-        //Skapa logik f�r om man bara har en quetion i ett quiz.
+        //Skapa logik f�r om man bara har en quetion i ett quiz.
         _questionIndex = questionIndex;
         if (_questionIndex == 0) previousButton = true;
         else if (_questionIndex == AllQuestions.Count - 1)
@@ -162,14 +234,40 @@ else
         _submittedAnswers.Add((participant, answer));
         await InvokeAsync(StateHasChanged);
     }
-    
-    private async Task HandleScoreUpdate(string answer, QuestionOpen question, LobbyParticipant participant)
+
+    private async Task HandleScoreUpdate(string answer, QuestionJsonBlob question, LobbyParticipant participant)
     {
         var existing = _userList.FirstOrDefault(p => p.ConnectionId == participant.ConnectionId);
         if (existing != null)
         {
             existing.Score = participant.Score;
         }
+        await InvokeAsync(StateHasChanged);
+    }
+    private async Task HandleSliderValue(int sliderValue, int quizId, LobbyParticipant lobbyParticipant, string questionText)
+    {
+        string sliderText = questionText + " : " + lobbyParticipant.Nickname + " set their slidervalue to: " + sliderValue;
+
+        particapantSliderList.Add(sliderText);
+        await InvokeAsync(StateHasChanged);
+    }
+    private async Task HandleMultipleAnswers(LobbyParticipant participant, int quizId, List<MultipleOptions> participantAnswers, int questionId)
+    {
+        int numberOfCorrectAnswers = 0;
+        
+        var question = await questionManager.GetQuestionJsonBlobFromQuestionIdAsync(questionId);
+        var optionsList = JsonSerializer.Deserialize<List<MultipleOptions>>(question.Blob);
+        foreach(var result in optionsList)
+        {
+            foreach(var partAns in participantAnswers)
+            {
+                if(partAns.Text == result.Text)
+                {
+                    if (partAns.CorrectFalse == result.CorrectFalse) numberOfCorrectAnswers++;
+                }
+            }
+        }
+        _multipleAnswersList.Add($"{participant.Nickname} got {numberOfCorrectAnswers} correct answers out of {optionsList.Count}");
         await InvokeAsync(StateHasChanged);
     }
 }

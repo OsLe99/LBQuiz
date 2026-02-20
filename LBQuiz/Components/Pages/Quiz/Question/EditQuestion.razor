@@ -1,0 +1,169 @@
+﻿@using LBQuiz.Components.Helpers
+@using Services.Interfaces
+@using Models
+@inject IQuestionManager QuestionManager
+@inject IQuizManager QuizManager
+@inject AuthenticationStateProvider AuthStateProvider
+
+
+@page "/quiz/question/update"
+
+
+<AuthorizeView>
+    <Authorized>
+        
+        <h3>Edit Question</h3>
+        
+        @if (SelectedQuestion == null)
+        {
+            @if (AllQuestions != null)
+            {
+                @foreach (var question in AllQuestions.OrderBy(x => x.SortOrder))
+                {
+                    <MudItem>
+                        <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;"
+                                  @onclick="() => OnQuestionClicked(question)">
+                            <MudText Typo="Typo.h4">@question.QuestionText</MudText>
+                            <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" @onclick="() => SortOrderDown(question.SortOrder, question.QuizId)"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" @onclick="() => SortOrderUp(question.SortOrder, question.QuizId)"></MudIconButton>
+                        </MudPaper>
+                    </MudItem>
+                }
+            }
+            else
+            {
+                <MudGrid>
+                    @if (AllQuizes != null)
+                    {
+                        @foreach (var item in AllQuizes)
+                        {
+                            <MudItem>
+                                <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px"
+                                          @onclick="() => OnQuizClicked(item)">
+                                    <MudText Typo="Typo.h4">@item.Name</MudText>
+                                    <MudText Typo="Typo.h6">@item.Description</MudText>
+                                </MudPaper>
+                            </MudItem>
+                        }
+                    }
+                </MudGrid>
+            }
+        }
+        else
+        {
+            @if (SelectedQuestion is QuestionOpen question)
+            {
+                <MudItem>
+                    <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;">
+                        <MudText @onclick="() => ToggleOpen()">@question.QuestionText</MudText>
+                        <MudPopover Open="@_open" Fixed="true" Class="px-4 pt-4">
+                            <div class="d-flex flex-column">
+                                <MudText>New question-text: </MudText>
+                                <MudTextField @bind-Value="@question.QuestionText"></MudTextField>
+                                <MudButton @onclick="() => SaveNewQuestionProps(question)">Save</MudButton>
+                            </div>
+                        </MudPopover>
+                    </MudPaper>
+                </MudItem>
+            }
+            else if (SelectedQuestion is QuestionSlider questionSlider)
+            {
+                <MudItem>
+                    <MudPaper>
+                        <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;">
+                            <MudText>@questionSlider.QuestionText</MudText>
+                            <MudText>New question-text: </MudText>
+                            <MudTextField @bind-Value="@questionSlider.QuestionText"></MudTextField>
+                            <MudInput T="int" @bind-Value="@questionSlider.MinValue" Label="Minimum Value"></MudInput>
+                            <MudInput T="int" @bind-Value="@questionSlider.MaxValue" Label="Maximum Value"></MudInput>
+                            <MudInput T="int?" @bind-Value="@questionSlider.CorrectValue" Label="Set a correct value (optional)"></MudInput>
+                        </MudPaper>
+                        <MudButton @onclick="() => SaveNewQuestionProps(questionSlider)">Save</MudButton>
+                    </MudPaper>
+                </MudItem>
+            }
+            else if (SelectedQuestion is MultipleChoice multipleQuestion)
+            {
+                <MudItem>
+                    <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;">
+                        <MudText>New question-text: </MudText>
+                        <MudTextField @bind-Value="@multipleQuestion.QuestionText"></MudTextField>
+                    </MudPaper>
+                </MudItem>
+                <MudPaper>
+                    <MudList T="String">
+                        @foreach (var item in multipleQuestion.MultipleOptionsList)
+                        {
+                            <MudListItem Text="@item.Text"></MudListItem>
+                            <MudInput @bind-Value="@item.Text"></MudInput>
+                            <MudCheckBox @bind-Value="item.CorrectFalse"></MudCheckBox>
+                        }
+                    </MudList>
+                    <MudButton @onclick="() => SaveNewQuestionProps(multipleQuestion)">Save</MudButton>
+                </MudPaper>
+
+            }
+        }
+
+    </Authorized>
+    
+    <NotAuthorized>
+        <NotAuthorizedHelper/>
+    </NotAuthorized>
+    
+</AuthorizeView>
+
+
+@code {
+    public List<Quiz> AllQuizes { get; set; }
+    public List<QuestionJsonBlob> AllQuestions { get; set; }
+    public Models.Question SelectedQuestion { get; set; }
+    public string _currentUserId { get; set; }
+    private Models.Question _question { get; set; }
+    private bool _open;
+
+
+    private void ToggleOpen() => _open = !_open;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            _currentUserId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            AllQuizes = await QuizManager.GetAllQuizesFromHostAsync(_currentUserId);
+        }
+
+        StateHasChanged();
+
+    }
+    public async Task OnQuizClicked(Quiz quiz)
+    {
+        AllQuestions = await QuestionManager.GetAllQuestionJsonBlobAsync(quiz.Id);
+        AllQuestions.OrderBy(q => q.SortOrder);
+        StateHasChanged();
+    }
+    public async Task OnQuestionClicked(QuestionJsonBlob question)
+    {
+        SelectedQuestion = await QuestionManager.GetQuestionFromBlob(question);
+    }
+    public async Task SortOrderDown(int oldIndex, int quizId)
+    {
+        int newIndex = oldIndex - 1;
+        await QuestionManager.UpdateSortOrderAsync(quizId, oldIndex, newIndex);
+        await OnInitializedAsync();
+    }
+    public async Task SortOrderUp(int oldIndex, int quizId)
+    {
+        int newIndex = oldIndex + 1;
+        await QuestionManager.UpdateSortOrderAsync(quizId, oldIndex, newIndex);
+        await OnInitializedAsync();
+    }
+    public async Task SaveNewQuestionProps(Models.Question question)
+    {
+        await QuestionManager.UpdateQuestionText(question);
+        _open = false;
+    }
+}
