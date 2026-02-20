@@ -5,11 +5,16 @@
 @using LBQuiz.Models.Lobby
 @using System.Text.Json
 @using LBQuiz.Models.Helpers.AnswerDTO
+@using Microsoft.AspNetCore.Components.Web
 @inject ApplicationDbContext DbContext
 @inject IQuestionManager QuestionManager
 @inject ILobbyHubService LobbyHub
 @inject ILobbyParticipantManager LobbyManager
 @inject ILobbyHubConnection HubConnection
+@inject ISnackbar Snackbar
+@inject IChatHubConnection ChatHubConnection
+@inject IQuizManager QuizManager
+@inject NavigationManager Navigation
 
 
 @page "/quiz/play/{quizId}/{lobbyId}"
@@ -64,6 +69,15 @@
             }
         </MudGrid>
     }
+    @* ChatComponent *@
+    <MudGrid Spacing="2" Style="margin-top: 20px; height:100vh">
+        <MudItem xs="12" md="8">
+
+        </MudItem>
+        <MudItem xs="12" md="4" Style="border: 1px solid rgba(255,144,0,0.6); box-shadow: 10px 10px 5px orange inset; background-color: rgba(147,202,237,0.4);">
+            <LBQuiz.Components.Pages.Chat.ChatComponent HostId="@_currentHostId" LobbyId="@lobbyId"></LBQuiz.Components.Pages.Chat.ChatComponent>
+        </MudItem>
+    </MudGrid>
 }
 else
 {
@@ -110,6 +124,10 @@ else
     public Models.Question CurrentQuestion2 { get; set; }
     public List<QuestionJsonBlob> AllQuestions { get; set; }
 
+    public string _currentHostId { get; set; }
+
+    public List<ChatMessage> AllMesseages { get; set; } = new List<ChatMessage>();
+
     private int _index = 0;
     public string Answer { get; set; }
     private bool answerButtonShow = false;
@@ -126,19 +144,27 @@ else
     public List<MultipleOptions> ParticipantAnswers = new();
     private HashSet<int> SelectedOptionIds = new();
 
-    
+    public ChatMessage playerMessage { get; set; } = new();
+
+
 
     protected override async Task OnInitializedAsync()
     {
         int qId = int.Parse(quizId);
         AllQuestions = await QuestionManager.GetAllQuestionJsonBlobAsync(qId);
 
+        await ChatHubConnection.InitializeAsync(Navigation);
+
         ParticipantsList = LobbyManager.GetLeaderboard(int.Parse(lobbyId));
         HubConnection.OnAnswerRecieved += HandleAnswerReceived;
         HubConnection.OnQuestionChanged += HandleNextQuestion;
         HubConnection.OnResultShow += HandleShowResults;
+        ChatHubConnection.OnMessageRecived += HandleAnswerReceived;
+
 
         CurrentQuestion = AllQuestions[_index];
+        //Hämta HostId från quizmanager. GetHostIdFromQuiz metod.
+        _currentHostId = await QuizManager.GetHostIdFromQuiz(CurrentQuestion.QuizId);
 
         await GetQuestionType();
 
@@ -256,6 +282,40 @@ else
         {
             SelectedOptionIds.Add(option.Id);
             option.ColorString = "rgba(0,255,0,0.4)";
+        }
+    }
+    public async Task OnHandleChatSend()
+    {
+
+        string nickName = "Nickname";
+        string userId = "";
+
+        try
+        {
+            _currentParticipant = LobbyManager.GetLobbyParticipant(HubConnection.ConnectionId);
+            nickName = string.IsNullOrEmpty(_currentParticipant.Nickname) ? "Nickname" : _currentParticipant.Nickname;
+            userId = _currentParticipant.ConnectionId;
+            playerMessage.SenderName = nickName;
+            playerMessage.SenderId = userId;
+            playerMessage.TimeSent = DateTime.UtcNow;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+        await ChatHubConnection.SendMessage(playerMessage);
+    }
+    public async Task HandleAnswerReceived(ChatMessage chatMessage)
+    {
+        AllMesseages.Add(chatMessage);
+        AllMesseages = AllMesseages.OrderByDescending(q => q.TimeSent).ToList();
+        await InvokeAsync(StateHasChanged);
+    }
+    public async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if(e.Key == "Enter")
+        {
+            await OnHandleChatSend();
         }
     }
 }

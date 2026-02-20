@@ -1,6 +1,7 @@
 @inject NavigationManager Navigation
 @inject ILobbyHubConnection LobbyHub
 @inject ILobbyService LobbyService
+@inject AuthenticationStateProvider AuthStateProvider
 @using LBQuiz.Services.Interfaces
 @using LBQuiz.Models.Lobby
 @inject ISnackbar Snackbar
@@ -41,6 +42,16 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            string email = user.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+            string nickName = email.Split("@")[0];
+            // _currentUserEmail = nickName;
+            // _nickName = nickName;
+        }
+
         await LobbyHub.InitializeAsync(Navigation);
     }
 

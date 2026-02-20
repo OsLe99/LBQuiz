@@ -86,13 +86,8 @@
             {
                 <MudItem>
                     <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;">
-                        <MudText @onclick="() => ToggleOpen()">@multipleQuestion.QuestionText</MudText>
-                        <MudPopover Open="@_open" Fixed="true" Class="px-4 pt-4">
-                            <div class="d-flex flex-column">
-                                <MudText>New question-text: </MudText>
-                                <MudTextField @bind-Value="@multipleQuestion.QuestionText"></MudTextField>
-                            </div>
-                        </MudPopover>
+                        <MudText>New question-text: </MudText>
+                        <MudTextField @bind-Value="@multipleQuestion.QuestionText"></MudTextField>
                     </MudPaper>
                 </MudItem>
                 <MudPaper>

@@ -18,6 +18,12 @@ namespace LBQuiz.Services
             return await _dbContext.Quiz.Where(q => q.HostId == hostId).ToListAsync();
         }
 
+        public async Task<string> GetHostIdFromQuiz(int quizId)
+        {
+            var result = _dbContext.Quiz.Where(q => q.Id == quizId).FirstOrDefault();
+            return result.HostId;
+        }
+
 
     }
 }
