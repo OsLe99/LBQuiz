@@ -19,7 +19,7 @@
                 <MudChatBubble Color="Color.Success">
                     <MudAvatar Color="Color.Default"
                                Size="Size.Small">
-                        @mess.SenderName[0]
+                        <MudIcon Color="Color.Success" Icon="@Icons.Material.Filled.EmojiEmotions"></MudIcon>
                     </MudAvatar><MudText>@mess.SenderName | @mess.Message</MudText>
                 </MudChatBubble>
             </MudChat>
@@ -37,7 +37,6 @@
             </MudChat>
         }
     }
-
 }
 
 @code {
@@ -77,6 +76,7 @@
             playerMessage.SenderName = "Host";
             playerMessage.TimeSent = DateTime.UtcNow;
             await ChatHubConnection.SendMessage(playerMessage);
+            playerMessage = new();
             return;
         }
         else if (LobbyParticipantManager.GetLobbyParticipant(LobbyHubConnection.ConnectionId) != null)
@@ -86,17 +86,13 @@
             playerMessage.SenderName = currentParticipant.Nickname;
             playerMessage.TimeSent = DateTime.UtcNow;
             await ChatHubConnection.SendMessage(playerMessage);
+            playerMessage = new();
             return;
         }
         else
         {
             return;
         }
-
-        playerMessage = new();
-        StateHasChanged();
-
-        
     }
     public async Task HandleKeyDown(KeyboardEventArgs e)
     {
