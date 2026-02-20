@@ -242,7 +242,7 @@ namespace LBQuiz.Services
                 await _hubConnection.InvokeAsync("SubmitSliderAnswer", lobbyId, sliderValue, quizId, questionText);
             }
         }
-        public async Task SubmitMultitpleAnswers(int lobbyId, int quizId, List<MultipleOptions> participantAnswers, int questionId)
+        public async Task SubmitMultipleAnswers(int lobbyId, int quizId, List<MultipleOptions> participantAnswers, int questionId)
         {
             if(_hubConnection != null)
             {

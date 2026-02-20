@@ -5,21 +5,6 @@
 
 @if(SelectedQuiz != null)
 {
-
-    @* @foreach(var question in AllQuestions)
-    {
-        int order = question.SortOrder;
-        string answear = "";
-        <MudItem xs="12" md="4">
-            <MudPaper Class="pa-4" Style="height: 250px; background-color: antiquewhite; border: 1px solid black">
-                <MudText Typo="Typo.h6" Class="mb-3">@question.QuestionText</MudText>
-                <MudTextField @bind-Value="IdAnswer[order]" Label="Answer" Variant="Variant.Outlined"></MudTextField>
-                <MudButton @onclick="@(() => CheckAnswer(order))" >Save</MudButton>
-                <MudText>@IdAnswer.GetValueOrDefault(order)</MudText>
-            </MudPaper>
-        </MudItem>
-    } *@
-    
     var selectedQuestion = AllQuestions[_index];
     int order = selectedQuestion.SortOrder;
     string answear = "";
@@ -79,7 +64,6 @@
 
     protected override void OnInitialized()
     {
-        //Change from First to Id from SelectedQuiz
         var selectedQuiz = _dbContext.Quiz.FirstOrDefault(q => q.Id == _quizId);
         if(selectedQuiz != null)
         {

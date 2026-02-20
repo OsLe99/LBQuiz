@@ -18,23 +18,6 @@ namespace LBQuiz.Services
         {
             _dbContext = dbContext;  
         }
-        
-
-       
-        public List<Models.QuestionOpen> GetAllQuestionFromQuizId(int questionId)
-        {
-            var list = new List<Models.QuestionOpen>();
-            try
-            {
-                list = _dbContext.QuestionOpen.Where(q => q.QuizId == questionId).ToList();
-            }
-            catch (Exception ex) 
-            {
-                Console.WriteLine("Failed to retrive data: " + ex);
-            }
-
-            return list;
-        }
 
         public async Task CreateOpenQuestion(int quizId, string questionText, string correctAnswer, int points)
         {
@@ -119,10 +102,6 @@ namespace LBQuiz.Services
             return sOrder;
 
         }
-        public async Task<QuestionJsonBlob> GetQuestionJsonBlobAsync(int quizId)
-        {
-            return _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).SingleOrDefault();
-        } 
 
         public async Task<string> GetQuestionTypeStringAsync(QuestionJsonBlob question)
         {
@@ -325,8 +304,6 @@ namespace LBQuiz.Services
                     Points = multiple.Points,
                     MultipleOptionsList = multiple.MultipleOptionsList
                 };
-
-
 
                 return result;
             }
