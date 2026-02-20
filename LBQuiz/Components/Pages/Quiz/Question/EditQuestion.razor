@@ -1,6 +1,7 @@
 ﻿@using LBQuiz.Components.Helpers
 @using Services.Interfaces
 @using Models
+@using System.Threading.Tasks
 @inject IQuestionManager QuestionManager
 @inject IQuizManager QuizManager
 @inject AuthenticationStateProvider AuthStateProvider
@@ -9,7 +10,7 @@
 @page "/quiz/question/update"
 
 
-<AuthorizeView>
+<AuthorizeView Context="authContext">
     <Authorized>
         
         <h3>Edit Question</h3>
@@ -18,8 +19,31 @@
         {
             @if (AllQuestions != null)
             {
-                @foreach (var question in AllQuestions.OrderBy(x => x.SortOrder))
+                <MudDropContainer T="QuestionJsonBlob" Items="AllQuestions" ItemDropped="ItemUpdated" Class="d-flex flex-column" ItemsSelector="@((item, zone) => zone == "questions")">
+                    <ChildContent>
+                        <MudPaper>
+                            <MudList T="QuestionJsonBlob">
+                                <MudListSubheader>Question List</MudListSubheader>
+                                <MudDropZone T="QuestionJsonBlob" AllowReorder="true" Identifier="questions"></MudDropZone>
+                            </MudList>
+                        </MudPaper>
+                    </ChildContent>
+                    <ItemRenderer>
+                        <MudListItem T="QuestionJsonBlob">
+                            @context.QuestionText
+                        </MudListItem>
+                    </ItemRenderer>
+                </MudDropContainer>
+                
+
+
+
+                @* @foreach (var question in AllQuestions.OrderBy(x => x.SortOrder))
                 {
+                    
+
+
+
                     <MudItem>
                         <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;"
                                   @onclick="() => OnQuestionClicked(question)">
@@ -28,7 +52,7 @@
                             <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" @onclick="() => SortOrderUp(question.SortOrder, question.QuizId)"></MudIconButton>
                         </MudPaper>
                     </MudItem>
-                }
+                } *@
             }
             else
             {
@@ -142,28 +166,37 @@
     public async Task OnQuizClicked(Quiz quiz)
     {
         AllQuestions = await QuestionManager.GetAllQuestionJsonBlobAsync(quiz.Id);
-        AllQuestions.OrderBy(q => q.SortOrder);
+        AllQuestions = AllQuestions.OrderBy(q => q.SortOrder).ToList();
         StateHasChanged();
     }
     public async Task OnQuestionClicked(QuestionJsonBlob question)
     {
         SelectedQuestion = await QuestionManager.GetQuestionFromBlob(question);
     }
-    public async Task SortOrderDown(int oldIndex, int quizId)
-    {
-        int newIndex = oldIndex - 1;
-        await QuestionManager.UpdateSortOrderAsync(quizId, oldIndex, newIndex);
-        await OnInitializedAsync();
-    }
-    public async Task SortOrderUp(int oldIndex, int quizId)
-    {
-        int newIndex = oldIndex + 1;
-        await QuestionManager.UpdateSortOrderAsync(quizId, oldIndex, newIndex);
-        await OnInitializedAsync();
-    }
+    // public async Task SortOrderDown(int oldIndex, int quizId)
+    // {
+    //     int newIndex = oldIndex - 1;
+    //     await QuestionManager.UpdateSortOrderAsync(quizId, oldIndex, newIndex);
+    //     await OnInitializedAsync();
+    // }
+    // public async Task SortOrderUp(int oldIndex, int quizId)
+    // {
+    //     int newIndex = oldIndex + 1;
+    //     await QuestionManager.UpdateSortOrderAsync(quizId, oldIndex, newIndex);
+    //     await OnInitializedAsync();
+    // }
     public async Task SaveNewQuestionProps(Models.Question question)
     {
         await QuestionManager.UpdateQuestionText(question);
         _open = false;
+    }
+    private async Task ItemUpdated(MudItemDropInfo<QuestionJsonBlob> dropItem)
+    {
+
+        for(int i = 0; i < AllQuestions.Count; i++)
+        {
+            AllQuestions[i].SortOrder = i+1;
+        }
+        await QuestionManager.UpdateSortOrderAsync(AllQuestions);
     }
 }
