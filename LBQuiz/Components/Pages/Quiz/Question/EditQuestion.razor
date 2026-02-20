@@ -1,6 +1,7 @@
 ﻿@using LBQuiz.Components.Helpers
 @using Services.Interfaces
 @using Models
+@using System.Threading.Tasks
 @inject IQuestionManager QuestionManager
 @inject IQuizManager QuizManager
 @inject AuthenticationStateProvider AuthStateProvider
@@ -18,17 +19,19 @@
         {
             @if (AllQuestions != null)
             {
-
-                <MudDropContainer T="QuestionJsonBlob" Items="AllQuestions" ItemsSelector="@((item, dropzone) => item.SortOrder.ToString() == dropzone)" ItemDropped="ItemUpdated" Class="d-flex flex-wrap flex-grow-1">
+                <MudDropContainer T="QuestionJsonBlob" Items="AllQuestions" ItemDropped="ItemUpdated" Class="d-flex flex-column" ItemsSelector="@((item, zone) => zone == "questions")">
                     <ChildContent>
-                        <MudPaper Class"ma-4 flex-grow-1">
-                            <MudList T="string" Class="d-flex flex-column mud-height-full">
+                        <MudPaper>
+                            <MudList T="QuestionJsonBlob">
                                 <MudListSubheader>Question List</MudListSubheader>
+                                <MudDropZone T="QuestionJsonBlob" AllowReorder="true" Identifier="questions"></MudDropZone>
                             </MudList>
                         </MudPaper>
                     </ChildContent>
-                    <ItemRenderer >
-                        <MudListItem T="string" Text="@context.QuestionText"></MudListItem>
+                    <ItemRenderer>
+                        <MudListItem T="QuestionJsonBlob">
+                            @context.QuestionText
+                        </MudListItem>
                     </ItemRenderer>
                 </MudDropContainer>
                 
@@ -168,32 +171,37 @@
     public async Task OnQuizClicked(Quiz quiz)
     {
         AllQuestions = await QuestionManager.GetAllQuestionJsonBlobAsync(quiz.Id);
-        AllQuestions.OrderBy(q => q.SortOrder);
+        AllQuestions = AllQuestions.OrderBy(q => q.SortOrder).ToList();
         StateHasChanged();
     }
     public async Task OnQuestionClicked(QuestionJsonBlob question)
     {
         SelectedQuestion = await QuestionManager.GetQuestionFromBlob(question);
     }
-    public async Task SortOrderDown(int oldIndex, int quizId)
-    {
-        int newIndex = oldIndex - 1;
-        await QuestionManager.UpdateSortOrderAsync(quizId, oldIndex, newIndex);
-        await OnInitializedAsync();
-    }
-    public async Task SortOrderUp(int oldIndex, int quizId)
-    {
-        int newIndex = oldIndex + 1;
-        await QuestionManager.UpdateSortOrderAsync(quizId, oldIndex, newIndex);
-        await OnInitializedAsync();
-    }
+    // public async Task SortOrderDown(int oldIndex, int quizId)
+    // {
+    //     int newIndex = oldIndex - 1;
+    //     await QuestionManager.UpdateSortOrderAsync(quizId, oldIndex, newIndex);
+    //     await OnInitializedAsync();
+    // }
+    // public async Task SortOrderUp(int oldIndex, int quizId)
+    // {
+    //     int newIndex = oldIndex + 1;
+    //     await QuestionManager.UpdateSortOrderAsync(quizId, oldIndex, newIndex);
+    //     await OnInitializedAsync();
+    // }
     public async Task SaveNewQuestionProps(Models.Question question)
     {
         await QuestionManager.UpdateQuestionText(question);
         _open = false;
     }
-    private void ItemUpdated()
+    private async Task ItemUpdated(MudItemDropInfo<QuestionJsonBlob> dropItem)
     {
-        
+
+        for(int i = 0; i < AllQuestions.Count; i++)
+        {
+            AllQuestions[i].SortOrder = i+1;
+        }
+        await QuestionManager.UpdateSortOrderAsync(AllQuestions);
     }
 }

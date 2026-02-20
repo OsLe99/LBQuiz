@@ -191,34 +191,40 @@ namespace LBQuiz.Services
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task UpdateSortOrderAsync(int quizId, int oldIndex, int newIndex)
-        {
-            //List of all questions wich need sortorder updated
-            var allQuestion = await _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToListAsync();
-            foreach(var question in allQuestion)
-            {
-                if (question == null) continue;
+        //public async Task UpdateSortOrderAsync(int quizId, int oldIndex, int newIndex)
+        //{
+        //    //List of all questions wich need sortorder updated
+        //    var allQuestion = await _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToListAsync();
+        //    newIndex = newIndex + 1;
+        //    foreach (var question in allQuestion)
+        //    {
+        //        if (question == null) continue;
 
-                if(question.SortOrder == oldIndex)
-                {
-                    question.SortOrder = newIndex;
-                }
-                else if(oldIndex < newIndex)
-                {
-                    if(question.SortOrder > oldIndex && question.SortOrder <= newIndex)
-                    {
-                        question.SortOrder--;
-                    }
-                }
-                else if(oldIndex > newIndex)
-                {
-                    if(question.SortOrder >= newIndex && question.SortOrder < oldIndex)
-                    {
-                        question.SortOrder++;
-                    }
-                    
-                }                    
-            }
+        //        if (question.SortOrder == oldIndex)
+        //        {
+        //            question.SortOrder = newIndex;
+        //        }
+        //        else if (oldIndex < newIndex)
+        //        {
+        //            if (question.SortOrder > oldIndex && question.SortOrder <= newIndex)
+        //            {
+        //                question.SortOrder--;
+        //            }
+        //        }
+        //        else if (oldIndex > newIndex)
+        //        {
+        //            if (question.SortOrder >= newIndex && question.SortOrder < oldIndex)
+        //            {
+        //                question.SortOrder++;
+        //            }
+
+        //        }
+        //    }
+        //    await _dbContext.SaveChangesAsync();
+        //}
+        public async Task UpdateSortOrderAsync(List<QuestionJsonBlob> allQuestions)
+        {
+            _dbContext.UpdateRange(allQuestions);
             await _dbContext.SaveChangesAsync();
         }
         public async Task UpdateQuestionText(Question question)
