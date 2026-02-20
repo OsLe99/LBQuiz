@@ -147,23 +147,6 @@ namespace LBQuiz.Hubs
             var participants = _lobbyParticipantManager.GetParticipants(participant.LobbyId);
             
             await Clients.Group(participant.LobbyId.ToString()).SendAsync("ScoreBoardUpdated", participants);
-
-            // var participant = _lobbyParticipantManager.GetLobbyParticipant(Context.ConnectionId);
-            // if (participant == null) return;
-            // if(Question.CorrectAnswer.Equals(formattedAnswer, StringComparison.OrdinalIgnoreCase))
-            // {
-            //     if (string.Equals(Question.CorrectAnswer, formattedAnswer, StringComparison.OrdinalIgnoreCase))
-            //     {
-            //         participant.Score += Question.Points;
-            //     }
-            //     
-            //     await Clients.Group(participant.LobbyId.ToString()).SendAsync("ScoreBoardCalculated", Question, answer, participant);
-            // }
-            //
-            // var participants = _lobbyParticipantManager.GetParticipants(participant.LobbyId);
-            //
-            // await Clients.Group(participant.LobbyId.ToString()).SendAsync("ScoreBoardUpdated", participants);
-            //
         }
 
         public async Task GoToNextQuestionAsync(int questionIndex, int lobbyId)

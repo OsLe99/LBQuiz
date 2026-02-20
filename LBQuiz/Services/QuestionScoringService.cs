@@ -1,8 +1,6 @@
 ﻿using LBQuiz.Models;
-using LBQuiz.Models.Helpers;
 using LBQuiz.Models.Helpers.AnswerDTO;
 using LBQuiz.Services.Interfaces;
-using Newtonsoft.Json;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace LBQuiz.Services;

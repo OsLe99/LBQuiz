@@ -104,22 +104,7 @@ namespace LBQuiz.Services
                 Blob = JsonSerializer.Serialize(dto),
                 QuestionType = "Multiple"
             };
-            // var multipleQuestion = new Models.MultipleChoice() { 
-            //     QuizId = quizId,
-            //     QuestionText = questionText,
-            //     Points = questionPoints,
-            //     SortOrder = sO,
-            //     MultipleOptionsList = multiple
-            // };
-            // var jsonBlob = new QuestionJsonBlob()
-            // {
-            //     QuizId = quizId,
-            //     QuestionText = questionText,
-            //     SortOrder = multipleQuestion.SortOrder,
-            //     Blob = JsonSerializer.Serialize(multiple),
-            //     QuestionType = "Multiple"
-            //     
-            // };
+            
             if(jsonBlob != null)
             {
                 _dbContext.QuestionJsonBlobs.Add(jsonBlob);
@@ -334,10 +319,8 @@ namespace LBQuiz.Services
                 };
                 return question;
             }
-            else
-            {
-                return null;
-            }
+            
+            return null;
         }
     }
 }

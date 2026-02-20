@@ -17,6 +17,5 @@ namespace LBQuiz.Services
         {
             await _hubContext.Clients.All.SendAsync("ReceiveSubmittedAnswer", answer, questionId);
         }
-
     }
 }
