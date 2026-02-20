@@ -5,6 +5,8 @@ using LBQuiz.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using LBQuiz.Models.Helpers.AnswerDTO;
+using Newtonsoft.Json.Linq;
+using LBQuiz.Migrations;
 
 namespace LBQuiz.Services
 {
@@ -224,37 +226,36 @@ namespace LBQuiz.Services
             {
                 var questionUpdate = _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefault();
                 questionUpdate.QuestionText = question.QuestionText;
-                
-
-
-                var json = JsonSerializer.Serialize(question);
-                var openQuest = JsonSerializer.Deserialize<QuestionOpen>(json);
-                openQuest.QuestionText = question.QuestionText;
+                var openQuest = JsonSerializer.Deserialize<QuestionOpen>(questionUpdate.Blob);
+                openQuest.QuestionText = quest.QuestionText;
                 openQuest.Points = question.Points;
                 openQuest.CorrectAnswer = quest.CorrectAnswer;
-                var newJson = JsonSerializer.Serialize(openQuest);
-                questionUpdate.Blob = newJson;
 
+                var json = JsonSerializer.Serialize<QuestionOpen>(openQuest);
+                questionUpdate.Blob = json;
 
                 _dbContext.Update(questionUpdate);
                 await _dbContext.SaveChangesAsync();
             }
             else if(question is QuestionSlider slider)
             {
-                var questionUpdate = _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefault();
+                var questionUpdate = _dbContext.QuestionJsonBlobs.Where(q => q.Id == slider.Id).FirstOrDefault();
                 questionUpdate.QuestionText = question.QuestionText;
 
-
-                var json = JsonSerializer.Serialize(question);
-                var openQuest = JsonSerializer.Deserialize<QuestionSlider>(json);
+                var openQuest = JsonSerializer.Deserialize<QuestionSlider>(questionUpdate.Blob);
                 openQuest.QuestionText = slider.QuestionText;
                 openQuest.MaxValue = slider.MaxValue;
                 openQuest.MinValue = slider.MinValue;
                 openQuest.CorrectValue = slider.CorrectValue;
+                var json = JsonSerializer.Serialize<QuestionSlider>(openQuest);
+                questionUpdate.Blob = json;
 
 
                 _dbContext.Update(questionUpdate);
                 await _dbContext.SaveChangesAsync();
+
+
+
             }
             else if(question is MultipleChoice multiple)
             {
@@ -291,33 +292,43 @@ namespace LBQuiz.Services
 
         #endregion
 
-        public async Task<Question> GetQuestionFromBlob(QuestionJsonBlob blob)
+        public async Task<Question> GetQuestionFromBlob(QuestionJsonBlob questionJsonBlob)
         {
-            if (blob.QuestionType == "Open")
+            if (questionJsonBlob.QuestionType == "Open")
             {
-                var question = JsonSerializer.Deserialize<QuestionOpen>(blob.Blob);
-                question.Id = blob.Id;
+                var question = JsonSerializer.Deserialize<QuestionOpen>(questionJsonBlob.Blob);
+                question.Id = questionJsonBlob.Id;
                 return question;
             }
-            if (blob.QuestionType == "Slider")
+            if (questionJsonBlob.QuestionType == "Slider")
             {
-                var question = JsonSerializer.Deserialize<QuestionSlider>(blob.Blob);
-                question.Id = blob.Id;
+                var question = JsonSerializer.Deserialize<QuestionSlider>(questionJsonBlob.Blob);
+                question.Id = questionJsonBlob.Id;
                 return question;
             }
-            if (blob.QuestionType == "Multiple")
+            if (questionJsonBlob.QuestionType == "Multiple")
             {
-                var newBlob = JsonSerializer.Deserialize<List<MultipleOptions>>(blob.Blob);
-                var question = new MultipleChoice()
+                var multiple = JsonSerializer.Deserialize<MultipleChoice>(questionJsonBlob.Blob);
+
+                var dto = new MultipleChoiceQuestionDTO()
                 {
-                    Id = blob.Id,
-                    QuizId = blob.QuizId,
-                    QuestionText = blob.QuestionText,
-                    Points = 0,
-                    SortOrder = blob.SortOrder,
-                    MultipleOptionsList = newBlob
+                    Points = multiple.Points,
+                    MultipleOptionsList = multiple.MultipleOptionsList
                 };
-                return question;
+
+                var result = new MultipleChoice()
+                {
+                    Id = questionJsonBlob.Id,
+                    QuizId = questionJsonBlob.QuizId,
+                    QuestionText = questionJsonBlob.QuestionText,
+                    SortOrder = questionJsonBlob.SortOrder,
+                    Points = multiple.Points,
+                    MultipleOptionsList = multiple.MultipleOptionsList
+                };
+
+
+
+                return result;
             }
             
             return null;
