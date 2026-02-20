@@ -4,6 +4,8 @@ using LBQuiz.Services.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Moq;
 using System.Security.Claims;
+using LBQuiz.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace LBQuiz.Test.Hubs;
 
@@ -16,6 +18,7 @@ public class LobbyHubFixture
     public Mock<IGroupManager> MockGroups { get; }
     public Mock<IClientProxy> MockClientProxy { get; }
     public Mock<IClientProxy> MockCallerProxy { get; }
+    public Mock<IQuestionScoringService> MockQuestionScoringService { get; }
 
     public LobbyHubFixture()
     {
@@ -26,6 +29,7 @@ public class LobbyHubFixture
         MockGroups = new Mock<IGroupManager>();
         MockClientProxy = new Mock<IClientProxy>();
         MockCallerProxy = new Mock<IClientProxy>();
+        MockQuestionScoringService = new Mock<IQuestionScoringService>();
         
         MockClients.As<IHubCallerClients<IClientProxy>>()
             .SetupGet(c => c.Caller)
@@ -36,6 +40,15 @@ public class LobbyHubFixture
             .Returns(MockClientProxy.Object);
         
         MockContext.SetupGet(c => c.ConnectionId).Returns("conn-123");
+    }
+
+    private ApplicationDbContext CreateInMemoryDb()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        
+        return new ApplicationDbContext(options);
     }
 
     public LobbyHub CreateHub(string? userId = null, string connectionId = "conn-123")
@@ -53,7 +66,9 @@ public class LobbyHubFixture
             MockContext.SetupGet(c => c.User).Returns((ClaimsPrincipal?)null);
         }
         
-        return new LobbyHub(MockLobbyParticipantManager.Object, MockLobbyService.Object)
+        var dbContext = CreateInMemoryDb();
+        
+        return new LobbyHub(MockLobbyParticipantManager.Object, MockLobbyService.Object, MockQuestionScoringService.Object, dbContext)
         {
             Context = MockContext.Object,
             Clients = MockClients.Object,

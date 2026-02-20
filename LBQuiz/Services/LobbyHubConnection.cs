@@ -28,7 +28,7 @@ namespace LBQuiz.Services
         public string? ConnectionId => _hubConnection?.ConnectionId;
 
         public event Func<string, LobbyParticipant, Task>? OnAnswerRecieved;
-        public event Func<string, QuestionOpen, LobbyParticipant, Task>? OnCalculateScoreBoard;
+        public event Func<string, QuestionJsonBlob, LobbyParticipant, Task>? OnCalculateScoreBoard;
 
         public LobbyHubConnection(IHttpContextAccessor httpContextAccessor)
         {
@@ -96,11 +96,9 @@ namespace LBQuiz.Services
                     }
                 });
 
-            _hubConnection.On<QuestionOpen, string, LobbyParticipant>("ScoreBoardCalculated",
+            _hubConnection.On<QuestionJsonBlob, string, LobbyParticipant>("ScoreBoardCalculated",
                 async (question, answer, participant) =>
                 {
-                    // Score is now calculated server-side, just pass it through
-                    Console.WriteLine($"{participant.Nickname}: {participant.Score} points");
                     if (OnCalculateScoreBoard != null)
                     {
                         await OnCalculateScoreBoard.Invoke(answer, question, participant);
@@ -198,11 +196,11 @@ namespace LBQuiz.Services
                 await _hubConnection.InvokeAsync("ReceiveSubmittedAnswer", answer, lobbyId.ToString(), quizId);
             }
         }
-        public async Task UpdateScoreBoard(Question question, string answer)
+        public async Task UpdateScoreBoard(int questionId, string answer)
         {
             if(_hubConnection != null)
             {
-                await _hubConnection.InvokeAsync("CalculateScoreBoard", question, answer);
+                await _hubConnection.InvokeAsync("CalculateScoreBoard", questionId, answer);
             }
         }
 
@@ -251,8 +249,5 @@ namespace LBQuiz.Services
                 await _hubConnection.InvokeAsync("SubmitMultipleAnswers", lobbyId, quizId, participantAnswers, questionId);
             }
         }
-
-
-
     }
 }
