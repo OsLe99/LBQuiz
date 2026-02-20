@@ -9,7 +9,7 @@
 @page "/quiz/question/update"
 
 
-<AuthorizeView>
+<AuthorizeView Context="authContext">
     <Authorized>
         
         <h3>Edit Question</h3>
@@ -18,8 +18,29 @@
         {
             @if (AllQuestions != null)
             {
-                @foreach (var question in AllQuestions.OrderBy(x => x.SortOrder))
+
+                <MudDropContainer T="QuestionJsonBlob" Items="AllQuestions" ItemsSelector="@((item, dropzone) => item.SortOrder.ToString() == dropzone)" ItemDropped="ItemUpdated" Class="d-flex flex-wrap flex-grow-1">
+                    <ChildContent>
+                        <MudPaper Class"ma-4 flex-grow-1">
+                            <MudList T="string" Class="d-flex flex-column mud-height-full">
+                                <MudListSubheader>Question List</MudListSubheader>
+                            </MudList>
+                        </MudPaper>
+                    </ChildContent>
+                    <ItemRenderer >
+                        <MudListItem T="string" Text="@context.QuestionText"></MudListItem>
+                    </ItemRenderer>
+                </MudDropContainer>
+                
+
+
+
+                @* @foreach (var question in AllQuestions.OrderBy(x => x.SortOrder))
                 {
+                    
+
+
+
                     <MudItem>
                         <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;"
                                   @onclick="() => OnQuestionClicked(question)">
@@ -28,7 +49,7 @@
                             <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" @onclick="() => SortOrderUp(question.SortOrder, question.QuizId)"></MudIconButton>
                         </MudPaper>
                     </MudItem>
-                }
+                } *@
             }
             else
             {
@@ -170,5 +191,9 @@
     {
         await QuestionManager.UpdateQuestionText(question);
         _open = false;
+    }
+    private void ItemUpdated()
+    {
+        
     }
 }
