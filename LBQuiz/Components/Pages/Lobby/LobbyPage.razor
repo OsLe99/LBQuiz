@@ -9,6 +9,9 @@
 @inject ILobbyHubConnection LobbyHub
 @inject ApplicationDbContext DbContext
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+
 @page "/quiz/{QuizId:int}/{LobbyId:int}"
 
 <h3 style="text-align: center; margin-bottom: 40px;">LobbyPage</h3>
@@ -20,37 +23,55 @@
 }
 else if(_quizStart == false)
 {
-    <MudGrid Justify="Justify.Center">
-        <MudItem>
-            <MudPaper Class="pa-4" Style="height:100%; min-height:200px; background-color: antiquewhite; box-shadow: 5px 5px 8px orange;">
-                <MudText Typo="Typo.h4">Welcome to the LobbyPage</MudText>
-                <MudText Typo="Typo.h6">Waiting for the lobbyleader to start the quiz</MudText>
-            </MudPaper>
-        </MudItem>
-        <MudItem>
-            <MudPaper Class="pa-4" Style="height:100%; min-height:200px; background-color: antiquewhite; box-shadow: 5px 5px 8px orange;">
-                <MudText Typo="Typo.h4">Lobby-Code: </MudText>
-                <MudText style="text-decoration: underline;" Typo="Typo.h3">@CurrentLobby.JoinCode</MudText>
-                @if (_userId == CurrentQuiz.HostId)
-                {
-                    <MudButton Style="margin-top: 20px;" Variant="Variant.Filled" Color="Color.Primary" OnClick="StartQuiz">Start Quiz</MudButton>
-                }
-            </MudPaper>
-        </MudItem>
-        <MudItem>
-            <MudPaper Class="pa-4" Style="height:100%; min-height:200px; background-color: antiquewhite; box-shadow: 5px 5px 8px orange;">
-                <MudText Typo="Typo.h6">Number of players in the lobby: @LobbyHub.Participants.Count</MudText>
-                <MudList T="string">
-                    @foreach(var part in LobbyHub.Participants)
-                    {
-                        <MudListItem Icon="@Icons.Material.Filled.AccountCircle">@part.Nickname</MudListItem>
-                    }
-                </MudList>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
+    <MudContainer Class="mb-5 d-flex-1">
+        
+        <MudPaper Style="background-color: lightgrey; height: 75vh;" Class="flex-grow-1">
+            
+            <MudGrid Justify="Justify.SpaceEvenly" Spacing="2">
+                
+                <MudItem>
+                    <MudText Typo="Typo.h4">Welcome to the lobby!</MudText>
+                </MudItem>
 
-    
+                <MudItem>
+                    <MudText Typo="Typo.h4">Join Code: @CurrentLobby.JoinCode
+                        <MudTooltip Text="Copy Code">
+                            <MudFab StartIcon="@Icons.Material.Filled.ContentCopy" Color="Color.Primary" Size="Size.Small" OnClick="CopyToClipboard"></MudFab>
+                        </MudTooltip>
+                    </MudText>
+                    
+                </MudItem>
+
+                <MudItem>
+                    <MudText Typo="Typo.h6">Number of players in lobby: @LobbyHub.Participants.Count</MudText>
+                    <MudContainer Style="max-height: 70vh; overflow: scroll;">
+                        <MudList T="string" ReadOnly="true">
+                            @foreach (var part in LobbyHub.Participants)
+                            {
+                                <MudListItem>
+                                    <MudChip Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Primary">
+                                        @part.Nickname
+                                    </MudChip>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    </MudContainer>
+                   
+                </MudItem>
+                
+
+            </MudGrid>
+            
+        </MudPaper>
+        <div class="d-flex justify-content-center mt-4">
+            @if (_userId == CurrentQuiz.HostId)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StartQuiz">Start Quiz</MudButton>
+            }
+        </div>
+ 
+
+    </MudContainer>
    
 }
 
@@ -59,7 +80,7 @@ else if(_quizStart == false)
     public int QuizId { get; set; }
     [Parameter]
     public int LobbyId { get; set; }
-    public Models.Lobby.QuizLobby CurrentLobby { get; set; }
+    public QuizLobby CurrentLobby { get; set; }
     public Models.Quiz CurrentQuiz { get; set; }
     private string? _userId;
     private bool _quizStart = false;
@@ -113,7 +134,11 @@ else if(_quizStart == false)
         }
     }
 
-
+    private async Task CopyToClipboard()
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", CurrentLobby.JoinCode);
+        Snackbar.Add("Copied to clipboard!", Severity.Success);
+    }
 }
 
 

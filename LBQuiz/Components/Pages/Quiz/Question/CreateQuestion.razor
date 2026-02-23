@@ -5,7 +5,9 @@
 @using LBQuiz.Models;
 @using Microsoft.EntityFrameworkCore
 @using Data
+@using LBQuiz.Components.Helpers
 @using Services.Interfaces
+@using Mono.TextTemplating
 @using Models.Helpers
 
 <AuthorizeView>
@@ -139,7 +141,7 @@
     </Authorized>
     
     <NotAuthorized>
-        <NotAuthorized/>
+        <NotAuthorizedHelper/>
     </NotAuthorized>
 
 </AuthorizeView>
@@ -166,7 +168,7 @@
     protected override async Task OnInitializedAsync()
     {
         _numberOfQuestionsInQuiz = await QuestionManager.GetNumberOfQuestionInQuizAsync(QuizId);
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task SaveQuestion()
