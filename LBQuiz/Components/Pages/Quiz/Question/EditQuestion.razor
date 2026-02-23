@@ -48,10 +48,16 @@
                         @foreach (var item in AllQuizes)
                         {
                             <MudItem>
-                                <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px"
+                                <MudPaper Class="editPaper pa-4" Style="border: 1px solid black; margin-bottom: 6px;"
                                           @onclick="() => OnQuizClicked(item)">
                                     <MudText Typo="Typo.h4">@item.Name</MudText>
                                     <MudText Typo="Typo.h6">@item.Description</MudText>
+                                    <MudButton
+                                        OnClick="() => DeleteQuiz(item)"
+                                        Class="mt-2"
+                                        Variant="Variant.Filled"
+                                        Color="Color.Error"
+                                    >Delete Quiz</MudButton>
                                 </MudPaper>
                             </MudItem>
                         }
@@ -203,5 +209,31 @@
 
             StateHasChanged();
         }
+    }
+    private async Task DeleteQuiz(Quiz quiz)
+    {
+        var parameters = new DialogParameters
+        {
+            {"ContentText" , $"Are you sure ypu want to delete {quiz.Name}?"},
+            {"ButtonText", "Delete"},
+            {"Color", Color.Error}
+        };
+
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        var dialog = DialogService.Show<ConfirmDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            AllQuizes = AllQuizes.Where(q => q != quiz).ToList();
+
+            await QuizManager.DeleteQuizAsync(quiz);
+
+            StateHasChanged();
+        }
+
+
+        
     }
 }
