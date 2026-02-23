@@ -12,7 +12,7 @@
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
 
-@page "/quiz/{QuizId:int}/{LobbyId:int}"
+@page "/quiz/{quizid:int}/{lobbyid:int}"
 
 <h3 style="text-align: center; margin-bottom: 40px;">LobbyPage</h3>
 
@@ -80,6 +80,8 @@ else if(_quizStart == false)
     public int QuizId { get; set; }
     [Parameter]
     public int LobbyId { get; set; }
+    [Parameter]
+    public string LobbyCode { get; set; }
     public QuizLobby CurrentLobby { get; set; }
     public Models.Quiz CurrentQuiz { get; set; }
     private string? _userId;

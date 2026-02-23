@@ -34,7 +34,7 @@ namespace LBQuiz.Services
 
                 var imageBytes = Convert.FromBase64String(base64String);
 
-                var filePath = Path.Combine("wwwroot", "images", "qrcodenn.jpg");
+                var filePath = Path.Combine("wwwroot", "images", "qrcode.jpg");
 
                 await File.WriteAllBytesAsync(filePath, imageBytes);
             }
