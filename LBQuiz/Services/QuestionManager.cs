@@ -255,24 +255,6 @@ namespace LBQuiz.Services
 
                 questionUpdate.Blob = JsonSerializer.Serialize(dto);
 
-                //var json = JsonSerializer.Serialize(multiple.MultipleOptionsList);
-                //var options = JsonSerializer.Deserialize<List<MultipleOptions>>(json);
-
-                
-                //foreach(var option in options)
-                //{
-                //    foreach(var item in multiple.MultipleOptionsList)
-                //    {
-                //        if(option.Id == item.Id)
-                //        {
-                //            option.Text = item.Text;
-                //        }
-                //    }
-                //}
-
-                //var newJson = JsonSerializer.Serialize(options);
-                //questionUpdate.Blob = newJson;
-
                 _dbContext.Update(questionUpdate);
                 await _dbContext.SaveChangesAsync();
             }
@@ -280,6 +262,11 @@ namespace LBQuiz.Services
             
         }
 
+        public async Task DeleteQuestionAsync(QuestionJsonBlob question)
+        {
+            _dbContext.QuestionJsonBlobs.Remove(question);
+            await _dbContext.SaveChangesAsync();
+        }
 
 
         #endregion
@@ -300,24 +287,6 @@ namespace LBQuiz.Services
             }
             if (questionJsonBlob.QuestionType == "Multiple")
             {
-                //var multiple = JsonSerializer.Deserialize<MultipleChoice>(questionJsonBlob.Blob);
-
-                //var dto = new MultipleChoiceQuestionDTO()
-                //{
-                //    Points = multiple.Points,
-                //    MultipleOptionsList = multiple.MultipleOptionsList
-                //};
-
-                //var result = new MultipleChoice()
-                //{
-                //    Id = questionJsonBlob.Id,
-                //    QuizId = questionJsonBlob.QuizId,
-                //    QuestionText = questionJsonBlob.QuestionText,
-                //    SortOrder = questionJsonBlob.SortOrder,
-                //    Points = multiple.Points,
-                //    MultipleOptionsList = multiple.MultipleOptionsList
-                //};
-
                 var dto = JsonSerializer.Deserialize<MultipleChoiceQuestionDTO>(questionJsonBlob.Blob);
 
                 var result = new MultipleChoice

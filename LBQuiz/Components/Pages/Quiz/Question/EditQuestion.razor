@@ -2,9 +2,11 @@
 @using Services.Interfaces
 @using Models
 @using System.Threading.Tasks
+@using Pages.PopUps
 @inject IQuestionManager QuestionManager
 @inject IQuizManager QuizManager
 @inject AuthenticationStateProvider AuthStateProvider
+@inject IDialogService DialogService
 
 
 @page "/quiz/question/update"
@@ -19,7 +21,7 @@
         {
             @if (AllQuestions != null)
             {
-                <MudDropContainer T="QuestionJsonBlob" Items="AllQuestions" ItemDropped="ItemUpdated" Class="d-flex flex-column" ItemsSelector="@((item, zone) => zone == "questions")">
+                <MudDropContainer T="QuestionJsonBlob" Items="AllQuestions" ItemDropped="ItemUpdated" Class="d-flex flex-column" ItemsSelector="@((item, zone) => zone == "questions")" @key="AllQuestions">
                     <ChildContent>
                         <MudPaper>
                             <MudList T="QuestionJsonBlob">
@@ -29,30 +31,14 @@
                         </MudPaper>
                     </ChildContent>
                     <ItemRenderer>
-                        <MudListItem T="QuestionJsonBlob">
-                            @context.QuestionText
-                        </MudListItem>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" spacing="2" Style="max-width: 400px; overflow:clip">
+                            <MudListItem T="QuestionJsonBlob" @onclick="() => OnQuestionClicked(context)">
+                                @context.QuestionText
+                            </MudListItem>
+                            <MudButton OnClick="() => DeleteQuestionAsync(context)" Color="Color.Error">Delete</MudButton>
+                        </MudStack>
                     </ItemRenderer>
                 </MudDropContainer>
-                
-
-
-
-                @* @foreach (var question in AllQuestions.OrderBy(x => x.SortOrder))
-                {
-                    
-
-
-
-                    <MudItem>
-                        <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;"
-                                  @onclick="() => OnQuestionClicked(question)">
-                            <MudText Typo="Typo.h4">@question.QuestionText</MudText>
-                            <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" @onclick="() => SortOrderDown(question.SortOrder, question.QuizId)"></MudIconButton>
-                            <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" @onclick="() => SortOrderUp(question.SortOrder, question.QuizId)"></MudIconButton>
-                        </MudPaper>
-                    </MudItem>
-                } *@
             }
             else
             {
@@ -62,10 +48,21 @@
                         @foreach (var item in AllQuizes)
                         {
                             <MudItem>
-                                <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px"
+                                <MudPaper Class="editPaper pa-4" Style="border: 1px solid black; margin-bottom: 6px;"
                                           @onclick="() => OnQuizClicked(item)">
                                     <MudText Typo="Typo.h4">@item.Name</MudText>
                                     <MudText Typo="Typo.h6">@item.Description</MudText>
+                                    <MudButton 
+                                        OnClick="() => UpdateQuiz(item)"
+                                        Class="mt-2"
+                                        Variant="Variant.Filled"
+                                        Color="Color.Primary">Update Quiz</MudButton>
+                                    <MudButton
+                                        OnClick="() => DeleteQuiz(item)"
+                                        Class="mt-2"
+                                        Variant="Variant.Filled"
+                                        Color="Color.Error"
+                                    >Delete Quiz</MudButton>
                                 </MudPaper>
                             </MudItem>
                         }
@@ -79,14 +76,13 @@
             {
                 <MudItem>
                     <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;">
-                        <MudText @onclick="() => ToggleOpen()">@question.QuestionText</MudText>
-                        <MudPopover Open="@_open" Fixed="true" Class="px-4 pt-4">
-                            <div class="d-flex flex-column">
-                                <MudText>New question-text: </MudText>
-                                <MudTextField @bind-Value="@question.QuestionText"></MudTextField>
-                                <MudButton @onclick="() => SaveNewQuestionProps(question)">Save</MudButton>
-                            </div>
-                        </MudPopover>
+                        <MudText>@question.QuestionText</MudText>
+                    </MudPaper>
+                    <MudPaper Class="pa-16 ma-2">
+                        <MudTextField Label="New Question Text" @bind-Value="question.QuestionText" Variant="Variant.Filled"></MudTextField>
+                        <MudTextField Label="New Question Answer" @bind-Value="question.CorrectAnswer" Variant="Variant.Filled"></MudTextField>
+                        <MudTextField Label="New Question Points" @bind-Value="question.Points" Variant="Variant.Filled"></MudTextField>
+                        <MudButton Variant="Variant.Filled" OnClick="() => SaveNewQuestionProps(question)" Style="margin-top: 10px; border: 1px solid rgba(0,0,0,0.4)">Save Changes</MudButton>
                     </MudPaper>
                 </MudItem>
             }
@@ -96,13 +92,14 @@
                     <MudPaper>
                         <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;">
                             <MudText>@questionSlider.QuestionText</MudText>
-                            <MudText>New question-text: </MudText>
-                            <MudTextField @bind-Value="@questionSlider.QuestionText"></MudTextField>
-                            <MudInput T="int" @bind-Value="@questionSlider.MinValue" Label="Minimum Value"></MudInput>
-                            <MudInput T="int" @bind-Value="@questionSlider.MaxValue" Label="Maximum Value"></MudInput>
-                            <MudInput T="int?" @bind-Value="@questionSlider.CorrectValue" Label="Set a correct value (optional)"></MudInput>
                         </MudPaper>
-                        <MudButton @onclick="() => SaveNewQuestionProps(questionSlider)">Save</MudButton>
+                        <MudPaper Class="pa-16 ma-2">
+                            <MudTextField Label="New Quesion Text" @bind-Value="@questionSlider.QuestionText" Variant="Variant.Filled"></MudTextField>
+                            <MudTextField Label="New Minimum Value" @bind-Value="@questionSlider.MinValue" Variant="Variant.Filled"></MudTextField>
+                            <MudTextField Label="New Maximum Value" @bind-Value="@questionSlider.MaxValue" Variant="Variant.Filled"></MudTextField>
+                            <MudTextField Label="New Correct Value" @bind-Value="@questionSlider.CorrectValue" Variant="Variant.Filled"></MudTextField>
+                            <MudButton Variant="Variant.Filled" @onclick="() => SaveNewQuestionProps(questionSlider)" Style="margin-top: 10px; border: 1px solid rgba(0,0,0,0.4)">Save Changes</MudButton>
+                        </MudPaper>
                     </MudPaper>
                 </MudItem>
             }
@@ -110,22 +107,23 @@
             {
                 <MudItem>
                     <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;">
-                        <MudText>New question-text: </MudText>
-                        <MudTextField @bind-Value="@multipleQuestion.QuestionText"></MudTextField>
+                        <MudTextField Label="New Question Text" @bind-Value="@multipleQuestion.QuestionText" Variant="Variant.Filled"></MudTextField>
                     </MudPaper>
                 </MudItem>
-                <MudPaper>
-                    <MudList T="String">
-                        @foreach (var item in multipleQuestion.MultipleOptionsList)
-                        {
-                            <MudListItem Text="@item.Text"></MudListItem>
-                            <MudInput @bind-Value="@item.Text"></MudInput>
-                            <MudCheckBox @bind-Value="item.CorrectFalse"></MudCheckBox>
-                        }
-                    </MudList>
-                    <MudButton @onclick="() => SaveNewQuestionProps(multipleQuestion)">Save</MudButton>
-                </MudPaper>
+                <MudPaper Class="pa-16 ma-2">
+                        <MudList T="String">
+                            @foreach (var item in multipleQuestion.MultipleOptionsList)
+                            {
+                                <MudListItem Text="@item.Text"></MudListItem>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" spacing="2" Style="max-width: 400px; overflow:clip">
+                                    <MudTextField Label="New Option Text" @bind-Value="@item.Text" Style="flex:1"></MudTextField>
+                                    <MudCheckBox @bind-Value="item.CorrectFalse"></MudCheckBox>
+                                </MudStack>
 
+                            }
+                        </MudList>
+                        <MudButton @onclick="() => SaveNewQuestionProps(multipleQuestion)" Style="margin-top: 10px; border: 1px solid rgba(0,0,0,0.4)">Save</MudButton>
+                </MudPaper>
             }
         }
 
@@ -173,18 +171,6 @@
     {
         SelectedQuestion = await QuestionManager.GetQuestionFromBlob(question);
     }
-    // public async Task SortOrderDown(int oldIndex, int quizId)
-    // {
-    //     int newIndex = oldIndex - 1;
-    //     await QuestionManager.UpdateSortOrderAsync(quizId, oldIndex, newIndex);
-    //     await OnInitializedAsync();
-    // }
-    // public async Task SortOrderUp(int oldIndex, int quizId)
-    // {
-    //     int newIndex = oldIndex + 1;
-    //     await QuestionManager.UpdateSortOrderAsync(quizId, oldIndex, newIndex);
-    //     await OnInitializedAsync();
-    // }
     public async Task SaveNewQuestionProps(Models.Question question)
     {
         await QuestionManager.UpdateQuestionText(question);
@@ -198,5 +184,78 @@
             AllQuestions[i].SortOrder = i+1;
         }
         await QuestionManager.UpdateSortOrderAsync(AllQuestions);
+    }
+    private async Task DeleteQuestionAsync(QuestionJsonBlob question)
+    {
+        var parameters = new DialogParameters
+        {
+            {"ContentText" , $"Are you sure ypu want to delete {question.QuestionText}?"},
+            {"ButtonText", "Delete"},
+            {"Color", Color.Error}
+        };
+
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        var dialog = DialogService.Show<ConfirmDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            AllQuestions = AllQuestions.Where(q => q != question).ToList();
+
+            for(int i = 0; i < AllQuestions.Count; i++)
+            {
+                AllQuestions[i].SortOrder = i + 1;
+            }
+
+            await QuestionManager.DeleteQuestionAsync(question);
+
+            await QuestionManager.UpdateSortOrderAsync(AllQuestions);
+
+            StateHasChanged();
+        }
+    }
+    private async Task DeleteQuiz(Quiz quiz)
+    {
+        var parameters = new DialogParameters
+        {
+            {"ContentText" , $"Are you sure ypu want to delete {quiz.Name}?"},
+            {"ButtonText", "Delete"},
+            {"Color", Color.Error}
+        };
+
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        var dialog = DialogService.Show<ConfirmDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            AllQuizes = AllQuizes.Where(q => q != quiz).ToList();
+
+            await QuizManager.DeleteQuizAsync(quiz);
+
+            StateHasChanged();
+        }
+    }
+    private async Task UpdateQuiz(Quiz quiz)
+    {
+        var parameters = new DialogParameters
+        {
+            {"updateQuiz", quiz},
+            {"ButtonText", "Save"},
+            {"Color", Color.Success}
+        };
+
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        var dialog = DialogService.Show<UpdateQuiz>("Confirm Update", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await QuizManager.UpdateQuizAsync(quiz);
+        }
+
     }
 }
