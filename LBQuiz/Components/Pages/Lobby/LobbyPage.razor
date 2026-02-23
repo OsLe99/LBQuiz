@@ -112,18 +112,11 @@ else if(_quizStart == false)
             // Host joins to receive events but is NOT added as a participant
             await LobbyHub.JoinLobbyAsHostAsync(LobbyId);
         }
-        else
-        {
-            // Regular participants join as normal
-            await LobbyHub.JoinLobbyAsync(CurrentLobby.JoinCode, "TestAnvändare");
-        }
 
         LobbyHub.OnParticipantsChanged += async () =>
         {
             await InvokeAsync(StateHasChanged); // säker UI-tråd
         };
-
-       
     }
 
     public async Task StartQuiz()
@@ -133,7 +126,7 @@ else if(_quizStart == false)
             await LobbyHub.StartQuizAsync(LobbyId, QuizId);
         }
     }
-
+    
     private async Task CopyToClipboard()
     {
         await JS.InvokeVoidAsync("navigator.clipboard.writeText", CurrentLobby.JoinCode);
