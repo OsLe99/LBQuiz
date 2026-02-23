@@ -55,6 +55,7 @@ builder.Services.AddScoped<ILobbyHubService, LobbyHubService>();
 builder.Services.AddScoped<IQuizManager, QuizManager>();
 builder.Services.AddScoped<IQuestionScoringService, QuestionScoringService>();
 builder.Services.AddScoped<IChatHubConnection, ChatHubConnection>();
+builder.Services.AddScoped<IQRCodeService, QRCodeService>();
 
 var app = builder.Build();
 
