@@ -34,5 +34,10 @@ namespace LBQuiz.Services
             _dbContext.Quiz.Remove(quiz);
             await _dbContext.SaveChangesAsync();
         }
+        public async Task UpdateQuizAsync(Quiz quiz)
+        {
+            _dbContext.Quiz.Update(quiz);
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }

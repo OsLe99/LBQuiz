@@ -7,5 +7,6 @@ namespace LBQuiz.Services.Interfaces
         Task<List<Quiz>> GetAllQuizesFromHostAsync(string hostId);
         Task<string> GetHostIdFromQuiz(int quizId);
         Task DeleteQuizAsync(Quiz quiz);
+        Task UpdateQuizAsync(Quiz quiz);
     }
 }

@@ -52,6 +52,11 @@
                                           @onclick="() => OnQuizClicked(item)">
                                     <MudText Typo="Typo.h4">@item.Name</MudText>
                                     <MudText Typo="Typo.h6">@item.Description</MudText>
+                                    <MudButton 
+                                        OnClick="() => UpdateQuiz(item)"
+                                        Class="mt-2"
+                                        Variant="Variant.Filled"
+                                        Color="Color.Primary">Update Quiz</MudButton>
                                     <MudButton
                                         OnClick="() => DeleteQuiz(item)"
                                         Class="mt-2"
@@ -232,8 +237,25 @@
 
             StateHasChanged();
         }
+    }
+    private async Task UpdateQuiz(Quiz quiz)
+    {
+        var parameters = new DialogParameters
+        {
+            {"updateQuiz", quiz},
+            {"ButtonText", "Save"},
+            {"Color", Color.Success}
+        };
 
+        var options = new DialogOptions { CloseOnEscapeKey = true };
 
-        
+        var dialog = DialogService.Show<UpdateQuiz>("Confirm Update", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await QuizManager.UpdateQuizAsync(quiz);
+        }
+
     }
 }
