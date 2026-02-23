@@ -280,6 +280,11 @@ namespace LBQuiz.Services
             
         }
 
+        public async Task DeleteQuestionAsync(QuestionJsonBlob question)
+        {
+            _dbContext.QuestionJsonBlobs.Remove(question);
+            await _dbContext.SaveChangesAsync();
+        }
 
 
         #endregion

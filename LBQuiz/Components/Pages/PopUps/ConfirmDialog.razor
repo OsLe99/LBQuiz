@@ -1,0 +1,29 @@
+﻿@using MudBlazor
+@inject IDialogService DialogService
+@inherits ComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <MudText>@ContentText</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="@color" OnClick="Submit">@ButtonText</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialogInstance { get; set; }
+
+    [Parameter] public string ContentText { get; set; } = "";
+    [Parameter] public string ButtonText { get; set; } = "";
+    [Parameter] public Color color { get; set; } = Color.Primary;
+
+    void Submit() => MudDialogInstance.Close(DialogResult.Ok(true));
+
+    void Cancel() => MudDialogInstance.Cancel();
+
+}
