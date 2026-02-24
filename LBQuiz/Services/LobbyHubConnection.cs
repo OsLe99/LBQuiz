@@ -171,6 +171,15 @@ namespace LBQuiz.Services
                 _currentLobbyId = lobbyId;
             }
         }
+
+        public async Task RejoinLobbyAsync(int lobbyId, string nickname)
+        {
+            if (_hubConnection != null)
+            {
+                await _hubConnection.InvokeAsync("RejoinLobby", lobbyId, nickname);
+                _currentLobbyId = lobbyId;
+            }
+        }
         
         public async Task LeaveLobbyAsync()
         {

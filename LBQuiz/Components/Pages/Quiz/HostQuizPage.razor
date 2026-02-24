@@ -14,6 +14,7 @@
 @inject IChatHubConnection ChatHubConnection
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 
 @page "/quiz/host/{quizId}/{lobbyId}"
@@ -149,24 +150,41 @@ else // Questions
     }
     protected override async Task OnInitializedAsync()
     {
-        //Jag vill kolla om senderId är samma som hostId. Då vet jag att det är svar från host.
-        @foreach (var participant in LobbyHub.Participants)
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        await LobbyHub.InitializeAsync(Navigation, userId);
+        await ChatHubConnection.InitializeAsync(Navigation);
+
+        foreach (var participant in LobbyHub.Participants)
         {
             _userList.Add(participant);
         }
-        
-        await ChatHubConnection.InitializeAsync(Navigation);
 
 
         var selectedQuiz = _dbContext.Quiz.FirstOrDefault(q => q.Id == int.Parse(quizId));
 
         await GetAllQuestionsFromQuiz();
 
+        LobbyHub.OnParticipantsChanged += async () =>
+        {
+            _userList = LobbyHub.Participants.ToList();
+            await InvokeAsync(StateHasChanged);
+        };
         LobbyHub.OnQuestionChanged += HandleNextQuestion;
         LobbyHub.OnAnswerRecieved += HandleAnswerRecieved;
         LobbyHub.OnCalculateScoreBoard += HandleScoreUpdate;
         LobbyHub.OnShowSliderValueToHost += HandleSliderValue;
         LobbyHub.OnShowMultipleAnswersToHost += HandleMultipleAnswers;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LobbyHub.JoinLobbyAsHostAsync(int.Parse(lobbyId));
+        }
     }
 
     private async Task GetAllQuestionsFromQuiz()
@@ -237,10 +255,15 @@ else // Questions
 
     private async Task HandleScoreUpdate(string answer, QuestionJsonBlob question, LobbyParticipant participant)
     {
-        var existing = _userList.FirstOrDefault(p => p.ConnectionId == participant.ConnectionId);
+        var existing = _userList.FirstOrDefault(p => p.Nickname == participant.Nickname);
         if (existing != null)
         {
             existing.Score = participant.Score;
+            existing.ConnectionId = participant.ConnectionId;
+        }
+        else
+        {
+            _userList.Add(participant);
         }
         await InvokeAsync(StateHasChanged);
     }
