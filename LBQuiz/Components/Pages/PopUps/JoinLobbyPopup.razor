@@ -72,7 +72,7 @@
             var quizLobby = await LobbyService.GetLobbyByJoinCodeAsync(_joinCode);
             
             MudDialog.Close();
-            Navigation.NavigateTo($"/quiz/{quizLobby.QuizId}/{quizLobby.Id}");
+            Navigation.NavigateTo($"/quiz/{_joinCode}");
         }
         
         catch (Exception ex)

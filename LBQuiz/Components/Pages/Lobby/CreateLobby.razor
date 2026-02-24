@@ -62,8 +62,6 @@
 
     public async Task OnQuizClicked(Models.Quiz quiz)
     {
-        //ska lägga till lobbyId för att veta vilken joinCode som ska visas på nästa sida
-        // Uppdaterad för att kolla ifall användaren är inloggad, samt skicka med identity från authState
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -74,9 +72,7 @@
         }
         var lobby = await LobbyService.CreateLobbyAsync(quiz.Id, userId);
         string jC = lobby.JoinCode;
-        Navigation.NavigateTo($"/quiz/{quiz.Id}/{lobby.Id}");
-
-        //Navigera med JoinCode istället. På nästa sida så hämta quiz med hjälp av joinCode
+        Navigation.NavigateTo($"/quiz/{jC}");
     }
 
 
