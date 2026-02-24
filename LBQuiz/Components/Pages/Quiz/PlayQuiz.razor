@@ -13,6 +13,7 @@
 @inject ILobbyHubConnection HubConnection
 @inject ISnackbar Snackbar
 @inject IChatHubConnection ChatHubConnection
+@inject IJSRuntime JS
 @inject IQuizManager QuizManager
 @inject NavigationManager Navigation
 
@@ -153,6 +154,7 @@ else
         int qId = int.Parse(quizId);
         AllQuestions = await QuestionManager.GetAllQuestionJsonBlobAsync(qId);
 
+        await HubConnection.InitializeAsync(Navigation);
         await ChatHubConnection.InitializeAsync(Navigation);
 
         ParticipantsList = LobbyManager.GetLeaderboard(int.Parse(lobbyId));
@@ -181,6 +183,18 @@ else
             pA.CorrectFalse = false;
         }
 
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var nickname = await JS.InvokeAsync<string>("sessionStorage.getItem", "lobbyNickname");
+            if (!string.IsNullOrEmpty(nickname))
+            {
+                await HubConnection.RejoinLobbyAsync(int.Parse(lobbyId), nickname);
+            }
+        }
     }
 
     public async Task SaveAnswer(string formattedAnswer)
