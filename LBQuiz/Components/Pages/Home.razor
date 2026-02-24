@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using Pages.PopUps
 @using LBQuiz.Components.Pages.Lobby
 @inject IDialogService DialogService
 @rendermode InteractiveServer
@@ -72,7 +73,7 @@
     
     private Task OpenJoinDialogueAsync()
     {
-        return DialogService.ShowAsync<JoinLobby>("JoinLobby");
+        return DialogService.ShowAsync<JoinLobbyPopup>("JoinLobby");
     }
 
     private async Task HandleCookieAccept()
