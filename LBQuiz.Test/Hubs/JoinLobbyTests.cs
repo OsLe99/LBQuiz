@@ -24,11 +24,11 @@ public class JoinLobbyTests : IClassFixture<LobbyHubFixture>
         _fixture.MockLobbyService.Setup(s => s.GetLobbyByJoinCodeAsync("ABC123"))
             .ReturnsAsync(lobby);
         
+        _fixture.MockLobbyParticipantManager.Setup(m => m.GetParticipants(1))
+            .Returns(new List<LobbyParticipant>());
+        
         _fixture.MockLobbyParticipantManager.Setup(m => m.AddParticipant(1, It.IsAny<LobbyParticipant>()))
             .Returns(true);
-        
-        _fixture.MockLobbyParticipantManager.Setup(m => m.GetParticipants(1))
-            .Returns(new List<LobbyParticipant> { _fixture.CreateTestLobbyParticipant() });
         
         // Act
         await hub.JoinLobby("ABC123", "Player1");
@@ -76,6 +76,10 @@ public class JoinLobbyTests : IClassFixture<LobbyHubFixture>
         _fixture.MockLobbyService
             .Setup(s => s.GetLobbyByJoinCodeAsync("ABC123"))
             .ReturnsAsync(lobby);
+        
+        _fixture.MockLobbyParticipantManager
+            .Setup(m => m.GetParticipants(1))
+            .Returns(new List<LobbyParticipant>());
         
         _fixture.MockLobbyParticipantManager
             .Setup(m => m.AddParticipant(1, It.IsAny<LobbyParticipant>()))
