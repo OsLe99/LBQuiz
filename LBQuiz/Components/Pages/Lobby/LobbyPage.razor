@@ -43,7 +43,9 @@ else if(_quizStart == false)
                     </MudText>
                     @if (qrImgString != null && qrImgString != "")
                     {
-                        <MudImage Src="@qrImgString" Style="max-height: 100px;"></MudImage>
+                        <div class="d-flex justify-content-center mt-6">
+                            <MudImage Src="@qrImgString" Style="max-height: 200px;" Class="rounded-lg"></MudImage>
+                        </div>
                     }
                 </MudItem>
 

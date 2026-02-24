@@ -160,6 +160,8 @@ else // Questions
         var user = authState.User;
         var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
 
+        _currentHostId = userId;
+
         await LobbyHub.InitializeAsync(Navigation, userId);
         await ChatHubConnection.InitializeAsync(Navigation);
 
