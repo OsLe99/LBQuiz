@@ -51,6 +51,12 @@ namespace LBQuiz.Hubs
                 throw new HubException("Invalid join code");
             }
 
+            var existingParticipants = _lobbyParticipantManager.GetParticipants(lobby.Id);
+            if (existingParticipants.Any(p => p.Nickname.Equals(nickname, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new HubException("A player with that nickname is already in the lobby.");
+            }
+
             var participant = new LobbyParticipant
             {
                 ConnectionId = Context.ConnectionId,
@@ -100,6 +106,58 @@ namespace LBQuiz.Hubs
         public async Task JoinLobbyAsHost(int lobbyId)
         {
             // Join group as host but not as a participant
+            await EnsureIsHostAsync(lobbyId);
+            await Groups.AddToGroupAsync(Context.ConnectionId, lobbyId.ToString());
+        }
+
+        public async Task RejoinLobby(int lobbyId, string nickname)
+        {
+            var lobby = await _lobbyService.GetLobbyByIdAsync(lobbyId);
+            if (lobby == null)
+            {
+                throw new HubException("Lobby not found");
+            }
+
+            // Check if there's already a participant with this nickname
+            var existingParticipants = _lobbyParticipantManager.GetParticipants(lobbyId);
+            var existing = existingParticipants.FirstOrDefault(p => p.Nickname == nickname);
+
+            if (existing != null)
+            {
+                if (existing.ConnectionId == Context.ConnectionId)
+                {
+                    // Already connected, just ensure group membership
+                    await Groups.AddToGroupAsync(Context.ConnectionId, lobbyId.ToString());
+                    return;
+                }
+
+                // Update to the new connection ID
+                _lobbyParticipantManager.UpdateParticipantConnectionId(existing.ConnectionId, Context.ConnectionId);
+                await Groups.AddToGroupAsync(Context.ConnectionId, lobbyId.ToString());
+                var participants = _lobbyParticipantManager.GetParticipants(lobbyId);
+                await Clients.Group(lobbyId.ToString()).SendAsync("ParticipantJoined", nickname, participants);
+                return;
+            }
+
+            // Re add as a participant 
+            var participant = new LobbyParticipant
+            {
+                ConnectionId = Context.ConnectionId,
+                LobbyId = lobbyId,
+                Nickname = nickname,
+                Score = 0
+            };
+
+            if (_lobbyParticipantManager.AddParticipant(lobbyId, participant))
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, lobbyId.ToString());
+                var participants = _lobbyParticipantManager.GetParticipants(lobbyId);
+                await Clients.Group(lobbyId.ToString()).SendAsync("ParticipantJoined", nickname, participants);
+            }
+        }
+
+        public async Task RejoinLobbyAsHost(int lobbyId)
+        {
             await EnsureIsHostAsync(lobbyId);
             await Groups.AddToGroupAsync(Context.ConnectionId, lobbyId.ToString());
         }

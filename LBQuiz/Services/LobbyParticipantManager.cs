@@ -102,6 +102,26 @@ public class LobbyParticipantManager : ILobbyParticipantManager
             AnswerDictionary.TryAdd(connectionId, dict);
         }
     }
+    public bool UpdateParticipantConnectionId(string oldConnectionId, string newConnectionId)
+    {
+        if (_connectionToLobby.TryRemove(oldConnectionId, out var lobbyId))
+        {
+            if (_lobbyParticipants.TryGetValue(lobbyId, out var participants))
+            {
+                if (participants.TryRemove(oldConnectionId, out var participant))
+                {
+                    participant.ConnectionId = newConnectionId;
+                    if (participants.TryAdd(newConnectionId, participant))
+                    {
+                        _connectionToLobby.TryAdd(newConnectionId, lobbyId);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     public async Task<bool> CheckAnswer(string correctAnswer, int questionId, string connectionId)
     {
         

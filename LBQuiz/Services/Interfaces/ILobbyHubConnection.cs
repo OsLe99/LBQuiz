@@ -29,7 +29,6 @@ namespace LBQuiz.Services.Interfaces
         Task EndQuizAsync(int lobbyId);
         Task SubmitSliderAnswer(int lobbyId, int sliderValue, int quizId, string questionText);
         Task SubmitMultipleAnswers(int lobbyId, int quizId, List<MultipleOptions> participantAnswers, int questionId);
-
-
+        Task RejoinLobbyAsync(int lobbyId, string nickname);
     }
 }

@@ -130,6 +130,22 @@ else if(_quizStart == false)
         };
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            bool isHost = CurrentQuiz != null && !string.IsNullOrEmpty(_userId) && _userId == CurrentQuiz.HostId;
+            if (!isHost)
+            {
+                var nickname = await JS.InvokeAsync<string>("sessionStorage.getItem", "lobbyNickname");
+                if (!string.IsNullOrEmpty(nickname))
+                {
+                    await LobbyHub.RejoinLobbyAsync(LobbyId, nickname);
+                }
+            }
+        }
+    }
+
     public async Task StartQuiz()
     {
         if (CurrentQuiz != null)
