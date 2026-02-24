@@ -11,5 +11,6 @@ namespace LBQuiz.Services.Interfaces
         Task SubmitParticipantAnswer(string connectionId, string answer, int questionId);
         Task<bool> CheckAnswer(string correctAnswer, int questionId, string connectionId);
         LobbyParticipant GetLobbyParticipant(string connectionId);
+        bool UpdateParticipantConnectionId(string oldConnectionId, string newConnectionId);
     }
 }

@@ -113,10 +113,26 @@ else if(_quizStart == false)
             await LobbyHub.JoinLobbyAsHostAsync(LobbyId);
         }
 
-        LobbyHub.OnParticipantsChanged += async () =>
+    LobbyHub.OnParticipantsChanged += async () =>
         {
             await InvokeAsync(StateHasChanged); // säker UI-tråd
         };
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            bool isHost = CurrentQuiz != null && !string.IsNullOrEmpty(_userId) && _userId == CurrentQuiz.HostId;
+            if (!isHost)
+            {
+                var nickname = await JS.InvokeAsync<string>("sessionStorage.getItem", "lobbyNickname");
+                if (!string.IsNullOrEmpty(nickname))
+                {
+                    await LobbyHub.RejoinLobbyAsync(LobbyId, nickname);
+                }
+            }
+        }
     }
 
     public async Task StartQuiz()
