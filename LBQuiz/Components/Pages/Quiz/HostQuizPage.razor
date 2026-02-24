@@ -190,7 +190,7 @@ else // Questions
     {
         if (firstRender)
         {
-            await LobbyHub.JoinLobbyAsHostAsync(int.Parse(lobbyId));
+            await LobbyHub.JoinLobbyAsHostAsync(_currentLobby.Id);
         }
     }
 

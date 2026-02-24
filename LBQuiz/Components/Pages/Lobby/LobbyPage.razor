@@ -12,6 +12,7 @@
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
 @inject IQRCodeService QRCodeService
+@inject ILobbyService LobbyService
 
 @page "/quiz/{LobbyCode}"
 
@@ -99,7 +100,7 @@ else if(_quizStart == false)
         var user = authState.User;
         _userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
 
-
+        CurrentLobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
 
         try
         {
@@ -140,7 +141,7 @@ else if(_quizStart == false)
                 var nickname = await JS.InvokeAsync<string>("sessionStorage.getItem", "lobbyNickname");
                 if (!string.IsNullOrEmpty(nickname))
                 {
-                    await LobbyHub.RejoinLobbyAsync(LobbyId, nickname);
+                    await LobbyHub.RejoinLobbyAsync(CurrentLobby.Id, nickname);
                 }
             }
         }

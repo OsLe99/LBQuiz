@@ -155,6 +155,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         var lobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+        lobbyId = lobby.Id.ToString();
         int qId = lobby.QuizId;
         AllQuestions = await QuestionManager.GetAllQuestionJsonBlobAsync(qId);
 
