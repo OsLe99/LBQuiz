@@ -2,6 +2,6 @@
 {
     public interface IQRCodeService
     {
-        Task GetQRImageFromApiAsync(string joinCode);
+        Task<string> GetQRImageFromApiAsync(string joinCode);
     }
 }

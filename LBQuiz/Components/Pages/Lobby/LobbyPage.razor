@@ -11,6 +11,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JS
 @inject ISnackbar Snackbar
+@inject IQRCodeService QRCodeService
 
 @page "/quiz/{LobbyCode}"
 
@@ -39,7 +40,11 @@ else if(_quizStart == false)
                             <MudFab StartIcon="@Icons.Material.Filled.ContentCopy" Color="Color.Primary" Size="Size.Small" OnClick="CopyToClipboard"></MudFab>
                         </MudTooltip>
                     </MudText>
-                    
+                    @if (qrImgString != null && qrImgString != "")
+                    {
+                        <MudImage Src="@qrImgString" Style="max-height: 100px;"></MudImage>
+                        <MudImage Src="/images/qrcode.jpg" Style="max-height: 100px;"></MudImage>
+                    }
                 </MudItem>
 
                 <MudItem>
@@ -86,6 +91,7 @@ else if(_quizStart == false)
     public Models.Quiz CurrentQuiz { get; set; }
     private string? _userId;
     private bool _quizStart = false;
+    private string qrImgString;
 
     protected override async Task OnInitializedAsync()
     {
@@ -110,12 +116,14 @@ else if(_quizStart == false)
 
         // Check if current user is the host
         bool isHost = CurrentQuiz != null && !string.IsNullOrEmpty(_userId) && _userId == CurrentQuiz.HostId;
-        
+
         if (isHost)
         {
             // Host joins to receive events but is NOT added as a participant
             await LobbyHub.JoinLobbyAsHostAsync(CurrentLobby.Id);
         }
+
+        await GenerateQrCode();
 
         LobbyHub.OnParticipantsChanged += async () =>
         {
@@ -130,11 +138,21 @@ else if(_quizStart == false)
             await LobbyHub.StartQuizAsync(CurrentLobby.Id, CurrentLobby.QuizId);
         }
     }
-    
+
     private async Task CopyToClipboard()
     {
         await JS.InvokeVoidAsync("navigator.clipboard.writeText", CurrentLobby.JoinCode);
         Snackbar.Add("Copied to clipboard!", Severity.Success);
+    }
+    private async Task GenerateQrCode()
+    {
+        if (CurrentLobby != null)
+        {
+            // Generate QR code for the lobby join URL
+            string lobbyUrl = Navigation.ToAbsoluteUri($"/quiz/{CurrentLobby.JoinCode}").ToString();
+            qrImgString = await QRCodeService.GetQRImageFromApiAsync(LobbyCode);
+            StateHasChanged();
+        }
     }
 }
 
