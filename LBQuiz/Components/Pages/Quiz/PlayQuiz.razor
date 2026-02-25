@@ -71,6 +71,23 @@
             }
         </MudGrid>
     }
+    else if (CurrentQuestion2 != null && CurrentQuestion2 is QuestionWordCloud questionWordCloud)
+    {
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Style="height: 250px">
+                <MudText Typo="Typo.h2" Class="mb-3">@questionWordCloud.QuestionText</MudText>
+                @for (int i = 0; i < questionWordCloud.MaxEntries; i++)
+                {
+                    var index = i;
+                    <MudTextField @bind-Value="_wordCloudEntries[index]"
+                                  Label="@($"Word {index + 1}")"
+                                  Variant="Variant.Filled"
+                                  Class="mb-2"/>
+                }
+                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitWordCloud">Submit answer</MudButton>
+            </MudPaper>
+        </MudItem>
+    }
     @* ChatComponent *@
     <MudGrid Spacing="2" Style="margin-top: 20px; height:100vh">
         <MudItem xs="12" md="8">
@@ -139,6 +156,7 @@ else
     private bool _showScoreboard = false;
     private LobbyParticipant? _currentParticipant;
     private int _currentParticipantRank;
+    private List<string> _wordCloudEntries = new();
 
     private List<LobbyParticipant> ParticipantsList { get; set; } = new();
 
@@ -278,6 +296,21 @@ else
                         MultipleOptionsList = multiple.MultipleOptionsList
                     };
             }
+            else if (questionType == "WordCloud")
+            {
+                var dto = JsonSerializer.Deserialize<WordCloudQuestionDTO>(CurrentQuestion.Blob);
+                var wc = new QuestionWordCloud
+                {
+                    Id = CurrentQuestion.Id,
+                    QuizId = CurrentQuestion.QuizId,
+                    QuestionText = CurrentQuestion.QuestionText,
+                    SortOrder = CurrentQuestion.SortOrder,
+                    Points = dto.Points,
+                    MaxEntries = dto.MaxEntries
+                };
+                CurrentQuestion2 = wc;
+                _wordCloudEntries = new List<string>(new string[wc.MaxEntries]);
+            }
         }
         catch (Exception ex)
         {
@@ -288,6 +321,13 @@ else
     private async Task SubmitMulipleChoice()
     {
         var formattedAnswer = JsonSerializer.Serialize(SelectedOptionIds.ToList());
+        await SaveAnswer(formattedAnswer);
+    }
+
+    private async Task SubmitWordCloud()
+    {
+        var words = _wordCloudEntries.Where(w => !string.IsNullOrWhiteSpace(w)).ToList();
+        var formattedAnswer = JsonSerializer.Serialize(words);
         await SaveAnswer(formattedAnswer);
     }
     
