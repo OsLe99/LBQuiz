@@ -212,6 +212,7 @@ else
         await HubConnection.UpdateScoreBoard(CurrentQuestion.Id, formattedAnswer);
 
         answerButtonShow = true;
+        Answer = string.Empty;
     }
 
     private Task HandleAnswerReceived(string answer, LobbyParticipant lobbyParticipant)

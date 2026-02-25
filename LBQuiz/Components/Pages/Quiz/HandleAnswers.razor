@@ -1,5 +1,13 @@
-﻿<h3>HandleAnswers</h3>
+﻿@using LBQuiz.Models;
+@using LBQuiz.Models.Lobby;
+
+
+
+<h3>HandleAnswers</h3>
 
 @code {
+    [Parameter]
+    public List<(LobbyParticipant participant, string answer)> ParticipantsAnswers { get; set; } = new();
 
+    
 }
