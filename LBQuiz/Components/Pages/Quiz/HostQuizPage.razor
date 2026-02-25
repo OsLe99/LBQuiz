@@ -12,12 +12,13 @@
 @inject IQuestionManager questionManager
 @inject IQuizManager QuizManager
 @inject IChatHubConnection ChatHubConnection
+@inject ILobbyService LobbyService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
+@page "/quiz/host/{LobbyCode}"
 
-@page "/quiz/host/{quizId}/{lobbyId}"
 @if (_showResults == true) // Show scoreboard
 {
     <div style="background-color: aliceblue; min-height: 100vh; width: 100%;">
@@ -68,7 +69,11 @@ else // Questions
 
     <div class="hostPageContainer">
         <div>
-            @if (AllQuestions[_questionIndex].QuestionType == "WordCloud")
+            @if (AllQuestions == null || AllQuestions.Count == 0)
+            {
+                <MudItem>No Questions</MudItem>
+            }
+            else if (AllQuestions[_questionIndex].QuestionType == "WordCloud")
             {
                 <MudPaper Class="pe-4" Style="height: 60vh;">
                     <canvas id="wordCloudCanvas" style="width: 100%; height: 100%;"></canvas>
@@ -80,7 +85,6 @@ else // Questions
                     <MudPaper Class="pa-4" Style="height: 250px; background-color: antiquewhite; border: 1px solid black">
                         <MudItem>@AllQuestions[_questionIndex].QuestionText</MudItem>
                     </MudPaper>
-                    
                 </MudItem>
             }
             <MudButton Disabled="previousButton" OnClick="PreviousQuestion">Previous question</MudButton>
@@ -121,7 +125,7 @@ else // Questions
 
         </MudItem>
         <MudItem xs="12" md="4" Style="border: 1px solid rgba(255,144,0,0.6); box-shadow: 4px 4px 2px orange inset; background-color: rgba(147,202,237,0.4);">
-            <LBQuiz.Components.Pages.Chat.ChatComponent HostId="@_currentHostId" LobbyId="@lobbyId"></LBQuiz.Components.Pages.Chat.ChatComponent>
+            <LBQuiz.Components.Pages.Chat.ChatComponent HostId="@_currentHostId" LobbyId="@_currentLobby.Id.ToString()"></LBQuiz.Components.Pages.Chat.ChatComponent>
         </MudItem>
     </MudGrid>
 
@@ -129,8 +133,9 @@ else // Questions
 
 
 @code {
-    [Parameter] public string quizId { get; set; }
-    [Parameter] public string lobbyId { get; set; }
+
+    [Parameter] public string LobbyCode { get; set; }
+
 
     private ApplicationDbContext _dbContext;
     private bool previousButton = true;
@@ -146,6 +151,7 @@ else // Questions
     private List<string> _multipleAnswersList = new();
     private List<LobbyParticipant> TopThree => _userList.Take(3).ToList();
     private string? _currentHostId;
+    private Models.Lobby.QuizLobby _currentLobby = new();
     private List<string> _wordCloudWords = new();
 
 
@@ -154,18 +160,13 @@ else // Questions
         _dbContext = dbContext;
     }
 
-    protected override void OnInitialized()
-    {
-        GetAllQuestionsFromQuiz().GetAwaiter().GetResult();
-        var result = QuizManager.GetHostIdFromQuiz(int.Parse(quizId));
-        _currentHostId = result.GetAwaiter().GetResult();
-    }
-
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        _currentLobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+        _currentHostId = userId;
 
         await LobbyHub.InitializeAsync(Navigation, userId);
         await ChatHubConnection.InitializeAsync(Navigation);
@@ -176,7 +177,8 @@ else // Questions
         }
 
 
-        var selectedQuiz = _dbContext.Quiz.FirstOrDefault(q => q.Id == int.Parse(quizId));
+
+        var selectedQuiz = _dbContext.Quiz.FirstOrDefault(q => q.Id == _currentLobby.QuizId);
 
         await GetAllQuestionsFromQuiz();
 
@@ -196,13 +198,14 @@ else // Questions
     {
         if (firstRender)
         {
-            await LobbyHub.JoinLobbyAsHostAsync(int.Parse(lobbyId));
+            await LobbyHub.JoinLobbyAsHostAsync(_currentLobby.Id);
         }
     }
 
     private async Task GetAllQuestionsFromQuiz()
     {
-        var questions = _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == int.Parse(quizId)).ToList();
+        var lobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+        var questions = _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == lobby.QuizId).ToList();
 
         if (questions != null)
         {
@@ -236,27 +239,31 @@ else // Questions
 
     private async Task NextQuestion()
     {
-        await LobbyHub.GoToNextQuestionAsync(_questionIndex, int.Parse(lobbyId));
+        var lobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+        await LobbyHub.GoToNextQuestionAsync(_questionIndex, lobby.Id);
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task PreviousQuestion()
     {
-        await LobbyHub.GoToPreviousQuestionAsync(_questionIndex, int.Parse(lobbyId));
+        var lobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+        await LobbyHub.GoToPreviousQuestionAsync(_questionIndex, lobby.Id);
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task ShowResults()
     {
+        var lobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
         _showResults = true;
         _userList = _userList.OrderByDescending(p => p.Score).ToList();
-        await LobbyHub.GoToResultsAsync(_showResults, int.Parse(lobbyId), _userList);
+        await LobbyHub.GoToResultsAsync(_showResults, lobby.Id, _userList);
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task EndQuiz()
     {
-        await LobbyHub.EndQuizAsync(int.Parse(lobbyId));
+        var lobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+        await LobbyHub.EndQuizAsync(lobby.Id);
         await InvokeAsync(StateHasChanged);
     }
 

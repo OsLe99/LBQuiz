@@ -15,10 +15,11 @@
 @inject IChatHubConnection ChatHubConnection
 @inject IJSRuntime JS
 @inject IQuizManager QuizManager
+@inject ILobbyService LobbyService
 @inject NavigationManager Navigation
 
 
-@page "/quiz/play/{quizId}/{lobbyId}"
+@page "/quiz/play/{LobbyCode}"
 
 <h3>PlayQuiz</h3>
 
@@ -137,6 +138,8 @@ else
     public string quizId { get; set; }
     [Parameter]
     public string lobbyId { get; set; }
+    [Parameter]
+    public string LobbyCode { get; set; }
 
     public QuestionJsonBlob CurrentQuestion { get; set; }
     public Models.Question CurrentQuestion2 { get; set; }
@@ -169,13 +172,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        int qId = int.Parse(quizId);
+        var lobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+        lobbyId = lobby.Id.ToString();
+        int qId = lobby.QuizId;
         AllQuestions = await QuestionManager.GetAllQuestionJsonBlobAsync(qId);
 
         await HubConnection.InitializeAsync(Navigation);
         await ChatHubConnection.InitializeAsync(Navigation);
 
-        ParticipantsList = LobbyManager.GetLeaderboard(int.Parse(lobbyId));
+        ParticipantsList = LobbyManager.GetLeaderboard(lobby.Id);
         HubConnection.OnAnswerRecieved += HandleAnswerReceived;
         HubConnection.OnQuestionChanged += HandleNextQuestion;
         HubConnection.OnResultShow += HandleShowResults;
@@ -217,13 +222,15 @@ else
 
     public async Task SaveAnswer(string formattedAnswer)
     {
-        var lobby = int.Parse(lobbyId);
-        var quiz = int.Parse(quizId);
+        var lobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+        int lobbyId = lobby.Id;
+        var quizId = lobby.QuizId;
 
-        await HubConnection.SubmitAnswer(lobby, formattedAnswer, quiz);
+        await HubConnection.SubmitAnswer(lobbyId, formattedAnswer, quizId);
         await HubConnection.UpdateScoreBoard(CurrentQuestion.Id, formattedAnswer);
 
         answerButtonShow = true;
+        Answer = string.Empty;
     }
 
     private Task HandleAnswerReceived(string answer, LobbyParticipant lobbyParticipant)
@@ -276,7 +283,8 @@ else
             }
             else if (questionType == "Multiple")
             {
-                int so = await QuestionManager.GetSortOrderAsync(int.Parse(quizId));
+                var lobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+                int so = await QuestionManager.GetSortOrderAsync(lobby.QuizId);
                 var multiple = JsonSerializer.Deserialize<MultipleChoiceQuestionDTO>(CurrentQuestion.Blob);
                 CurrentQuestion2 = new MultipleChoice
                     {

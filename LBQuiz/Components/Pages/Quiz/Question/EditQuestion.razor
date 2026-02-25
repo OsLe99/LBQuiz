@@ -5,6 +5,7 @@
 @using Pages.PopUps
 @inject IQuestionManager QuestionManager
 @inject IQuizManager QuizManager
+@inject IQRCodeService QRCodeService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IDialogService DialogService
 
@@ -16,7 +17,6 @@
     <Authorized>
         
         <h3>Edit Question</h3>
-        
         @if (SelectedQuestion == null)
         {
             @if (AllQuestions != null)
@@ -257,5 +257,9 @@
             await QuizManager.UpdateQuizAsync(quiz);
         }
 
+    }
+    private async Task TestQrCode()
+    {
+        await QRCodeService.GetQRImageFromApiAsync("jaja");
     }
 }
