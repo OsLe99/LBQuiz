@@ -38,10 +38,10 @@ namespace LBQuiz.Hubs
                 throw new HubException("Invalid host id");
             }
             var lobby = await _lobbyService.GetLobbyByIdAsync(lobbyId);
-            //if (lobby?.QuizHostId != userId)
-            //{
-            //    throw new HubException("Only for hosts.");
-            //}
+            if (lobby?.QuizHostId != userId)
+            {
+                throw new HubException("Only for hosts.");
+            }
         }
         public async Task JoinLobby(string joinCode, string nickname)
         {

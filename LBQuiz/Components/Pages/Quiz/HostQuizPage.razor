@@ -153,13 +153,13 @@ else // Questions
     {
         _dbContext = dbContext;
     }
-    
+
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-
+        _currentLobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
         _currentHostId = userId;
 
         await LobbyHub.InitializeAsync(Navigation, userId);
