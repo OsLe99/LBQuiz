@@ -38,6 +38,7 @@ namespace LBQuiz.Services
         {
             _dbContext.Quiz.Update(quiz);
             await _dbContext.SaveChangesAsync();
+            
         }
     }
 }

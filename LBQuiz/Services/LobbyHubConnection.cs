@@ -71,18 +71,18 @@ namespace LBQuiz.Services
                         await OnParticipantsChanged.Invoke();
                 });
 
-            _hubConnection.On<int, int, string>("QuizLobbyStarted",
-                (quizId, lobbyId, hostId) =>
+            _hubConnection.On<string, string>("QuizLobbyStarted",
+                (joinCode, hostId) =>
                 {
                     // If host, go to host page
                     if (_currentUserId != null && _currentUserId == hostId)
                     {
-                        navigation.NavigateTo($"/quiz/host/{quizId}/{lobbyId}");
+                        navigation.NavigateTo($"/quiz/host/{joinCode}");
                     }
                     // All other users
                     else
                     {
-                        navigation.NavigateTo($"/quiz/play/{quizId}/{lobbyId}");
+                        navigation.NavigateTo($"/quiz/play/{joinCode}");
                     }
                 });
 

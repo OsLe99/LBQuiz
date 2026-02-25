@@ -98,7 +98,9 @@ namespace LBQuiz.Hubs
         {
             await EnsureIsHostAsync(lobbyId);
             var hostId = GetUserId();
-            await Clients.Group(lobbyId.ToString()).SendAsync("QuizLobbyStarted", quizId, lobbyId, hostId);
+            var lobby = await _lobbyService.GetLobbyByIdAsync(lobbyId);
+            var joinCode = lobby.JoinCode;
+            await Clients.Group(lobbyId.ToString()).SendAsync("QuizLobbyStarted", joinCode, hostId);
         }
         
         public async Task JoinLobbyAsHost(int lobbyId)
