@@ -327,5 +327,26 @@ namespace LBQuiz.Services
             
             return null;
         }
+        public async Task<bool> ReturnBoolOnAnswer(QuestionJsonBlob question, string answer)
+        {
+            bool questionBool = false;
+            if (question.QuestionType == "Open")
+            {
+                var quest = JsonSerializer.Deserialize<QuestionOpen>(question.Blob);
+                if (quest.CorrectAnswer.ToLower() == answer)
+                {
+                    questionBool = true;
+                }
+            }
+            else if(question.QuestionType == "Slider")
+            {
+                var quest = JsonSerializer.Deserialize<QuestionSlider>(question.Blob);
+                if(quest.CorrectValue.ToString() == answer)
+                {
+                    questionBool = true;
+                }
+            }
+            return questionBool;
+        } 
     }
 }
