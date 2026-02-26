@@ -185,7 +185,6 @@ namespace LBQuiz.Hubs
             }
         }
 
-        //H�r ska logiken f�r att r�kna ut po�ngst�llningen in
         public async Task CalculateScoreBoard(int questionId, string answer)
         {
             Console.WriteLine($"Incoming questionId: {questionId}");
@@ -202,8 +201,11 @@ namespace LBQuiz.Hubs
 
             if (result)
             {
-                participant.Score += points;
-                await Clients.Group(participant.LobbyId.ToString()).SendAsync("ScoreBoardCalculated", question, answer, participant);
+                //Den här participanten har inte fått updaterat score än om vi trycker på handlescore. Uträkning borde därför inte ske här.
+                //All uträkning borde ske på hostsidan på _userList
+                //Skicka med point, ta bort "participant.Score += points;"
+                //participant.Score += points;
+                await Clients.Group(participant.LobbyId.ToString()).SendAsync("ScoreBoardCalculated", question, answer, participant, points);
             }
             
             var participants = _lobbyParticipantManager.GetParticipants(participant.LobbyId);

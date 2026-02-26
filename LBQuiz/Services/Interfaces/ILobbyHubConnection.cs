@@ -18,7 +18,7 @@ namespace LBQuiz.Services.Interfaces
         event Func<int, Task>? OnQuestionChanged;
         event Func<string, LobbyParticipant, Task>? OnAnswerRecieved;
         event Func<bool, List<LobbyParticipant>, Task>? OnResultShow;
-        event Func<string, QuestionJsonBlob, LobbyParticipant, Task>? OnCalculateScoreBoard;
+        event Func<string, QuestionJsonBlob, LobbyParticipant,int, Task>? OnCalculateScoreBoard;
         event Func<int, int, LobbyParticipant, string, Task>? OnShowSliderValueToHost;
         event Func<LobbyParticipant, int, List<MultipleOptions>, int, Task>? OnShowMultipleAnswersToHost;
         event Func<string, QuestionJsonBlob, Task>? OnPointsDeducted;

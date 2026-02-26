@@ -30,7 +30,7 @@ namespace LBQuiz.Services
         public string? ConnectionId => _hubConnection?.ConnectionId;
 
         public event Func<string, LobbyParticipant, Task>? OnAnswerRecieved;
-        public event Func<string, QuestionJsonBlob, LobbyParticipant, Task>? OnCalculateScoreBoard;
+        public event Func<string, QuestionJsonBlob, LobbyParticipant, int, Task>? OnCalculateScoreBoard;
 
         public LobbyHubConnection(IHttpContextAccessor httpContextAccessor)
         {
@@ -98,12 +98,12 @@ namespace LBQuiz.Services
                     }
                 });
 
-            _hubConnection.On<QuestionJsonBlob, string, LobbyParticipant>("ScoreBoardCalculated",
-                async (question, answer, participant) =>
+            _hubConnection.On<QuestionJsonBlob, string, LobbyParticipant, int>("ScoreBoardCalculated",
+                async (question, answer, participant, points) =>
                 {
                     if (OnCalculateScoreBoard != null)
                     {
-                        await OnCalculateScoreBoard.Invoke(answer, question, participant);
+                        await OnCalculateScoreBoard.Invoke(answer, question, participant, points);
                     }
                 });
 

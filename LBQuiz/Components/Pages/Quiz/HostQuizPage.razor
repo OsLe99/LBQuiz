@@ -280,13 +280,12 @@ else // Questions
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task HandleScoreUpdate(string answer, QuestionJsonBlob question, LobbyParticipant participant)
+    private async Task HandleScoreUpdate(string answer, QuestionJsonBlob question, LobbyParticipant participant, int points)
     {
-        var existing = _userList.FirstOrDefault(p => p.Nickname == participant.Nickname);
-        if (existing != null)
+        var userUpdate = _userList.FirstOrDefault(p => p.Nickname == participant.Nickname);
+        if (userUpdate != null)
         {
-            existing.Score = participant.Score;
-            existing.ConnectionId = participant.ConnectionId;
+            userUpdate.Score += points;
         }
         else
         {
