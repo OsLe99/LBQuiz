@@ -21,6 +21,7 @@ namespace LBQuiz.Services.Interfaces
         event Func<string, QuestionJsonBlob, LobbyParticipant, Task>? OnCalculateScoreBoard;
         event Func<int, int, LobbyParticipant, string, Task>? OnShowSliderValueToHost;
         event Func<LobbyParticipant, int, List<MultipleOptions>, int, Task>? OnShowMultipleAnswersToHost;
+        event Func<string, QuestionJsonBlob, Task>? OnPointsDeducted;
         Task SubmitAnswer(int lobbyId, string answer, int quizId);
         Task UpdateScoreBoard(int questionId, string answer);
         Task GoToNextQuestionAsync(int questionIndex, int lobbyId);
@@ -30,5 +31,6 @@ namespace LBQuiz.Services.Interfaces
         Task SubmitSliderAnswer(int lobbyId, int sliderValue, int quizId, string questionText);
         Task SubmitMultipleAnswers(int lobbyId, int quizId, List<MultipleOptions> participantAnswers, int questionId);
         Task RejoinLobbyAsync(int lobbyId, string nickname);
+        Task DeductPoints(string nickName, QuestionJsonBlob question, int lobbyId);
     }
 }

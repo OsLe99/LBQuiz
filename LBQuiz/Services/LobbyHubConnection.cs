@@ -4,6 +4,7 @@ using LBQuiz.Services.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using LBQuiz.Models.Helpers;
+using System.Runtime.InteropServices;
 
 namespace LBQuiz.Services
 {
@@ -22,6 +23,7 @@ namespace LBQuiz.Services
         public event Func<bool, List<LobbyParticipant>, Task>? OnResultShow;
         public event Func<int, int, LobbyParticipant, string, Task>? OnShowSliderValueToHost;
         public event Func<LobbyParticipant, int, List<MultipleOptions>, int, Task>? OnShowMultipleAnswersToHost;
+        public event Func<string, QuestionJsonBlob, Task>? OnPointsDeducted;
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
@@ -151,6 +153,13 @@ namespace LBQuiz.Services
                     await OnShowMultipleAnswersToHost.Invoke(participant, quizId, participantAnswers, questionId);
                 }
             });
+            _hubConnection.On<string, QuestionJsonBlob>("OnDeductPoints", async (nickName, question) =>
+            {
+                if(OnPointsDeducted != null)
+                {
+                    await OnPointsDeducted.Invoke(nickName, question);
+                }
+            });
 
             await _hubConnection.StartAsync();
         }
@@ -258,5 +267,13 @@ namespace LBQuiz.Services
                 await _hubConnection.InvokeAsync("SubmitMultipleAnswers", lobbyId, quizId, participantAnswers, questionId);
             }
         }
+        public async Task DeductPoints(string nickName, QuestionJsonBlob question, int lobbyId)
+        {
+            if(_hubConnection != null)
+            {
+                await _hubConnection.InvokeAsync("DeductPoints", nickName, question, lobbyId);
+            }
+        }
+
     }
 }

@@ -20,6 +20,7 @@ namespace LBQuiz.Services.Interfaces
         Task<Question> GetQuestionFromBlob(QuestionJsonBlob blob);
         Task UpdateQuestionText(Question question);
         Task DeleteQuestionAsync(QuestionJsonBlob question);
+        Task<bool> ReturnBoolOnAnswer(QuestionJsonBlob question, string answer);
 
     }
 }

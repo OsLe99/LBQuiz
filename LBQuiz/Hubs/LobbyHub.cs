@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using LBQuiz.Data;
 using Microsoft.EntityFrameworkCore;
+using LBQuiz.Migrations;
+using System.Text.Json;
 
 namespace LBQuiz.Hubs
 {
@@ -259,6 +261,12 @@ namespace LBQuiz.Hubs
             }
         }
 
-
+        public async Task DeductPoints(string nickName, QuestionJsonBlob question, int lobbyId)
+        {
+            if (!string.IsNullOrEmpty(lobbyId.ToString()))
+            {
+                await Clients.Group(lobbyId.ToString()).SendAsync("OnDeductPoints", nickName, question);
+            }
+        }
     }
 }

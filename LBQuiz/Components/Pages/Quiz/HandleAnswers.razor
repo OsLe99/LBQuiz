@@ -1,13 +1,61 @@
 ﻿@using LBQuiz.Models;
+@using LBQuiz.Models.Helpers
 @using LBQuiz.Models.Lobby;
+@using LBQuiz.Services.Interfaces
+@inject ILobbyHubConnection LobbyHubConnection
 
 
 
 <h3>HandleAnswers</h3>
 
+
+@foreach (var item in ParticipantAnswers)
+{
+    <MudItem @onclick="() => OnClickParticipantAnswer(item)">
+        <MudBadge Color="@item.AnswerColor" Overlap="true" Size="Size.Medium" Bordered="true">
+            <MudPaper>
+                <MudText Typo="Typo.h6">@item.Participant.Nickname : </MudText>
+                <MudText Typo="Typo.h6">@item.Answer</MudText>
+            </MudPaper>
+        </MudBadge>
+    </MudItem>
+}
+<MudButton OnClick="GoToNextSlide">Next Slide</MudButton>
+
+
 @code {
     [Parameter]
-    public List<(LobbyParticipant participant, string answer)> ParticipantsAnswers { get; set; } = new();
+    public List<ParticipantAnswer> ParticipantAnswers { get; set; } = new();
+    [Parameter]
+    public int QuestionIndex { get; set; } = 0;
+    [Parameter]
+    public int LobbyId { get; set; }
+    [Parameter]
+    public EventCallback OnCloseHandleAnswer { get; set; }
+    [Parameter]
+    public QuestionJsonBlob CurrentQuestion { get; set; }
 
-    
+
+
+    private async Task OnClickParticipantAnswer(ParticipantAnswer participantAnswer)
+    {
+        if(participantAnswer.AnswerColor == Color.Success)
+        {
+            participantAnswer.AnswerColor = Color.Error;
+        }
+        else if(participantAnswer.AnswerColor == Color.Error)
+        {
+            participantAnswer.AnswerColor = Color.Success;
+        }
+
+        if (participantAnswer.AnswerColor == Color.Error)
+        {
+            await LobbyHubConnection.DeductPoints(participantAnswer.Participant.Nickname, participantAnswer.QuestionJB, LobbyId);
+        }
+    }
+    private async Task GoToNextSlide()
+    {
+        await LobbyHubConnection.GoToNextQuestionAsync(QuestionIndex, LobbyId);
+        await OnCloseHandleAnswer.InvokeAsync();
+    }
 }

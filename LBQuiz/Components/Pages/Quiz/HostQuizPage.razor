@@ -19,7 +19,11 @@
 
 @page "/quiz/host/{LobbyCode}"
 
-@if (_showResults == true) // Show scoreboard
+@if (ShowHandleAnswers)
+{
+    <HandleAnswers ParticipantAnswers="_submittedAnswers" QuestionIndex="_questionIndex" LobbyId="_currentLobby.Id" OnCloseHandleAnswer="() => CloseHandleAnswersComponent()"></HandleAnswers>
+}
+else if (_showResults == true) // Show scoreboard
 {
     <div style="background-color: aliceblue; min-height: 100vh; width: 100%;">
         <MudText Typo="Typo.h2" Align="Align.Center">Results</MudText>
@@ -84,6 +88,7 @@ else // Questions
                 <MudButton Disabled="previousButton" OnClick="PreviousQuestion">Previous question</MudButton>
                 <MudButton Disabled="nextButton" OnClick="NextQuestion">Next question</MudButton>
                 <MudButton Disabled="_resultButton" OnClick="ShowResults">Show results</MudButton>
+                <MudButton OnClick="() => ShowHandleAnswers = true">Handle Answers</MudButton>
             </MudItem>
         </div>
         <div>
@@ -138,7 +143,7 @@ else // Questions
     private bool _resultButton = true;
     private bool _showResults = false;
     private List<LobbyParticipant> _userList = new();
-    private List<(LobbyParticipant Participant, string Answer)> _submittedAnswers = new();
+    private List<ParticipantAnswer> _submittedAnswers = new();
     private int _questionIndex = 0;
     private List<QuestionJsonBlob> AllQuestions = new();
     private int? _score = 0;
@@ -147,7 +152,7 @@ else // Questions
     private List<LobbyParticipant> TopThree => _userList.Take(3).ToList();
     private string? _currentHostId;
     private Models.Lobby.QuizLobby _currentLobby = new();
-
+    private bool ShowHandleAnswers = false;
 
     public HostQuizPage(ApplicationDbContext dbContext)
     {
@@ -170,8 +175,6 @@ else // Questions
             _userList.Add(participant);
         }
 
-
-
         var selectedQuiz = _dbContext.Quiz.FirstOrDefault(q => q.Id == _currentLobby.QuizId);
 
         await GetAllQuestionsFromQuiz();
@@ -186,6 +189,8 @@ else // Questions
         LobbyHub.OnCalculateScoreBoard += HandleScoreUpdate;
         LobbyHub.OnShowSliderValueToHost += HandleSliderValue;
         LobbyHub.OnShowMultipleAnswersToHost += HandleMultipleAnswers;
+        LobbyHub.OnPointsDeducted += HandlePointsDeducted;
+
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -209,7 +214,6 @@ else // Questions
 
     private async Task HandleNextQuestion(int questionIndex)
     {
-        //Skapa logik f�r om man bara har en quetion i ett quiz.
         _questionIndex = questionIndex;
         if (_questionIndex == 0) previousButton = true;
         else if (_questionIndex == AllQuestions.Count - 1)
@@ -263,7 +267,16 @@ else // Questions
 
     private async Task HandleAnswerRecieved(string answer, LobbyParticipant participant)
     {
-        _submittedAnswers.Add((participant, answer));
+        //TODO: Create a method in QuestionManager that gets the correct answer for a question and compare it with the answer that was recieved. Then set the color of the answer to green if it is correct and red if it is wrong.
+        var correctFalse = await questionManager.ReturnBoolOnAnswer(AllQuestions[_questionIndex], answer.ToLower());
+        var lobbyParticipant = new ParticipantAnswer
+        {
+            Answer = answer,
+            Participant = participant,
+            QuestionJB = AllQuestions[_questionIndex],
+            AnswerColor = correctFalse ? Color.Success : Color.Error
+        };
+        _submittedAnswers.Add(lobbyParticipant);
         await InvokeAsync(StateHasChanged);
     }
 
@@ -291,7 +304,7 @@ else // Questions
     private async Task HandleMultipleAnswers(LobbyParticipant participant, int quizId, List<MultipleOptions> participantAnswers, int questionId)
     {
         int numberOfCorrectAnswers = 0;
-        
+
         var question = await questionManager.GetQuestionJsonBlobFromQuestionIdAsync(questionId);
         var optionsList = JsonSerializer.Deserialize<List<MultipleOptions>>(question.Blob);
         foreach(var result in optionsList)
@@ -307,4 +320,37 @@ else // Questions
         _multipleAnswersList.Add($"{participant.Nickname} got {numberOfCorrectAnswers} correct answers out of {optionsList.Count}");
         await InvokeAsync(StateHasChanged);
     }
+    private async Task CloseHandleAnswersComponent()
+    {
+        _submittedAnswers = new();
+        ShowHandleAnswers = false;
+        await InvokeAsync(StateHasChanged);
+    }
+    private async Task HandlePointsDeducted(string nickName, QuestionJsonBlob question)
+    {
+        int pointsToDeduct = 0;
+        switch (question.QuestionType)
+        {
+            case "Open":
+                var quest = JsonSerializer.Deserialize<QuestionOpen>(question.Blob);
+                pointsToDeduct = quest.Points;
+                break;
+            case "Slider":
+                var slider = JsonSerializer.Deserialize<QuestionSlider>(question.Blob);
+                pointsToDeduct = slider.Points;
+                break;
+            case "Multiple":
+                var multiple = JsonSerializer.Deserialize<MultipleChoice>(question.Blob);
+                pointsToDeduct = multiple.Points;
+                break;
+
+        }
+
+        var user = _userList.Where(p => p.Nickname == nickName).FirstOrDefault();
+        user.Score = user.Score - pointsToDeduct;
+        Console.WriteLine(user);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    //_userList.Where(u => u.ConnectionId == participantAnswer.Participant.ConnectionId).Select(u => { u.Score = participantAnswer.Participant.Score; return u; }).ToList();
 }
