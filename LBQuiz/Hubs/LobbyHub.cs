@@ -270,5 +270,14 @@ namespace LBQuiz.Hubs
                 await Clients.Group(lobbyId.ToString()).SendAsync("OnDeductPoints", nickName, question);
             }
         }
+
+        public async Task AwardPoints(string nickName, QuestionJsonBlob question, int lobbyId)
+        {
+            if (!string.IsNullOrEmpty(lobbyId.ToString()))
+            {
+                await Clients.Group(lobbyId.ToString()).SendAsync("OnAwardPoints", nickName, question);
+            }
+
+        }
     }
 }

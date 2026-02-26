@@ -190,6 +190,7 @@ else // Questions
         LobbyHub.OnShowSliderValueToHost += HandleSliderValue;
         LobbyHub.OnShowMultipleAnswersToHost += HandleMultipleAnswers;
         LobbyHub.OnPointsDeducted += HandlePointsDeducted;
+        LobbyHub.OnPointsAwarded += HandlePointsAwarded;
 
     }
 
@@ -347,6 +348,31 @@ else // Questions
 
         var user = _userList.Where(p => p.Nickname == nickName).FirstOrDefault();
         user.Score = user.Score - pointsToDeduct;
+        Console.WriteLine(user);
+        await InvokeAsync(StateHasChanged);
+    }
+    private async Task HandlePointsAwarded(string nickName, QuestionJsonBlob question)
+    {
+        int pointsToAward = 0;
+        switch (question.QuestionType)
+        {
+            case "Open":
+                var quest = JsonSerializer.Deserialize<QuestionOpen>(question.Blob);
+                pointsToAward = quest.Points;
+                break;
+            case "Slider":
+                var slider = JsonSerializer.Deserialize<QuestionSlider>(question.Blob);
+                pointsToAward = slider.Points;
+                break;
+            case "Multiple":
+                var multiple = JsonSerializer.Deserialize<MultipleChoice>(question.Blob);
+                pointsToAward = multiple.Points;
+                break;
+
+        }
+
+        var user = _userList.Where(p => p.Nickname == nickName).FirstOrDefault();
+        user.Score = user.Score + pointsToAward;
         Console.WriteLine(user);
         await InvokeAsync(StateHasChanged);
     }

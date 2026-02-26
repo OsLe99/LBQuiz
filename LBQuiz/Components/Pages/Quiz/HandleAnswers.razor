@@ -8,22 +8,24 @@
 
 <h3>HandleAnswers</h3>
 
-
-@foreach (var item in ParticipantAnswers)
-{
-    <MudItem @onclick="() => OnClickParticipantAnswer(item)">
-        <MudBadge Color="@item.AnswerColor" Overlap="true" Size="Size.Medium" Bordered="true">
-            <MudPaper>
-                <MudText Typo="Typo.h6">@item.Participant.Nickname : </MudText>
-                <MudText Typo="Typo.h6">@item.Answer</MudText>
+<MudGrid Spacing="3">
+    @foreach (var item in ParticipantAnswers)
+    {
+        <MudItem @onclick="() => OnClickParticipantAnswer(item)" xs="12" sm="6" md="4">
+            <MudPaper Class="pa-4">
+                <MudBadge Color="@item.AnswerColor" Overlap="true" Size="Size.Medium" Bordered="true">
+                    <MudText Typo="Typo.h6" Style="text-decoration: underline;">@item.Participant.Nickname : </MudText>
+                    <MudText Typo="Typo.h6">@item.Answer</MudText>
+                </MudBadge>
             </MudPaper>
-        </MudBadge>
-    </MudItem>
-}
+        </MudItem>
+    }
+</MudGrid>
+
 <MudButton OnClick="GoToNextSlide">Next Slide</MudButton>
 
 
-@code {
+    @code {
     [Parameter]
     public List<ParticipantAnswer> ParticipantAnswers { get; set; } = new();
     [Parameter]
@@ -51,6 +53,10 @@
         if (participantAnswer.AnswerColor == Color.Error)
         {
             await LobbyHubConnection.DeductPoints(participantAnswer.Participant.Nickname, participantAnswer.QuestionJB, LobbyId);
+        }
+        else if (participantAnswer.AnswerColor == Color.Success)
+        {
+            await LobbyHubConnection.AwardPoints(participantAnswer.Participant.Nickname, participantAnswer.QuestionJB, LobbyId);
         }
     }
     private async Task GoToNextSlide()

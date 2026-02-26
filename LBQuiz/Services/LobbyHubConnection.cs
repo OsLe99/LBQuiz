@@ -24,6 +24,7 @@ namespace LBQuiz.Services
         public event Func<int, int, LobbyParticipant, string, Task>? OnShowSliderValueToHost;
         public event Func<LobbyParticipant, int, List<MultipleOptions>, int, Task>? OnShowMultipleAnswersToHost;
         public event Func<string, QuestionJsonBlob, Task>? OnPointsDeducted;
+        public event Func<string, QuestionJsonBlob, Task>? OnPointsAwarded;
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
@@ -160,6 +161,13 @@ namespace LBQuiz.Services
                     await OnPointsDeducted.Invoke(nickName, question);
                 }
             });
+            _hubConnection.On<string, QuestionJsonBlob>("OnAwardPoints", async (nickName, question) =>
+            {
+                if(OnPointsAwarded != null)
+                {
+                    await OnPointsAwarded.Invoke(nickName, question);
+                }
+            });
 
             await _hubConnection.StartAsync();
         }
@@ -272,6 +280,14 @@ namespace LBQuiz.Services
             if(_hubConnection != null)
             {
                 await _hubConnection.InvokeAsync("DeductPoints", nickName, question, lobbyId);
+            }
+        }
+
+        public async Task AwardPoints(string nickName, QuestionJsonBlob question, int lobbyId)
+        {
+            if (_hubConnection != null)
+            {
+                await _hubConnection.InvokeAsync("AwardPoints", nickName, question, lobbyId);
             }
         }
 
