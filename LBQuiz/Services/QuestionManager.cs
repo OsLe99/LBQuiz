@@ -119,6 +119,29 @@ namespace LBQuiz.Services
             _dbContext.QuestionJsonBlobs.Add(jsonBlob);
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task CreateReviewQuestion(int quizId, string questionText, int minValue, int maxValue, int points)
+        {
+            var sO = await GetSortOrderAsync(quizId);
+
+            var dto = new ReviewQuestionDTO
+            {
+                Points = points,
+                MinValue = minValue,
+                MaxValue = maxValue
+            };
+
+            var jsonBlob = new QuestionJsonBlob
+            {
+                QuizId = quizId,
+                QuestionText = questionText,
+                SortOrder = sO,
+                Blob = JsonSerializer.Serialize(dto),
+                QuestionType = "Review"
+            };
+            _dbContext.QuestionJsonBlobs.Add(jsonBlob);
+            await _dbContext.SaveChangesAsync();
+        }
         
         #endregion
         
