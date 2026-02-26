@@ -18,7 +18,8 @@ namespace LBQuiz.Services
         {
             _dbContext = dbContext;  
         }
-
+        
+        #region CRUD Operations - Create
         public async Task CreateOpenQuestion(int quizId, string questionText, string correctAnswer, int points)
         {
             var sO = await GetSortOrderAsync(quizId);
@@ -96,33 +97,32 @@ namespace LBQuiz.Services
                 await _dbContext.SaveChangesAsync();
             }
         }
-        public async Task<int> GetSortOrderAsync(int quizId)
-        {
-            int sOrder = _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToList().Count + 1;
-            return sOrder;
 
-        }
+        public async Task CreateWordCloudQuestion(int quizId, string questionText, int maxEntries)
+        {
+            var sO = await GetSortOrderAsync(quizId);
 
-        public async Task<string> GetQuestionTypeStringAsync(QuestionJsonBlob question)
-        {
-            return question.QuestionType;
-        }
-        public async Task<List<QuestionJsonBlob>> GetAllQuestionJsonBlobAsync(int quizId)
-        {
-            return await _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToListAsync();
+            var dto = new WordCloudQuestionDTO
+            {
+                Points = 0,
+                MaxEntries = maxEntries
+            };
+
+            var jsonBlob = new QuestionJsonBlob
+            {
+                QuizId = quizId,
+                QuestionText = questionText,
+                SortOrder = sO,
+                Blob = JsonSerializer.Serialize(dto),
+                QuestionType = "WordCloud"
+            };
+            _dbContext.QuestionJsonBlobs.Add(jsonBlob);
+            await _dbContext.SaveChangesAsync();
         }
         
-        public async Task<QuestionJsonBlob> GetQuestionJsonBlobFromQuestionIdAsync(int questionId)
-        {
-            return await _dbContext.QuestionJsonBlobs.Where(q => q.Id == questionId).SingleOrDefaultAsync();
-        }
-        public async Task<int> GetNumberOfQuestionInQuizAsync(int quizId)
-        {
-            return _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToList().Count;
-        }
-
-        //QuestionCrud
-        #region CRUD Operations
+        #endregion
+        
+        #region CRUD Operations - Update & Delete
         public async Task<QuestionJsonBlob> UpdateQuestionTextAsync(Question question, string questionText)
         {
             var updateQuestion = await _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefaultAsync();
@@ -162,44 +162,6 @@ namespace LBQuiz.Services
             return updateQuestion;
         }
 
-        public async Task DeleteQuestionAsync(Question question)
-        {
-            var deleteQuestion = await _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefaultAsync();
-            _dbContext.Remove(deleteQuestion);
-            await _dbContext.SaveChangesAsync();
-        }
-
-        //public async Task UpdateSortOrderAsync(int quizId, int oldIndex, int newIndex)
-        //{
-        //    //List of all questions wich need sortorder updated
-        //    var allQuestion = await _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToListAsync();
-        //    newIndex = newIndex + 1;
-        //    foreach (var question in allQuestion)
-        //    {
-        //        if (question == null) continue;
-
-        //        if (question.SortOrder == oldIndex)
-        //        {
-        //            question.SortOrder = newIndex;
-        //        }
-        //        else if (oldIndex < newIndex)
-        //        {
-        //            if (question.SortOrder > oldIndex && question.SortOrder <= newIndex)
-        //            {
-        //                question.SortOrder--;
-        //            }
-        //        }
-        //        else if (oldIndex > newIndex)
-        //        {
-        //            if (question.SortOrder >= newIndex && question.SortOrder < oldIndex)
-        //            {
-        //                question.SortOrder++;
-        //            }
-
-        //        }
-        //    }
-        //    await _dbContext.SaveChangesAsync();
-        //}
         public async Task UpdateSortOrderAsync(List<QuestionJsonBlob> allQuestions)
         {
             _dbContext.UpdateRange(allQuestions);
@@ -258,10 +220,31 @@ namespace LBQuiz.Services
                 _dbContext.Update(questionUpdate);
                 await _dbContext.SaveChangesAsync();
             }
-            
-            
-        }
+            else if (question is QuestionWordCloud wordCloud)
+            {
+                var questionUpdate = _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefault();
+                questionUpdate.QuestionText = wordCloud.QuestionText;
 
+                var dto = new WordCloudQuestionDTO
+                {
+                    Points = wordCloud.Points,
+                    MaxEntries = wordCloud.MaxEntries
+                };
+                
+                questionUpdate.Blob = JsonSerializer.Serialize(dto);
+                
+                _dbContext.Update(questionUpdate);
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+        
+        public async Task DeleteQuestionAsync(Question question)
+        {
+            var deleteQuestion = await _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefaultAsync();
+            _dbContext.Remove(deleteQuestion);
+            await _dbContext.SaveChangesAsync();
+        }
+        
         public async Task DeleteQuestionAsync(QuestionJsonBlob question)
         {
             _dbContext.QuestionJsonBlobs.Remove(question);
@@ -271,6 +254,31 @@ namespace LBQuiz.Services
 
         #endregion
 
+        public async Task<int> GetSortOrderAsync(int quizId)
+        {
+            int sOrder = _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToList().Count + 1;
+            return sOrder;
+
+        }
+
+        public async Task<string> GetQuestionTypeStringAsync(QuestionJsonBlob question)
+        {
+            return question.QuestionType;
+        }
+        public async Task<List<QuestionJsonBlob>> GetAllQuestionJsonBlobAsync(int quizId)
+        {
+            return await _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToListAsync();
+        }
+        
+        public async Task<QuestionJsonBlob> GetQuestionJsonBlobFromQuestionIdAsync(int questionId)
+        {
+            return await _dbContext.QuestionJsonBlobs.Where(q => q.Id == questionId).SingleOrDefaultAsync();
+        }
+        public async Task<int> GetNumberOfQuestionInQuizAsync(int quizId)
+        {
+            return _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToList().Count;
+        }
+        
         public async Task<Question> GetQuestionFromBlob(QuestionJsonBlob questionJsonBlob)
         {
             if (questionJsonBlob.QuestionType == "Open")
@@ -300,6 +308,21 @@ namespace LBQuiz.Services
                 };
 
                 return result;
+            }
+
+            if (questionJsonBlob.QuestionType == "WordCloud")
+            {
+                var dto = JsonSerializer.Deserialize<WordCloudQuestionDTO>(questionJsonBlob.Blob);
+
+                var result = new QuestionWordCloud
+                {
+                    Id = questionJsonBlob.Id,
+                    QuizId = questionJsonBlob.QuizId,
+                    QuestionText = questionJsonBlob.QuestionText,
+                    SortOrder = questionJsonBlob.SortOrder,
+                    Points = dto.Points,
+                    MaxEntries = dto.MaxEntries
+                };
             }
             
             return null;

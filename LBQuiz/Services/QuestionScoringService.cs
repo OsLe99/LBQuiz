@@ -22,6 +22,7 @@ public class QuestionScoringService : IQuestionScoringService
             "Open" => ScoreOpen(question, answer, out points),
             "Slider" => ScoreSlider(question, answer, out points),
             "Multiple" => ScoreMultiple(question, answer, out points),
+            "WordCloud" => ScoreWordCloud(question, answer, out points),
             _ => false
         };
     }
@@ -80,5 +81,11 @@ public class QuestionScoringService : IQuestionScoringService
 
         return points > 0;
     }
-    
+
+    private bool ScoreWordCloud(QuestionJsonBlob question, string answer, out int points)
+    {
+        // WordCloud will never have a correct answer, we only check that we got something
+        points = 0;
+        return !string.IsNullOrWhiteSpace(answer);
+    }
 }

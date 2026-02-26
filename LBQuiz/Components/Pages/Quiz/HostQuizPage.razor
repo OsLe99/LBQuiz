@@ -90,6 +90,27 @@ else // Questions
                 <MudButton Disabled="_resultButton" OnClick="ShowResults">Show results</MudButton>
                 <MudButton OnClick="() => ShowHandleAnswers = true">Handle Answers</MudButton>
             </MudItem>
+            @if (AllQuestions == null || AllQuestions.Count == 0)
+            {
+                <MudItem>No Questions</MudItem>
+            }
+            else if (AllQuestions[_questionIndex].QuestionType == "WordCloud")
+            {
+                <MudPaper Class="pe-4" Style="height: 60vh;">
+                    <canvas id="wordCloudCanvas" style="width: 100%; height: 100%;"></canvas>
+                </MudPaper>
+            }
+            else
+            {
+                <MudItem xs="12" md="4">
+                    <MudPaper Class="pa-4" Style="height: 250px; background-color: antiquewhite; border: 1px solid black">
+                        <MudItem>@AllQuestions[_questionIndex].QuestionText</MudItem>
+                    </MudPaper>
+                </MudItem>
+            }
+            <MudButton Disabled="previousButton" OnClick="PreviousQuestion">Previous question</MudButton>
+            <MudButton Disabled="nextButton" OnClick="NextQuestion">Next question</MudButton>
+            <MudButton Disabled="_resultButton" OnClick="ShowResults">Show results</MudButton>
         </div>
         <div>
             <MudText Typo="Typo.h2" Align="Align.Center" Style="text-decoration: underline">Participants</MudText>
@@ -153,6 +174,7 @@ else // Questions
     private string? _currentHostId;
     private Models.Lobby.QuizLobby _currentLobby = new();
     private bool ShowHandleAnswers = false;
+    private List<string> _wordCloudWords = new();
 
     public HostQuizPage(ApplicationDbContext dbContext)
     {
@@ -266,6 +288,17 @@ else // Questions
         await InvokeAsync(StateHasChanged);
     }
 
+    private async Task RenderWordCloud()
+    {
+        var grouped = _wordCloudWords
+            .Where(w => !string.IsNullOrWhiteSpace(w))
+            .GroupBy(w => w.ToLower())
+            .Select(g => new object[] { g.Key, g.Count() })
+            .ToList();
+
+        await JS.InvokeVoidAsync("renderWordCloud", "wordCloudCanvas", grouped);
+    }
+
     private async Task HandleAnswerRecieved(string answer, LobbyParticipant participant)
     {
         //TODO: Create a method in QuestionManager that gets the correct answer for a question and compare it with the answer that was recieved. Then set the color of the answer to green if it is correct and red if it is wrong.
@@ -278,6 +311,24 @@ else // Questions
             AnswerColor = correctFalse ? Color.Success : Color.Error
         };
         _submittedAnswers.Add(lobbyParticipant);
+        _submittedAnswers.Add((participant, answer));
+
+        if (AllQuestions[_questionIndex].QuestionType == "WordCloud")
+        {
+            var words = JsonSerializer.Deserialize<List<string>>(answer);
+            if (words != null)
+            {
+                _wordCloudWords.AddRange(words.Where(w => !string.IsNullOrWhiteSpace(w)));
+            }
+
+            await InvokeAsync(async () =>
+            {
+                StateHasChanged();
+                await Task.Delay(100);
+                await RenderWordCloud();
+            });
+        }
+
         await InvokeAsync(StateHasChanged);
     }
 
@@ -292,8 +343,10 @@ else // Questions
         {
             _userList.Add(participant);
         }
+
         await InvokeAsync(StateHasChanged);
     }
+
     private async Task HandleSliderValue(int sliderValue, int quizId, LobbyParticipant lobbyParticipant, string questionText)
     {
         string sliderText = questionText + " : " + lobbyParticipant.Nickname + " set their slidervalue to: " + sliderValue;
@@ -301,22 +354,24 @@ else // Questions
         particapantSliderList.Add(sliderText);
         await InvokeAsync(StateHasChanged);
     }
+
     private async Task HandleMultipleAnswers(LobbyParticipant participant, int quizId, List<MultipleOptions> participantAnswers, int questionId)
     {
         int numberOfCorrectAnswers = 0;
 
         var question = await questionManager.GetQuestionJsonBlobFromQuestionIdAsync(questionId);
         var optionsList = JsonSerializer.Deserialize<List<MultipleOptions>>(question.Blob);
-        foreach(var result in optionsList)
+        foreach (var result in optionsList)
         {
-            foreach(var partAns in participantAnswers)
+            foreach (var partAns in participantAnswers)
             {
-                if(partAns.Text == result.Text)
+                if (partAns.Text == result.Text)
                 {
                     if (partAns.CorrectFalse == result.CorrectFalse) numberOfCorrectAnswers++;
                 }
             }
         }
+
         _multipleAnswersList.Add($"{participant.Nickname} got {numberOfCorrectAnswers} correct answers out of {optionsList.Count}");
         await InvokeAsync(StateHasChanged);
     }

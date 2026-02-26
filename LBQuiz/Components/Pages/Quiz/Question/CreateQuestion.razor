@@ -136,6 +136,23 @@
 
             </MudForm>
         }
+        else if (picked == "Word Cloud")
+        {
+            <MudForm @ref="_questionForm" OnValidSubmit="SaveQuestion">
+                <MudTextField @bind-Value="_questionText"
+                              Label="Question"
+                              Variant="Variant.Filled"
+                              Required="true"/>
+                
+                <MudNumericField @bind-Value="_maxEntries"
+                                 Label="Max entries"
+                                 Variant="Variant.Filled"
+                                 Min="1"
+                                 Max="10"
+                                 Required="true"/>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
+            </MudForm>
+        }
         <h6 style="text-decoration: underline; text-align:center; margin-top:20px">Number of Quetions in Quiz: @_numberOfQuestionsInQuiz</h6>
 
     </Authorized>
@@ -156,12 +173,13 @@
     private string _questionText { get; set; } = string.Empty;
     private string _correctAnswer { get; set; } = string.Empty;
     private int _questionPoints { get; set; }
-    public List<string> questionTypes = new() { "Open Question", "Slider", "Multiple Picker" };
+    public List<string> questionTypes = new() { "Open Question", "Slider", "Multiple Picker", "Word Cloud" };
     public string picked { get; set; }
     private int _minValue;
     private int _maxValue;
     private int _correctValue;
     private int _numberOfOptions = 0;
+    private int _maxEntries;
     private List<MultipleOptions> _multipleOptions = new();
     private int _numberOfQuestionsInQuiz;
 
@@ -204,6 +222,10 @@
                 id++;
             }
             await QuestionManager.CreateMultipleChoiceQuestion(QuizId, _questionPoints, _questionText, _multipleOptions);
+        }
+        else if (picked == "Word Cloud")
+        {
+            await QuestionManager.CreateWordCloudQuestion(QuizId, _questionText, _maxEntries);
         }
 
         try
