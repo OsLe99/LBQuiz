@@ -21,7 +21,7 @@
 
 @if (ShowHandleAnswers)
 {
-    <HandleAnswers ParticipantAnswers="_submittedAnswers" QuestionIndex="_questionIndex" LobbyId="_currentLobby.Id" OnCloseHandleAnswer="() => CloseHandleAnswersComponent()"></HandleAnswers>
+    <HandleAnswers ParticipantAnswers="_submittedAnswers" QuestionIndex="_questionIndex" LobbyId="_currentLobby.Id" CurrentQuestion="AllQuestions[_questionIndex]" OnCloseHandleAnswer="() => CloseHandleAnswersComponent()"></HandleAnswers>
 }
 else if (_showResults == true) // Show scoreboard
 {
