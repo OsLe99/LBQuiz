@@ -73,23 +73,7 @@ else // Questions
 
     <div class="hostPageContainer">
         <div>
-            <MudItem xs="12" md="4">
-                <MudPaper Class="pa-4" Style="height: 250px; background-color: antiquewhite; border: 1px solid black">
-                    @if(AllQuestions != null && AllQuestions.Count > 0)
-                    {
-                        <MudItem>@AllQuestions[_questionIndex].QuestionText</MudItem>
-                    }
-                    else
-                    {
-                        <MudItem>No Questions</MudItem>
-                    }
-                    
-                </MudPaper>
-                <MudButton Disabled="previousButton" OnClick="PreviousQuestion">Previous question</MudButton>
-                <MudButton Disabled="nextButton" OnClick="NextQuestion">Next question</MudButton>
-                <MudButton Disabled="_resultButton" OnClick="ShowResults">Show results</MudButton>
-                <MudButton OnClick="() => ShowHandleAnswers = true">Handle Answers</MudButton>
-            </MudItem>
+            
             @if (AllQuestions == null || AllQuestions.Count == 0)
             {
                 <MudItem>No Questions</MudItem>
@@ -111,6 +95,7 @@ else // Questions
             <MudButton Disabled="previousButton" OnClick="PreviousQuestion">Previous question</MudButton>
             <MudButton Disabled="nextButton" OnClick="NextQuestion">Next question</MudButton>
             <MudButton Disabled="_resultButton" OnClick="ShowResults">Show results</MudButton>
+            <MudButton OnClick="() => ShowHandleAnswers = true">Handle Answers</MudButton>
         </div>
         <div>
             <MudText Typo="Typo.h2" Align="Align.Center" Style="text-decoration: underline">Participants</MudText>
@@ -311,7 +296,6 @@ else // Questions
             AnswerColor = correctFalse ? Color.Success : Color.Error
         };
         _submittedAnswers.Add(lobbyParticipant);
-        _submittedAnswers.Add((participant, answer));
 
         if (AllQuestions[_questionIndex].QuestionType == "WordCloud")
         {
