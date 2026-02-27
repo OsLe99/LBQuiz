@@ -314,7 +314,6 @@ else // Questions
 
     private async Task HandleAnswerRecieved(string answer, LobbyParticipant participant)
     {
-        //TODO: Create a method in QuestionManager that gets the correct answer for a question and compare it with the answer that was recieved. Then set the color of the answer to green if it is correct and red if it is wrong.
         if (string.IsNullOrEmpty(answer))
         {
             answer = "No answer given"; 
