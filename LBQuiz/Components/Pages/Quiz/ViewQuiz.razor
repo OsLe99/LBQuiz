@@ -1,6 +1,8 @@
 ﻿@page "/viewquiz"
+@inject IDbContextFactory<ApplicationDbContext> ContextFactory
 @using LBQuiz.Models
 @using Data
+@using Microsoft.EntityFrameworkCore
 <h3>ViewQuiz</h3>
 
 @if(SelectedQuiz != null)
@@ -49,22 +51,23 @@
     public Models.Quiz SelectedQuiz { get; set; }
     private int _quizId { get; set; } = 7;
     public List<Models.Question> AllQuestions { get; set; }
-    private readonly ApplicationDbContext _dbContext;
+    private IDbContextFactory<ApplicationDbContext> _factory;
     private Dictionary<int, string> IdAnswer = new Dictionary<int, string>();
     private string _answer { get; set; }
     private int _index = 0;
     private int _score = 0;
     private int _maxScore = 0;
 
-    public ViewQuiz(ApplicationDbContext dbContext)
+    public ViewQuiz(IDbContextFactory<ApplicationDbContext> dbContext)
     {
-        _dbContext = dbContext;
+        _factory = dbContext;
     }
 
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        var selectedQuiz = _dbContext.Quiz.FirstOrDefault(q => q.Id == _quizId);
+        using var context = await _factory.CreateDbContextAsync();
+        var selectedQuiz = context.Quiz.FirstOrDefault(q => q.Id == _quizId);
         if(selectedQuiz != null)
         {
             SelectedQuiz = selectedQuiz;
@@ -80,7 +83,8 @@
 
     private async Task GetAllQuestionsFromQuiz()
     {
-        var questions = _dbContext.Question.Where(q => q.QuizId == _quizId).ToList();
+        using var context = await _factory.CreateDbContextAsync();
+        var questions = context.Question.Where(q => q.QuizId == _quizId).ToList();
 
         if(questions != null)
         {

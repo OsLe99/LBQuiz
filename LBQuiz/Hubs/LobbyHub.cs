@@ -17,14 +17,14 @@ namespace LBQuiz.Hubs
         private readonly ILobbyParticipantManager _lobbyParticipantManager;
         private readonly ILobbyService _lobbyService;
         private readonly IQuestionScoringService _scoringService;
-        private readonly ApplicationDbContext _dbContext;
+        private IDbContextFactory<ApplicationDbContext> _factory;
         private string? GetUserId() => Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        public LobbyHub(ILobbyParticipantManager lobbyParticipantManager, ILobbyService lobbyService, IQuestionScoringService scoringService, ApplicationDbContext dbContext)
+        public LobbyHub(ILobbyParticipantManager lobbyParticipantManager, ILobbyService lobbyService, IQuestionScoringService scoringService, IDbContextFactory<ApplicationDbContext> dbContext)
         {
             _lobbyParticipantManager = lobbyParticipantManager;
             _lobbyService = lobbyService;
             _scoringService = scoringService;
-            _dbContext = dbContext;
+            _factory = dbContext;
         }
 
         public override async Task OnConnectedAsync()
@@ -187,16 +187,12 @@ namespace LBQuiz.Hubs
 
         public async Task CalculateScoreBoard(int questionId, string answer)
         {
-            Console.WriteLine($"Incoming questionId: {questionId}");
+            using var context = await _factory.CreateDbContextAsync();
             
             var participant =  _lobbyParticipantManager.GetLobbyParticipant(Context.ConnectionId);
             
-            var question = await _dbContext.QuestionJsonBlobs.FirstOrDefaultAsync(q => q.Id == questionId);
+            var question = await context.QuestionJsonBlobs.FirstOrDefaultAsync(q => q.Id == questionId);
             
-            Console.WriteLine(question == null 
-                ? "QUESTION NOT FOUND" 
-                : "Question found");
-
             var result = _scoringService.IsCorrect(question, answer, out int points);
 
             if (result)

@@ -1,25 +1,31 @@
 ﻿using LBQuiz.Data;
-using LBQuiz.Services;
 using LBQuiz.Models.Lobby;
+using LBQuiz.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace LBQuiz.Test.Services.LobbyServiceTests;
 
 public class GetLobbyByIdAsyncTests
 {
-    private ApplicationDbContext CreateInMemoryContext()
+    private IDbContextFactory<ApplicationDbContext> CreateInMemoryFactory()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
-        return new ApplicationDbContext(options);
+
+        var factory = new PooledDbContextFactory<ApplicationDbContext>(options);
+
+        return factory;
     }
 
     [Fact]
     public async Task GetLobbyByIdAsync_WithValidId_ShouldReturnLobby()
     {
         // Arrange
-        await using var context = CreateInMemoryContext();
+        var factory = CreateInMemoryFactory();
+
+        using var context = await factory.CreateDbContextAsync();
         var lobby = new QuizLobby
         {
             Id = 1,
@@ -30,7 +36,7 @@ public class GetLobbyByIdAsyncTests
         context.Add(lobby);
         await context.SaveChangesAsync();
         
-        var service = new LobbyService(context);
+        var service = new LobbyService(factory);
         
         // Act
         var result = await service.GetLobbyByIdAsync(1);
@@ -44,7 +50,9 @@ public class GetLobbyByIdAsyncTests
     public async Task GetLobbyByIdAsync_WithInvalidId_ShouldReturnNull()
     {
         // Arrange
-        await using var context = CreateInMemoryContext();
+        var factory = CreateInMemoryFactory();
+
+        using var context = await factory.CreateDbContextAsync();
         var lobby = new QuizLobby
         {
             Id = 1,
@@ -55,7 +63,7 @@ public class GetLobbyByIdAsyncTests
         context.Add(lobby);
         await context.SaveChangesAsync();
         
-        var service = new LobbyService(context);
+        var service = new LobbyService(factory);
         
         // Act
         var result = await service.GetLobbyByIdAsync(2);
@@ -68,7 +76,9 @@ public class GetLobbyByIdAsyncTests
     public async Task GetLobbyByIdAsync_MultipleLobbies_ShouldReturnCorrectLobby()
     {
         // Arrange
-        await using var context = CreateInMemoryContext();
+        var factory = CreateInMemoryFactory();
+
+        using var context = await factory.CreateDbContextAsync();
         var lobby1 = new QuizLobby
         {
             Id = 1,
@@ -88,7 +98,7 @@ public class GetLobbyByIdAsyncTests
         context.AddRange(lobby1, lobby2);
         await context.SaveChangesAsync();
         
-        var service = new LobbyService(context);
+        var service = new LobbyService(factory);
         
         // Act
         var result = await service.GetLobbyByIdAsync(1);
@@ -105,7 +115,9 @@ public class GetLobbyByIdAsyncTests
     public async Task GetLobbyById_InactiveLobby_ShouldReturnLobby()
     {
         // Arrange
-        await using var context = CreateInMemoryContext();
+        var factory = CreateInMemoryFactory();
+
+        using var context = await factory.CreateDbContextAsync();
         var lobby = new QuizLobby
         {
             Id = 1,
@@ -117,7 +129,7 @@ public class GetLobbyByIdAsyncTests
         context.Add(lobby);
         await context.SaveChangesAsync();
         
-        var service = new LobbyService(context);
+        var service = new LobbyService(factory);
         
         // Act
         var result = await service.GetLobbyByIdAsync(1);

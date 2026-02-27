@@ -6,7 +6,7 @@
 @using System.Text.Json
 @using LBQuiz.Models.Helpers.AnswerDTO
 @using Microsoft.AspNetCore.Components.Web
-@inject ApplicationDbContext DbContext
+
 @inject IQuestionManager QuestionManager
 @inject ILobbyHubService LobbyHub
 @inject ILobbyParticipantManager LobbyManager
@@ -85,6 +85,16 @@
                                   Class="mb-2"/>
                 }
                 <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitWordCloud">Submit answer</MudButton>
+            </MudPaper>
+        </MudItem>
+    }
+    else if (CurrentQuestion2 != null && CurrentQuestion2 is QuestionReview questionReview)
+    {
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Style="height: 250px">
+                <MudText Typo="Typo.h2" Class="mb-3">@questionReview.QuestionText</MudText>
+                <MudSlider @bind-Value="sliderValue" Min="@questionReview.MinValue" Max="@questionReview.MaxValue">Value: @sliderValue.ToString()</MudSlider>
+                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SaveAnswer(sliderValue.ToString()))">Submit answer</MudButton>
             </MudPaper>
         </MudItem>
     }
@@ -215,7 +225,8 @@ else
             var nickname = await JS.InvokeAsync<string>("sessionStorage.getItem", "lobbyNickname");
             if (!string.IsNullOrEmpty(nickname))
             {
-                await HubConnection.RejoinLobbyAsync(int.Parse(lobbyId), nickname);
+                var lobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+                await HubConnection.RejoinLobbyAsync(lobby.Id, nickname);
             }
         }
     }
@@ -310,6 +321,21 @@ else
                 };
                 CurrentQuestion2 = wc;
                 _wordCloudEntries = new List<string>(new string[wc.MaxEntries]);
+            }
+            else if (questionType == "Review")
+            {
+                var dto = JsonSerializer.Deserialize<ReviewQuestionDTO>(CurrentQuestion.Blob);
+                var review = new QuestionReview
+                {
+                    Id = CurrentQuestion.Id,
+                    QuizId = CurrentQuestion.QuizId,
+                    QuestionText = CurrentQuestion.QuestionText,
+                    SortOrder = CurrentQuestion.SortOrder,
+                    Points = dto.Points,
+                    MinValue = dto.MinValue,
+                    MaxValue = dto.MaxValue
+                };
+                CurrentQuestion2 = review;
             }
         }
         catch (Exception ex)

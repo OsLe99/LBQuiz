@@ -1,8 +1,9 @@
 ﻿@using LBQuiz.Components.Helpers
 @using LBQuiz.Data
+@using Microsoft.EntityFrameworkCore
 @using Models
 @using Microsoft.AspNetCore.Components.Authorization
-@inject ApplicationDbContext _dbContext
+@inject IDbContextFactory<ApplicationDbContext> ContextFactory
 @inject AuthenticationStateProvider AuthStateProvider
 @page "/quiz/question/choose"
 
@@ -36,12 +37,17 @@
 @code {
     private List<Quiz> _allQuizes;
     private string _currentUserId;
+    private IDbContextFactory<ApplicationDbContext> _factory;
 
 
-
+    public ChooseQuestion(IDbContextFactory<ApplicationDbContext> dbContext)
+    {
+        _factory = dbContext;
+    }
 
     protected override async Task OnInitializedAsync()
     {
+        using var context = await _factory.CreateDbContextAsync();
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
@@ -49,6 +55,6 @@
         {
             _currentUserId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         }
-        _allQuizes = _dbContext.Quiz.Where(q => q.HostId == _currentUserId).ToList();
+        _allQuizes = context.Quiz.Where(q => q.HostId == _currentUserId).ToList();
     }
 }
