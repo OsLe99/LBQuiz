@@ -25,6 +25,8 @@ namespace LBQuiz.Services
         public event Func<LobbyParticipant, int, List<MultipleOptions>, int, Task>? OnShowMultipleAnswersToHost;
         public event Func<string, QuestionJsonBlob, Task>? OnPointsDeducted;
         public event Func<string, QuestionJsonBlob, Task>? OnPointsAwarded;
+        public event Func<int, Task>? OnCountDownStart;
+
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
@@ -74,9 +76,13 @@ namespace LBQuiz.Services
                         await OnParticipantsChanged.Invoke();
                 });
 
-            _hubConnection.On<string, string>("QuizLobbyStarted",
-                (joinCode, hostId) =>
+            _hubConnection.On<string, string, int>("QuizLobbyStarted",
+                async (joinCode, hostId, countDownTimer) =>
                 {
+                    if(OnCountDownStart != null)
+                    {
+                        await OnCountDownStart.Invoke(countDownTimer);
+                    }
                     // If host, go to host page
                     if (_currentUserId != null && _currentUserId == hostId)
                     {
@@ -87,6 +93,7 @@ namespace LBQuiz.Services
                     {
                         navigation.NavigateTo($"/quiz/play/{joinCode}");
                     }
+                    
                 });
 
             // Listen for server event with corrected name and payload
@@ -207,11 +214,11 @@ namespace LBQuiz.Services
                 Participants.Clear();
             }
         }
-        public async Task StartQuizAsync(int lobbyId, int quizId)
+        public async Task StartQuizAsync(int lobbyId, int quizId, int countDownTimer)
         {
             if (_hubConnection?.State == HubConnectionState.Connected)
             {
-                await _hubConnection.SendAsync("StartQuiz", lobbyId, quizId);
+                await _hubConnection.SendAsync("StartQuiz", lobbyId, quizId, countDownTimer);
             }
         }
         

@@ -11,7 +11,7 @@ namespace LBQuiz.Services.Interfaces
         Task JoinLobbyAsync(string joinCode, string nickname);
         Task JoinLobbyAsHostAsync(int lobbyId);
         Task LeaveLobbyAsync();
-        Task StartQuizAsync(int lobbyId, int quizId);
+        Task StartQuizAsync(int lobbyId, int quizId, int countDownTimer);
         List<LobbyParticipant> Participants { get; }
         string? ConnectionId { get; }
         event Func<Task>? OnParticipantsChanged;
@@ -23,6 +23,7 @@ namespace LBQuiz.Services.Interfaces
         event Func<LobbyParticipant, int, List<MultipleOptions>, int, Task>? OnShowMultipleAnswersToHost;
         event Func<string, QuestionJsonBlob, Task>? OnPointsDeducted;
         event Func<string, QuestionJsonBlob, Task>? OnPointsAwarded;
+        event Func<int, Task>? OnCountDownStart;
         Task SubmitAnswer(int lobbyId, string answer, int quizId);
         Task UpdateScoreBoard(int questionId, string answer);
         Task GoToNextQuestionAsync(int questionIndex, int lobbyId);

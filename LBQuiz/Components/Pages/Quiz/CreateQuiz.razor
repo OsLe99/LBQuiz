@@ -13,6 +13,12 @@
 
 <AuthorizeView>
     <Authorized>
+        <div class="createBar">
+            <MudText Align="Align.Center" Typo="Typo.h5">
+                Create a new quiz
+                <MudIcon Icon="@Icons.Material.Filled.BorderColor"></MudIcon>
+            </MudText>
+        </div>
         <MudTextField @bind-Value="_quizName" Label="Quiz Name" Variant="Variant.Filled" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"></MudTextField>
         <MudTextField @bind-Value="_quizDescription" Label="Quiz Description" Variant="Variant.Filled" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"></MudTextField>
 
