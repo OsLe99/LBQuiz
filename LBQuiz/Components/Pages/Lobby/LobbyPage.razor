@@ -13,6 +13,7 @@
 @inject ISnackbar Snackbar
 @inject IQRCodeService QRCodeService
 @inject ILobbyService LobbyService
+@inject IQuizManager QuizManager
 
 @page "/quiz/{LobbyCode}"
 
@@ -125,12 +126,13 @@ else
         var user = authState.User;
         _userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        CurrentLobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+
 
         try
         {
-            CurrentLobby = await DbContext.QuizLobby.Where(q => q.JoinCode == LobbyCode).FirstOrDefaultAsync();
-            CurrentQuiz = await DbContext.Quiz.Where(q => q.Id == CurrentLobby.QuizId).FirstOrDefaultAsync();
+            CurrentLobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+            CurrentQuiz = await QuizManager.GetQuizFromQuizId(CurrentLobby.QuizId);
+            // CurrentQuiz = await DbContext.Quiz.Where(q => q.Id == CurrentLobby.QuizId).FirstOrDefaultAsync();
         }
         catch (Exception ex)
         {

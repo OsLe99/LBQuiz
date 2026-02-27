@@ -47,5 +47,10 @@ namespace LBQuiz.Services
             await context.SaveChangesAsync();
             
         }
-    }
+        public async Task<Quiz> GetQuizFromQuizId(int quizId)
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            return await context.Quiz.Where(q => q.Id == quizId).FirstOrDefaultAsync();
+        }
+}
 }

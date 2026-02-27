@@ -8,5 +8,6 @@ namespace LBQuiz.Services.Interfaces
         Task<string> GetHostIdFromQuiz(int quizId);
         Task DeleteQuizAsync(Quiz quiz);
         Task UpdateQuizAsync(Quiz quiz);
+        Task<Quiz> GetQuizFromQuizId(int quizId);
     }
 }
