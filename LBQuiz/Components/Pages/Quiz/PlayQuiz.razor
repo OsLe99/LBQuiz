@@ -6,7 +6,7 @@
 @using System.Text.Json
 @using LBQuiz.Models.Helpers.AnswerDTO
 @using Microsoft.AspNetCore.Components.Web
-@inject ApplicationDbContext DbContext
+
 @inject IQuestionManager QuestionManager
 @inject ILobbyHubService LobbyHub
 @inject ILobbyParticipantManager LobbyManager
@@ -225,7 +225,8 @@ else
             var nickname = await JS.InvokeAsync<string>("sessionStorage.getItem", "lobbyNickname");
             if (!string.IsNullOrEmpty(nickname))
             {
-                await HubConnection.RejoinLobbyAsync(int.Parse(lobbyId), nickname);
+                var lobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+                await HubConnection.RejoinLobbyAsync(lobby.Id, nickname);
             }
         }
     }

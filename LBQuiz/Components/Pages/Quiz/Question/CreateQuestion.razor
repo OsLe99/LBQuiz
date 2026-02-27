@@ -12,8 +12,13 @@
 
 <AuthorizeView>
     <Authorized>
+        <div class="createBar">
+            <MudText Align="Align.Center" Typo="Typo.h5">
+                Create a new question
+                <MudIcon Icon="@Icons.Material.Filled.QuestionAnswer"></MudIcon>
+            </MudText>
+        </div>
         
-        <h3>Create Question</h3>
 
         @if (string.IsNullOrEmpty(picked))
         {
@@ -184,7 +189,7 @@
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
             </MudForm>
         }
-        <h6 style="text-decoration: underline; text-align:center; margin-top:20px">Number of Quetions in Quiz: @_numberOfQuestionsInQuiz</h6>
+        <MudText Align="Align.Center" Style="margin-top: 100px; color: rgba(0,0,0,0.4);">Total questions in this quiz: @_numberOfQuestionsInQuiz</MudText>
 
     </Authorized>
     
@@ -272,8 +277,8 @@
             Console.WriteLine($"An error occurred while saving the question: {ex.Message}");
         }
         picked = "";
-        StateHasChanged();
-
+        _numberOfQuestionsInQuiz = await QuestionManager.GetNumberOfQuestionInQuizAsync(QuizId);
+        await InvokeAsync(StateHasChanged);
     }
 
     private void UpdateMultipleOptions()

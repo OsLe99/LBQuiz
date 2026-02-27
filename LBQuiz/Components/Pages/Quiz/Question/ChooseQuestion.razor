@@ -8,7 +8,12 @@
 
 <AuthorizeView>
     <Authorized>
-        <h3>Choose Question</h3>
+        <div class="createBar">
+            <MudText Align="Align.Center" Typo="Typo.h5">
+                Pick a question
+                <MudIcon Icon="@Icons.Material.Filled.BorderColor"></MudIcon>
+            </MudText>
+        </div>
         @foreach(var q in _allQuizes)
         {
             <MudItem xs="12" md="4" Style="text-align: center">

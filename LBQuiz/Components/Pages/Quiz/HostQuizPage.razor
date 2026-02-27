@@ -145,9 +145,13 @@ else // Questions
     </div>
 
     <MudGrid Spacing="2" Style="margin-top: 20px; height:100vh">
-        <MudItem xs="12" md="8">
 
+
+        <MudItem xs="12" md="8" Style="text-align: center;">
+            <MudText Class="@_animationClass" Style="color: rgba(0,0,0,0.4);" Typo="Typo.h6">Answers: @_submittedAnswers.Count / @_userList.Count</MudText>
         </MudItem>
+
+
         <MudItem xs="12" md="4" Style="border: 1px solid rgba(255,144,0,0.6); box-shadow: 4px 4px 2px orange inset; background-color: rgba(147,202,237,0.4);">
             <LBQuiz.Components.Pages.Chat.ChatComponent HostId="@_currentHostId" LobbyId="@_currentLobby.Id.ToString()"></LBQuiz.Components.Pages.Chat.ChatComponent>
         </MudItem>
@@ -179,6 +183,8 @@ else // Questions
     private bool ShowHandleAnswers = false;
     private List<string> _wordCloudWords = new();
     private Dictionary<string, int> _reviewResponses = new();
+    private string _animationClass = "";
+
 
     public HostQuizPage(ApplicationDbContext dbContext)
     {
@@ -308,6 +314,12 @@ else // Questions
 
     private async Task HandleAnswerRecieved(string answer, LobbyParticipant participant)
     {
+        //TODO: Create a method in QuestionManager that gets the correct answer for a question and compare it with the answer that was recieved. Then set the color of the answer to green if it is correct and red if it is wrong.
+        if (string.IsNullOrEmpty(answer))
+        {
+            answer = "No answer given"; 
+        }
+        var correctFalse = await questionManager.ReturnBoolOnAnswer(AllQuestions[_questionIndex], answer.ToLower());
         var currentQuestion = AllQuestions[_questionIndex];
         Color answerColor;
         
@@ -318,7 +330,7 @@ else // Questions
         }
         else
         {
-            var correctFalse = await questionManager.ReturnBoolOnAnswer(currentQuestion, answer.ToLower());
+            // var correctFalse = await questionManager.ReturnBoolOnAnswer(currentQuestion, answer.ToLower());
             answerColor = correctFalse ? Color.Success : Color.Error;
         }
         
@@ -330,6 +342,9 @@ else // Questions
             AnswerColor = answerColor
         };
         _submittedAnswers.Add(lobbyParticipant);
+
+        await TriggerAnimation();
+
 
         if (AllQuestions[_questionIndex].QuestionType == "WordCloud")
         {
@@ -465,5 +480,15 @@ else // Questions
         return _reviewResponses.Values.Average();
     }
 
-    //_userList.Where(u => u.ConnectionId == participantAnswer.Participant.ConnectionId).Select(u => { u.Score = participantAnswer.Participant.Score; return u; }).ToList();
+    private async Task TriggerAnimation()
+    {
+        _animationClass = "grow-animate";
+        await InvokeAsync(StateHasChanged);
+
+        await Task.Delay(300);
+
+        _animationClass = "";
+        await InvokeAsync(StateHasChanged);
+    }
+
 }

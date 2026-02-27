@@ -96,13 +96,13 @@ namespace LBQuiz.Hubs
             }
             await base.OnDisconnectedAsync(exception);
         }
-        public async Task StartQuiz(int lobbyId, int quizId)
+        public async Task StartQuiz(int lobbyId, int quizId, int countDownTimer)
         {
             await EnsureIsHostAsync(lobbyId);
             var hostId = GetUserId();
             var lobby = await _lobbyService.GetLobbyByIdAsync(lobbyId);
             var joinCode = lobby.JoinCode;
-            await Clients.Group(lobbyId.ToString()).SendAsync("QuizLobbyStarted", joinCode, hostId);
+            await Clients.Group(lobbyId.ToString()).SendAsync("QuizLobbyStarted", joinCode, hostId, countDownTimer);
         }
         
         public async Task JoinLobbyAsHost(int lobbyId)

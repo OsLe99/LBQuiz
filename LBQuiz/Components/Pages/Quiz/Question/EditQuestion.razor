@@ -15,12 +15,16 @@
 
 <AuthorizeView Context="authContext">
     <Authorized>
-        
-        <h3>Edit Question</h3>
         @if (SelectedQuestion == null)
         {
             @if (AllQuestions != null)
             {
+                <div class="createBar">
+                    <MudText Align="Align.Center" Typo="Typo.h5">
+                        Pick a question to edit
+                        <MudIcon Icon="@Icons.Material.Filled.Edit"></MudIcon>
+                    </MudText>
+                </div>
                 <MudDropContainer T="QuestionJsonBlob" Items="AllQuestions" ItemDropped="ItemUpdated" Class="d-flex flex-column" ItemsSelector="@((item, zone) => zone == "questions")" @key="AllQuestions">
                     <ChildContent>
                         <MudPaper>
@@ -39,9 +43,16 @@
                         </MudStack>
                     </ItemRenderer>
                 </MudDropContainer>
+                <MudButton Style="border: 1px solid rgba(0,0,0,0.2); margin: 10px;" StartIcon="@Icons.Material.Filled.SubdirectoryArrowLeft" OnClick="SetAllQuestionsNull">Quiz</MudButton>
             }
             else
             {
+                <div class="createBar">
+                    <MudText Align="Align.Center" Typo="Typo.h5">
+                        Pick a quiz to edit
+                        <MudIcon Icon="@Icons.Material.Filled.Edit"></MudIcon>
+                    </MudText>
+                </div>
                 <MudGrid>
                     @if (AllQuizes != null)
                     {
@@ -72,6 +83,12 @@
         }
         else
         {
+            <div class="createBar">
+                <MudText Align="Align.Center" Typo="Typo.h5">
+                    Edit question
+                    <MudIcon Icon="@Icons.Material.Filled.Edit"></MudIcon>
+                </MudText>
+            </div>
             @if (SelectedQuestion is QuestionOpen question)
             {
                 <MudItem>
@@ -125,6 +142,7 @@
                         <MudButton @onclick="() => SaveNewQuestionProps(multipleQuestion)" Style="margin-top: 10px; border: 1px solid rgba(0,0,0,0.4)">Save</MudButton>
                 </MudPaper>
             }
+            <MudButton Style="border: 1px solid rgba(0,0,0,0.2); margin: 10px;" StartIcon="@Icons.Material.Filled.SubdirectoryArrowLeft" OnClick="SetSelectedQuestionNull">Questions</MudButton>
         }
 
     </Authorized>
@@ -261,5 +279,15 @@
     private async Task TestQrCode()
     {
         await QRCodeService.GetQRImageFromApiAsync("jaja");
+    }
+    private void SetAllQuestionsNull()
+    {
+        AllQuestions = null;
+        StateHasChanged();
+    }
+    private void SetSelectedQuestionNull()
+    {
+        SelectedQuestion = null;
+        StateHasChanged();
     }
 }

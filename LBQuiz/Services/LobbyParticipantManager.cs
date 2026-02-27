@@ -11,7 +11,7 @@ public class LobbyParticipantManager : ILobbyParticipantManager
     private readonly ConcurrentDictionary<int, ConcurrentDictionary<string, LobbyParticipant>> _lobbyParticipants = new();
     private readonly ConcurrentDictionary<string, int> _connectionToLobby = new();
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<int, string>> AnswerDictionary = new();
-
+    
     public bool AddParticipant(int lobbyId, LobbyParticipant participant)
     {
         if (lobbyId <= 0)
