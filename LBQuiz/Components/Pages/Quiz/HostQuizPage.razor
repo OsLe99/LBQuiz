@@ -16,6 +16,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
+@inject IDbContextFactory<ApplicationDbContext> ContextFactory
 
 @page "/quiz/host/{LobbyCode}"
 
@@ -161,7 +162,7 @@ else // Questions
     [Parameter] public string LobbyCode { get; set; }
 
 
-    private ApplicationDbContext _dbContext;
+    private IDbContextFactory<ApplicationDbContext> _factory;
     private bool previousButton = true;
     private bool nextButton = false;
     private bool _resultButton = true;
@@ -180,13 +181,14 @@ else // Questions
     private List<string> _wordCloudWords = new();
     private Dictionary<string, int> _reviewResponses = new();
 
-    public HostQuizPage(ApplicationDbContext dbContext)
+    public HostQuizPage(IDbContextFactory<ApplicationDbContext> dbContext)
     {
-        _dbContext = dbContext;
+        _factory = dbContext;
     }
 
     protected override async Task OnInitializedAsync()
     {
+        using var context = await _factory.CreateDbContextAsync();
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -201,7 +203,7 @@ else // Questions
             _userList.Add(participant);
         }
 
-        var selectedQuiz = _dbContext.Quiz.FirstOrDefault(q => q.Id == _currentLobby.QuizId);
+        var selectedQuiz = context.Quiz.FirstOrDefault(q => q.Id == _currentLobby.QuizId);
 
         await GetAllQuestionsFromQuiz();
 
@@ -230,8 +232,9 @@ else // Questions
 
     private async Task GetAllQuestionsFromQuiz()
     {
+        using var context = await _factory.CreateDbContextAsync();
         var lobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
-        var questions = _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == lobby.QuizId).ToList();
+        var questions = context.QuestionJsonBlobs.Where(q => q.QuizId == lobby.QuizId).ToList();
 
         if (questions != null)
         {

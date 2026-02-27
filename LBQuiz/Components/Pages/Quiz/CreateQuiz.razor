@@ -3,11 +3,13 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager NavigationManager
+@inject IDbContextFactory<ApplicationDbContext> ContextFactory
 
 
 @using Microsoft.AspNetCore.Components
 @using System.Globalization;
 @using LBQuiz.Components.Helpers
+@using Microsoft.EntityFrameworkCore
 
 <AuthorizeView>
     <Authorized>
@@ -48,10 +50,17 @@
     private bool _quizSaved { get; set; } = false;
     private string _currentUserId; 
 
-    private readonly ApplicationDbContext _dbContext;
-    public CreateQuiz(ApplicationDbContext dbContext)
+    //private readonly IDbContextFactory<ApplicationDbContext> _factory;
+
+    //public QuestionManager(IDbContextFactory<ApplicationDbContext> dbContext)
+    //{
+    //    _factory = dbContext;
+    //}
+
+    private readonly IDbContextFactory<ApplicationDbContext> _factory;
+    public CreateQuiz(IDbContextFactory<ApplicationDbContext> dbContext)
     {
-        _dbContext = dbContext;
+        _factory = dbContext;
     }
 
     protected override async Task OnInitializedAsync()
@@ -65,7 +74,9 @@
         }
     }
 
-    async Task SaveQuizToDatabase()   {
+    async Task SaveQuizToDatabase()  
+    {
+        using var context = await _factory.CreateDbContextAsync();
         var newQuiz = new Models.Quiz()
         {
             Name = _quizName,
@@ -73,10 +84,10 @@
             //HostId should always be the ID for the person who is logged in
             HostId = _currentUserId // TODO: Replace with actual logged-in user ID
         };
-        _dbContext.Quiz.Add(newQuiz);
+        context.Quiz.Add(newQuiz);
         try
         {
-            await _dbContext.SaveChangesAsync();
+            await context.SaveChangesAsync();
             _quizSaved = true;
             NavigationManager.NavigateTo($"/quiz/{newQuiz.Id}/question/create");
 

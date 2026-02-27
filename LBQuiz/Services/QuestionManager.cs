@@ -1,27 +1,30 @@
 ﻿using LBQuiz.Data;
+using LBQuiz.Migrations;
 using LBQuiz.Models;
 using LBQuiz.Models.Helpers;
+using LBQuiz.Models.Helpers.AnswerDTO;
 using LBQuiz.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
-using LBQuiz.Models.Helpers.AnswerDTO;
+using Microsoft.EntityFrameworkCore.Internal;
 using Newtonsoft.Json.Linq;
-using LBQuiz.Migrations;
+using System;
+using System.Text.Json;
 
 namespace LBQuiz.Services
 {
     public class QuestionManager : IQuestionManager
     {
-        private readonly ApplicationDbContext _dbContext;
+        private readonly IDbContextFactory<ApplicationDbContext> _factory;
 
-        public QuestionManager(ApplicationDbContext dbContext)
+        public QuestionManager(IDbContextFactory<ApplicationDbContext> dbContext)
         {
-            _dbContext = dbContext;  
+            _factory = dbContext;  
         }
         
         #region CRUD Operations - Create
         public async Task CreateOpenQuestion(int quizId, string questionText, string correctAnswer, int points)
         {
+            using var context = await _factory.CreateDbContextAsync();
             var sO = await GetSortOrderAsync(quizId);
             var question = new QuestionOpen()
             {
@@ -41,13 +44,14 @@ namespace LBQuiz.Services
                 QuestionType = "Open"
 
             };
-            _dbContext.QuestionJsonBlobs.Add(blob);
-            await _dbContext.SaveChangesAsync();
+            context.QuestionJsonBlobs.Add(blob);
+            await context.SaveChangesAsync();
 
             
         }
         public async Task CreateSliderQuestion(int quizId, int minValue, int maxValue, int correctValue, int points, string questionText)
         {
+            using var context = await _factory.CreateDbContextAsync();
             var sO = await GetSortOrderAsync(quizId);
             var question = new QuestionSlider
             {
@@ -68,12 +72,13 @@ namespace LBQuiz.Services
                 Blob = json,
                 QuestionType = "Slider"
             };
-            _dbContext.QuestionJsonBlobs.Add(blob);
-            await _dbContext.SaveChangesAsync();
+            context.QuestionJsonBlobs.Add(blob);
+            await context.SaveChangesAsync();
 
         }
         public async Task CreateMultipleChoiceQuestion(int quizId, int questionPoints, string questionText, List<MultipleOptions> multiple)
         {
+            using var context = await _factory.CreateDbContextAsync();
             var sO = await GetSortOrderAsync(quizId);
 
             var dto = new MultipleChoiceQuestionDTO
@@ -93,13 +98,14 @@ namespace LBQuiz.Services
             
             if(jsonBlob != null)
             {
-                _dbContext.QuestionJsonBlobs.Add(jsonBlob);
-                await _dbContext.SaveChangesAsync();
+                context.QuestionJsonBlobs.Add(jsonBlob);
+                await context.SaveChangesAsync();
             }
         }
 
         public async Task CreateWordCloudQuestion(int quizId, string questionText, int maxEntries)
         {
+            using var context = await _factory.CreateDbContextAsync();
             var sO = await GetSortOrderAsync(quizId);
 
             var dto = new WordCloudQuestionDTO
@@ -116,12 +122,13 @@ namespace LBQuiz.Services
                 Blob = JsonSerializer.Serialize(dto),
                 QuestionType = "WordCloud"
             };
-            _dbContext.QuestionJsonBlobs.Add(jsonBlob);
-            await _dbContext.SaveChangesAsync();
+            context.QuestionJsonBlobs.Add(jsonBlob);
+            await context.SaveChangesAsync();
         }
 
         public async Task CreateReviewQuestion(int quizId, string questionText, int minValue, int maxValue, int points)
         {
+            using var context = await _factory.CreateDbContextAsync();
             var sO = await GetSortOrderAsync(quizId);
 
             var dto = new ReviewQuestionDTO
@@ -139,8 +146,8 @@ namespace LBQuiz.Services
                 Blob = JsonSerializer.Serialize(dto),
                 QuestionType = "Review"
             };
-            _dbContext.QuestionJsonBlobs.Add(jsonBlob);
-            await _dbContext.SaveChangesAsync();
+            context.QuestionJsonBlobs.Add(jsonBlob);
+            await context.SaveChangesAsync();
         }
         
         #endregion
@@ -148,18 +155,20 @@ namespace LBQuiz.Services
         #region CRUD Operations - Update & Delete
         public async Task<QuestionJsonBlob> UpdateQuestionTextAsync(Question question, string questionText)
         {
-            var updateQuestion = await _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefaultAsync();
+            using var context = await _factory.CreateDbContextAsync();
+            var updateQuestion = await context.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefaultAsync();
             if(updateQuestion != null)
             {
                 updateQuestion.QuestionText = questionText;
             }
-            _dbContext.QuestionJsonBlobs.Update(updateQuestion);
-            await _dbContext.SaveChangesAsync();
+            context.QuestionJsonBlobs.Update(updateQuestion);
+            await context.SaveChangesAsync();
             return updateQuestion;
         }
         public async Task<QuestionJsonBlob> UpdateQuestionPointsAsync(Question question, int points)
         {
-            var updateQuestion = await _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.QuizId).FirstOrDefaultAsync();
+            using var context = await _factory.CreateDbContextAsync();
+            var updateQuestion = await context.QuestionJsonBlobs.Where(q => q.Id == question.QuizId).FirstOrDefaultAsync();
             if(updateQuestion.QuestionType == "Open")
             {
                 var openQuestion = JsonSerializer.Deserialize<QuestionOpen>(updateQuestion.Blob);
@@ -187,14 +196,16 @@ namespace LBQuiz.Services
 
         public async Task UpdateSortOrderAsync(List<QuestionJsonBlob> allQuestions)
         {
-            _dbContext.UpdateRange(allQuestions);
-            await _dbContext.SaveChangesAsync();
+            using var context = await _factory.CreateDbContextAsync();
+            context.UpdateRange(allQuestions);
+            await context.SaveChangesAsync();
         }
         public async Task UpdateQuestionText(Question question)
         {
-            if(question is QuestionOpen quest)
+            using var context = await _factory.CreateDbContextAsync();
+            if (question is QuestionOpen quest)
             {
-                var questionUpdate = _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefault();
+                var questionUpdate = context.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefault();
                 questionUpdate.QuestionText = question.QuestionText;
                 var openQuest = JsonSerializer.Deserialize<QuestionOpen>(questionUpdate.Blob);
                 openQuest.QuestionText = quest.QuestionText;
@@ -204,12 +215,12 @@ namespace LBQuiz.Services
                 var json = JsonSerializer.Serialize<QuestionOpen>(openQuest);
                 questionUpdate.Blob = json;
 
-                _dbContext.Update(questionUpdate);
-                await _dbContext.SaveChangesAsync();
+                context.Update(questionUpdate);
+                await context.SaveChangesAsync();
             }
             else if(question is QuestionSlider slider)
             {
-                var questionUpdate = _dbContext.QuestionJsonBlobs.Where(q => q.Id == slider.Id).FirstOrDefault();
+                var questionUpdate = context.QuestionJsonBlobs.Where(q => q.Id == slider.Id).FirstOrDefault();
                 questionUpdate.QuestionText = question.QuestionText;
 
                 var openQuest = JsonSerializer.Deserialize<QuestionSlider>(questionUpdate.Blob);
@@ -221,15 +232,15 @@ namespace LBQuiz.Services
                 questionUpdate.Blob = json;
 
 
-                _dbContext.Update(questionUpdate);
-                await _dbContext.SaveChangesAsync();
+                context.Update(questionUpdate);
+                await context.SaveChangesAsync();
 
 
 
             }
             else if(question is MultipleChoice multiple)
             {
-                var questionUpdate = _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefault();
+                var questionUpdate = context.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefault();
                 questionUpdate.QuestionText = question.QuestionText;
 
                 var dto = new MultipleChoiceQuestionDTO
@@ -240,12 +251,12 @@ namespace LBQuiz.Services
 
                 questionUpdate.Blob = JsonSerializer.Serialize(dto);
 
-                _dbContext.Update(questionUpdate);
-                await _dbContext.SaveChangesAsync();
+                context.Update(questionUpdate);
+                await context.SaveChangesAsync();
             }
             else if (question is QuestionWordCloud wordCloud)
             {
-                var questionUpdate = _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefault();
+                var questionUpdate = context.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefault();
                 questionUpdate.QuestionText = wordCloud.QuestionText;
 
                 var dto = new WordCloudQuestionDTO
@@ -255,23 +266,25 @@ namespace LBQuiz.Services
                 };
                 
                 questionUpdate.Blob = JsonSerializer.Serialize(dto);
-                
-                _dbContext.Update(questionUpdate);
-                await _dbContext.SaveChangesAsync();
+
+                context.Update(questionUpdate);
+                await context.SaveChangesAsync();
             }
         }
         
         public async Task DeleteQuestionAsync(Question question)
         {
-            var deleteQuestion = await _dbContext.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefaultAsync();
-            _dbContext.Remove(deleteQuestion);
-            await _dbContext.SaveChangesAsync();
+            using var context = await _factory.CreateDbContextAsync();
+            var deleteQuestion = await context.QuestionJsonBlobs.Where(q => q.Id == question.Id).FirstOrDefaultAsync();
+            context.Remove(deleteQuestion);
+            await context.SaveChangesAsync();
         }
         
         public async Task DeleteQuestionAsync(QuestionJsonBlob question)
         {
-            _dbContext.QuestionJsonBlobs.Remove(question);
-            await _dbContext.SaveChangesAsync();
+            using var context = await _factory.CreateDbContextAsync();
+            context.QuestionJsonBlobs.Remove(question);
+            await context.SaveChangesAsync();
         }
 
 
@@ -279,7 +292,8 @@ namespace LBQuiz.Services
 
         public async Task<int> GetSortOrderAsync(int quizId)
         {
-            int sOrder = _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToList().Count + 1;
+            using var context = await _factory.CreateDbContextAsync();
+            int sOrder = context.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToList().Count + 1;
             return sOrder;
 
         }
@@ -290,16 +304,19 @@ namespace LBQuiz.Services
         }
         public async Task<List<QuestionJsonBlob>> GetAllQuestionJsonBlobAsync(int quizId)
         {
-            return await _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToListAsync();
+            using var context = await _factory.CreateDbContextAsync();
+            return await context.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToListAsync();
         }
         
         public async Task<QuestionJsonBlob> GetQuestionJsonBlobFromQuestionIdAsync(int questionId)
         {
-            return await _dbContext.QuestionJsonBlobs.Where(q => q.Id == questionId).SingleOrDefaultAsync();
+            using var context = await _factory.CreateDbContextAsync();
+            return await context.QuestionJsonBlobs.Where(q => q.Id == questionId).SingleOrDefaultAsync();
         }
         public async Task<int> GetNumberOfQuestionInQuizAsync(int quizId)
         {
-            return _dbContext.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToList().Count;
+            using var context = await _factory.CreateDbContextAsync();
+            return context.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToList().Count;
         }
         
         public async Task<Question> GetQuestionFromBlob(QuestionJsonBlob questionJsonBlob)

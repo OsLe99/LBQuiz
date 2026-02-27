@@ -1,5 +1,5 @@
 ﻿@page "/quiz/{QuizId:int}/question/create"
-@inject ApplicationDbContext _dbcontext
+@inject IDbContextFactory<ApplicationDbContext> ContextFactory
 @inject IQuestionManager QuestionManager
 @inject NavigationManager NavigationManager
 @using LBQuiz.Models;
@@ -213,6 +213,12 @@
     private int _maxEntries;
     private List<MultipleOptions> _multipleOptions = new();
     private int _numberOfQuestionsInQuiz;
+    private IDbContextFactory<ApplicationDbContext> _factory;
+
+    public CreateQuestion(IDbContextFactory<ApplicationDbContext> dbContext)
+    {
+        _factory = dbContext;
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -222,6 +228,7 @@
 
     private async Task SaveQuestion()
     {
+        using var context = await _factory.CreateDbContextAsync();
         await _questionForm.Validate();
         if (picked == "Slider" && _minValue > _maxValue)
         {
@@ -265,7 +272,7 @@
 
         try
         {
-            await _dbcontext.SaveChangesAsync();
+            await context.SaveChangesAsync();
         }
         catch (Exception ex)
         {
