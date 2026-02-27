@@ -2,24 +2,31 @@
 using LBQuiz.Models.Lobby;
 using LBQuiz.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace LBQuiz.Test.Services.LobbyServiceTests;
 
 public class EndQuizAsyncTests
 {
-    private ApplicationDbContext CreateInMemoryContext()
+    private IDbContextFactory<ApplicationDbContext> CreateInMemoryFactory()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
-        return new ApplicationDbContext(options);
+
+        var factory = new PooledDbContextFactory<ApplicationDbContext>(options);
+
+        return factory;
     }
 
     [Fact]
     public async Task EndQuizAsync_WithExistingLobby_ShouldSetIsActiveToFalse()
     {
         // Arrange
-        await using var context = CreateInMemoryContext();
+        var factory = CreateInMemoryFactory();
+
+        using var context = await factory.CreateDbContextAsync();
+
         var lobby = new QuizLobby
         {
             Id = 1,
@@ -29,16 +36,15 @@ public class EndQuizAsyncTests
         };
         context.Add(lobby);
         await context.SaveChangesAsync();
-        var lobbyService = new LobbyService(context);
+        var lobbyService = new LobbyService(factory);
         
         // Act
-        var result = lobbyService.EndQuizAsync(1);
-        await lobbyService.EndQuizAsync(1);
-        
+        var result = lobbyService.EndQuizAsync(lobby.Id);
+        await lobbyService.EndQuizAsync(lobby.Id);
+
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(1, result.Id);
-        var updatedLobby = await context.QuizLobby.FindAsync(1);
+        using var assertContext = await factory.CreateDbContextAsync();
+        var updatedLobby = await assertContext.QuizLobby.FindAsync(1);
         Assert.NotNull(updatedLobby);
         Assert.False(updatedLobby.IsActive);
     }
@@ -47,7 +53,9 @@ public class EndQuizAsyncTests
     public async Task EndQuizAsync_ShouldNotAffectOtherLobbies()
     {
         // Arrange
-        await using var context = CreateInMemoryContext();
+        var factory = CreateInMemoryFactory();
+
+        using var context = await factory.CreateDbContextAsync();
         var lobby1 = new QuizLobby
         {
             Id = 1,
@@ -66,16 +74,14 @@ public class EndQuizAsyncTests
         context.AddRange(lobby1, lobby2);
         await context.SaveChangesAsync();
         
-        var lobbyService = new LobbyService(context);
+        var lobbyService = new LobbyService(factory);
         
         // Act
-        var result = lobbyService.EndQuizAsync(1);
-        await lobbyService.EndQuizAsync(1);
-        
+        await lobbyService.EndQuizAsync(lobby1.Id);
+
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(1, result.Id);
-        var updatedLobby = await context.QuizLobby.FindAsync(1);
+        using var assertContext = await factory.CreateDbContextAsync();
+        var updatedLobby = await assertContext.QuizLobby.Where(q => q.Id == lobby1.Id).SingleOrDefaultAsync();
         Assert.NotNull(updatedLobby);
         Assert.False(updatedLobby.IsActive);
     }
@@ -84,7 +90,9 @@ public class EndQuizAsyncTests
     public async Task EndQuizAsync_WithAlreadyInactiveLobby_ShouldRemainInactive()
     {
         // Arrange
-        await using var context = CreateInMemoryContext();
+        var factory = CreateInMemoryFactory();
+
+        using var context = await factory.CreateDbContextAsync();
         var lobby = new QuizLobby
         {
             Id = 1,
@@ -95,7 +103,7 @@ public class EndQuizAsyncTests
         context.Add(lobby);
         await context.SaveChangesAsync();
         
-        var lobbyService = new LobbyService(context);
+        var lobbyService = new LobbyService(factory);
         
         // Act
         await lobbyService.EndQuizAsync(1);
@@ -109,8 +117,10 @@ public class EndQuizAsyncTests
     public async Task EndQuizAsync_NonExistentLobby_ShouldNotThrow()
     {
         // Arrange
-        await using var context = CreateInMemoryContext();
-        var lobbyService = new LobbyService(context);
+        var factory = CreateInMemoryFactory();
+
+        using var context = await factory.CreateDbContextAsync();
+        var lobbyService = new LobbyService(factory);
         
         // Act & Assert
         await lobbyService.EndQuizAsync(1);

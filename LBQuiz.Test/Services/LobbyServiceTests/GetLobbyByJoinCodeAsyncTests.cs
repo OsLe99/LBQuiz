@@ -1,25 +1,31 @@
-﻿using LBQuiz.Services;
-using LBQuiz.Data;
+﻿using LBQuiz.Data;
 using LBQuiz.Models.Lobby;
+using LBQuiz.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace LBQuiz.Test.Services.LobbyServiceTests;
 
 public class GetLobbyByJoinCodeAsyncTests
 {
-    private ApplicationDbContext CreateInMemoryContext()
+    private IDbContextFactory<ApplicationDbContext> CreateInMemoryFactory()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
-        return new ApplicationDbContext(options);
+
+        var factory = new PooledDbContextFactory<ApplicationDbContext>(options);
+
+        return factory;
     }
-    
+
     [Fact]
     public async Task GetLobbyByJoinCodeAsync_WithValidActiveCode_ShouldReturnLobby()
     {
         // Arrange
-        await using var context =  CreateInMemoryContext();
+        var factory = CreateInMemoryFactory();
+
+        using var context = await factory.CreateDbContextAsync();
         var lobby = new QuizLobby
         {
             QuizId = 1,
@@ -30,7 +36,7 @@ public class GetLobbyByJoinCodeAsyncTests
         context.QuizLobby.Add(lobby);
         await context.SaveChangesAsync();
         
-        var service = new LobbyService(context);
+        var service = new LobbyService(factory);
         
         // Act
         var result = await service.GetLobbyByJoinCodeAsync("ABC123");
@@ -45,7 +51,9 @@ public class GetLobbyByJoinCodeAsyncTests
     public async Task GetLobbyByJoinCodeAsync_WithInvalidCode_ShouldReturnNull()
     {
         // Arrange
-        await using var context = CreateInMemoryContext();
+        var factory = CreateInMemoryFactory();
+
+        using var context = await factory.CreateDbContextAsync();
         var lobby = new QuizLobby
         {
             QuizId = 1,
@@ -56,7 +64,7 @@ public class GetLobbyByJoinCodeAsyncTests
         context.QuizLobby.Add(lobby);
         await context.SaveChangesAsync();
         
-        var service = new LobbyService(context);
+        var service = new LobbyService(factory);
         
         // Act
         var result = await service.GetLobbyByJoinCodeAsync("123ABC");
@@ -69,7 +77,9 @@ public class GetLobbyByJoinCodeAsyncTests
     public async Task GetLobbyByJoinCodeAsync_WithValidCodeInactiveLobby_ShouldReturnNull()
     {
         // Arrange
-        await using var context = CreateInMemoryContext();
+        var factory = CreateInMemoryFactory();
+
+        using var context = await factory.CreateDbContextAsync();
         var lobby = new QuizLobby
         {
             QuizId = 1,
@@ -80,7 +90,7 @@ public class GetLobbyByJoinCodeAsyncTests
         context.QuizLobby.Add(lobby);
         await context.SaveChangesAsync();
         
-        var service = new LobbyService(context);
+        var service = new LobbyService(factory);
         
         // Act
         var result = await service.GetLobbyByJoinCodeAsync("ABC123");
@@ -93,8 +103,10 @@ public class GetLobbyByJoinCodeAsyncTests
     public async Task GetLobbyByJoinCodeAsync_WithEmptyDatabase_ShouldReturnNull()
     {
         // Arrange
-        await using var context = CreateInMemoryContext();
-        var service = new LobbyService(context);
+        var factory = CreateInMemoryFactory();
+
+        using var context = await factory.CreateDbContextAsync();
+        var service = new LobbyService(factory);
         
         // Act
         var result = await service.GetLobbyByJoinCodeAsync("ABC123");
@@ -107,7 +119,9 @@ public class GetLobbyByJoinCodeAsyncTests
     public async Task GetLobbyByJoinCodeAsync_NotCaseSensitive_ShouldReturnLobby()
     {
         // Arrange
-        await using var context = CreateInMemoryContext();
+        var factory = CreateInMemoryFactory();
+
+        using var context = await factory.CreateDbContextAsync();
         var lobby = new QuizLobby
         {
             QuizId = 1,
@@ -117,7 +131,7 @@ public class GetLobbyByJoinCodeAsyncTests
         };
         context.QuizLobby.Add(lobby);
         await context.SaveChangesAsync();
-        var service = new LobbyService(context);
+        var service = new LobbyService(factory);
         
         // Act
         var result = await service.GetLobbyByJoinCodeAsync("abc123");
@@ -130,7 +144,9 @@ public class GetLobbyByJoinCodeAsyncTests
     public async Task GetLobbyByJoinCodeAsync_MultipleLobbies_ShouldReturnCorrectLobby()
     {
         // Arrange
-        await using var context = CreateInMemoryContext();
+        var factory = CreateInMemoryFactory();
+
+        using var context = await factory.CreateDbContextAsync();
         var lobby1 = new QuizLobby
         {
             QuizId = 1,
@@ -148,7 +164,7 @@ public class GetLobbyByJoinCodeAsyncTests
         context.QuizLobby.AddRange(lobby1, lobby2);
         await context.SaveChangesAsync();
         
-        var service = new LobbyService(context);
+        var service = new LobbyService(factory);
         
         //Act
         var result = await service.GetLobbyByJoinCodeAsync("DEF123");
