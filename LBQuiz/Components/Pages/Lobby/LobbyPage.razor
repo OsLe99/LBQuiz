@@ -16,7 +16,12 @@
 
 @page "/quiz/{LobbyCode}"
 
-<h3 style="text-align: center; margin-bottom: 40px;">LobbyPage</h3>
+<div class="createBar">
+    <MudText Align="Align.Center" Typo="Typo.h5">
+        Lobbypage
+        <MudIcon Icon="@Icons.Material.Filled.Face"></MudIcon>
+    </MudText>
+</div>
 
 @if(_isCountingDown == false)
 {
@@ -149,6 +154,7 @@ else
         {
             await InvokeAsync(StateHasChanged); // säker UI-tråd
         };
+        LobbyHub.OnCountDownStart += OnStartCountDown;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -171,21 +177,11 @@ else
     {
         if (CurrentQuiz != null)
         {
-            _isCountingDown = true;
-            _countdownValue = 5;
+            
 
-            while(_countdownValue > 0)
-            {
-                await Task.Delay(1000);
-                if (countDownColor == Color.Error) countDownColor = Color.Success;
-                else countDownColor = Color.Error;
-                _countdownValue--;
-                StateHasChanged();
-            }
+            //Flytta till huben för att starta quiz-countdown på alla clients
 
-            _isCountingDown = false;
-
-            await LobbyHub.StartQuizAsync(CurrentLobby.Id, CurrentLobby.QuizId);
+            await LobbyHub.StartQuizAsync(CurrentLobby.Id, CurrentLobby.QuizId, _countdownValue);
         }
     }
 
@@ -203,6 +199,22 @@ else
             qrImgString = await QRCodeService.GetQRImageFromApiAsync(LobbyCode);
             StateHasChanged();
         }
+    }
+    private async Task OnStartCountDown(int countDownTimer)
+    {
+        _isCountingDown = true;
+        _countdownValue = countDownTimer;
+
+        while (_countdownValue > 0)
+        {
+            await Task.Delay(1000);
+            if (countDownColor == Color.Error) countDownColor = Color.Success;
+            else countDownColor = Color.Error;
+            _countdownValue--;
+            await InvokeAsync(StateHasChanged);
+        }
+
+        _isCountingDown = false;
     }
 }
 

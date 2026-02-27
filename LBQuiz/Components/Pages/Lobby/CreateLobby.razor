@@ -13,7 +13,12 @@
 <AuthorizeView>
     <Authorized>
         
-        <h3>CreateLobby</h3>
+        <div class="createBar">
+            <MudText Align="Align.Center" Typo="Typo.h5">
+                Create a new lobby
+                <MudIcon Icon="@Icons.Material.Filled.BorderColor"></MudIcon>
+            </MudText>
+        </div>
         
         @foreach (var quiz in _quizzes)
         {
