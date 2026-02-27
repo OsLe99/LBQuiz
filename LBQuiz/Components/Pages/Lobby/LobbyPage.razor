@@ -16,7 +16,12 @@
 
 @page "/quiz/{LobbyCode}"
 
-<h3 style="text-align: center; margin-bottom: 40px;">LobbyPage</h3>
+<div class="createBar">
+    <MudText Align="Align.Center" Typo="Typo.h5">
+        Lobbypage
+        <MudIcon Icon="@Icons.Material.Filled.Face"></MudIcon>
+    </MudText>
+</div>
 
 @if(_isCountingDown == false)
 {

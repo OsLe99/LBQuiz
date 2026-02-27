@@ -78,3 +78,24 @@ h1:focus {
 .editPaper:Hover {
     background-color: antiquewhite;
 }
+.createBar {
+    background-color: #C3CBD6;
+    margin-bottom: 10px;
+}
+.grow-animate{
+    display: inline-block;
+    animation: growText 0.3s ease-in-out;
+}
+@keyframes growText {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(2);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
