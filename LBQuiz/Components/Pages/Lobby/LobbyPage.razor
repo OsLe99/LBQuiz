@@ -18,76 +18,84 @@
 
 <h3 style="text-align: center; margin-bottom: 40px;">LobbyPage</h3>
 
-
-@if(CurrentLobby == null)
+@if(_isCountingDown == false)
 {
-    <h1>Creating lobby...</h1>
+    @if (CurrentLobby == null)
+    {
+        <h1>Creating lobby...</h1>
+    }
+    else if (_quizStart == false)
+    {
+        <MudContainer Class="mb-5 d-flex-1">
+
+            <MudPaper Style="background-color: lightgrey; height: 75vh;" Class="flex-grow-1">
+
+                <MudGrid Justify="Justify.SpaceEvenly" Spacing="2">
+
+                    <MudItem xs="12" md="4">
+                        <MudText Typo="Typo.h4">Welcome to the lobby!</MudText>
+                        @if (CurrentQuiz != null)
+                        {
+                            <div class="text-center mt-6">
+                                <MudText Typo="Typo.h5">@CurrentQuiz.Name</MudText>
+                                <MudText Typo="Typo.h6">@CurrentQuiz.Description</MudText>
+                            </div>
+                        }
+                    </MudItem>
+
+                    <MudItem>
+                        <MudText Typo="Typo.h4">
+                            Join Code: @CurrentLobby.JoinCode
+                            <MudTooltip Text="Copy Code">
+                                <MudFab StartIcon="@Icons.Material.Filled.ContentCopy" Color="Color.Primary" Size="Size.Small" OnClick="CopyToClipboard"></MudFab>
+                            </MudTooltip>
+                        </MudText>
+                        @if (qrImgString != null && qrImgString != "")
+                        {
+                            <div class="d-flex justify-content-center mt-6">
+                                <MudImage Src="@qrImgString" Style="max-height: 180px;" Class="rounded-lg"></MudImage>
+                            </div>
+                        }
+                    </MudItem>
+
+                    <MudItem>
+                        <MudText Typo="Typo.h6">Number of players in lobby: @LobbyHub.Participants.Count</MudText>
+                        <MudContainer Style="max-height: 70vh; overflow: scroll;">
+                            <MudList T="string" ReadOnly="true">
+                                @foreach (var part in LobbyHub.Participants)
+                                {
+                                    <MudListItem>
+                                        <MudChip Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Primary">
+                                            @part.Nickname
+                                        </MudChip>
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        </MudContainer>
+
+                    </MudItem>
+
+
+                </MudGrid>
+
+            </MudPaper>
+            <div class="d-flex justify-content-center mt-4">
+                @if (_userId == CurrentQuiz.HostId)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StartQuiz">Start Quiz</MudButton>
+                }
+            </div>
+
+
+        </MudContainer>
+
+    }
 }
-else if(_quizStart == false)
+else
 {
-    <MudContainer Class="mb-5 d-flex-1">
-        
-        <MudPaper Style="background-color: lightgrey; height: 75vh;" Class="flex-grow-1">
-            
-            <MudGrid Justify="Justify.SpaceEvenly" Spacing="2">
-                
-                <MudItem xs="12" md="4">
-                    <MudText Typo="Typo.h4">Welcome to the lobby!</MudText>
-                    @if(CurrentQuiz != null)
-                    {
-                        <div class="text-center mt-6">
-                            <MudText Typo="Typo.h5">@CurrentQuiz.Name</MudText>
-                            <MudText Typo="Typo.h6">@CurrentQuiz.Description</MudText>
-                        </div>
-                    }
-                </MudItem>
-
-                <MudItem>
-                    <MudText Typo="Typo.h4">Join Code: @CurrentLobby.JoinCode
-                        <MudTooltip Text="Copy Code">
-                            <MudFab StartIcon="@Icons.Material.Filled.ContentCopy" Color="Color.Primary" Size="Size.Small" OnClick="CopyToClipboard"></MudFab>
-                        </MudTooltip>
-                    </MudText>
-                    @if (qrImgString != null && qrImgString != "")
-                    {
-                        <div class="d-flex justify-content-center mt-6">
-                            <MudImage Src="@qrImgString" Style="max-height: 180px;" Class="rounded-lg"></MudImage>
-                        </div>
-                    }
-                </MudItem>
-
-                <MudItem>
-                    <MudText Typo="Typo.h6">Number of players in lobby: @LobbyHub.Participants.Count</MudText>
-                    <MudContainer Style="max-height: 70vh; overflow: scroll;">
-                        <MudList T="string" ReadOnly="true">
-                            @foreach (var part in LobbyHub.Participants)
-                            {
-                                <MudListItem>
-                                    <MudChip Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Primary">
-                                        @part.Nickname
-                                    </MudChip>
-                                </MudListItem>
-                            }
-                        </MudList>
-                    </MudContainer>
-                   
-                </MudItem>
-                
-
-            </MudGrid>
-            
-        </MudPaper>
-        <div class="d-flex justify-content-center mt-4">
-            @if (_userId == CurrentQuiz.HostId)
-            {
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StartQuiz">Start Quiz</MudButton>
-            }
-        </div>
- 
-
-    </MudContainer>
-   
+    <MudText Style="text-align: center;" Color="@countDownColor" Typo="Typo.h1">Quiz starting in @_countdownValue</MudText>
 }
+
 
 @code {
     // [Parameter]
@@ -101,6 +109,9 @@ else if(_quizStart == false)
     private string? _userId;
     private bool _quizStart = false;
     private string qrImgString;
+    private bool _isCountingDown = false;
+    private int _countdownValue = 5;
+    private Color countDownColor = Color.Warning;
 
     protected override async Task OnInitializedAsync()
     {
@@ -160,6 +171,20 @@ else if(_quizStart == false)
     {
         if (CurrentQuiz != null)
         {
+            _isCountingDown = true;
+            _countdownValue = 5;
+
+            while(_countdownValue > 0)
+            {
+                await Task.Delay(1000);
+                if (countDownColor == Color.Error) countDownColor = Color.Success;
+                else countDownColor = Color.Error;
+                _countdownValue--;
+                StateHasChanged();
+            }
+
+            _isCountingDown = false;
+
             await LobbyHub.StartQuizAsync(CurrentLobby.Id, CurrentLobby.QuizId);
         }
     }
