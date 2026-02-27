@@ -153,6 +153,37 @@
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
             </MudForm>
         }
+        else if (picked == "Review")
+        {
+            <MudForm @ref="_questionForm" OnValidSubmit="SaveQuestion">
+                <MudTextField @bind-Value="_questionText"
+                              Label="Question"
+                              Variant="Variant.Filled"
+                              Required="true"
+                              For="@(() => _questionText)"/>
+
+                <MudNumericField @bind-Value="_minValue"
+                                 Variant="Variant.Filled"
+                                 Min="0"
+                                 Max="1000000"
+                                 Label="Minimum value"/>
+                
+                <MudNumericField @bind-Value="_maxValue"
+                                 Variant="Variant.Filled"
+                                 Min="0"
+                                 Max="1000000"
+                                 Label="Maximum value"/>
+
+                <MudNumericField @bind-Value="_questionPoints"
+                                 Label="Points"
+                                 Variant="Variant.Filled"
+                                 Min="0"
+                                 Max="1000"
+                                 For="@(() => _questionPoints)"/>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
+            </MudForm>
+        }
         <h6 style="text-decoration: underline; text-align:center; margin-top:20px">Number of Quetions in Quiz: @_numberOfQuestionsInQuiz</h6>
 
     </Authorized>
@@ -173,7 +204,7 @@
     private string _questionText { get; set; } = string.Empty;
     private string _correctAnswer { get; set; } = string.Empty;
     private int _questionPoints { get; set; }
-    public List<string> questionTypes = new() { "Open Question", "Slider", "Multiple Picker", "Word Cloud" };
+    public List<string> questionTypes = new() { "Open Question", "Slider", "Multiple Picker", "Word Cloud", "Review" };
     public string picked { get; set; }
     private int _minValue;
     private int _maxValue;
@@ -226,6 +257,10 @@
         else if (picked == "Word Cloud")
         {
             await QuestionManager.CreateWordCloudQuestion(QuizId, _questionText, _maxEntries);
+        }
+        else if (picked == "Review")
+        {
+            await QuestionManager.CreateReviewQuestion(QuizId, _questionText, _minValue, _maxValue, _questionPoints);
         }
 
         try

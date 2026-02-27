@@ -346,17 +346,36 @@ namespace LBQuiz.Services
                     Points = dto.Points,
                     MaxEntries = dto.MaxEntries
                 };
+                return result;
+            }
+            
+            if (questionJsonBlob.QuestionType == "Review")
+            {
+                var dto = JsonSerializer.Deserialize<ReviewQuestionDTO>(questionJsonBlob.Blob);
+
+                var result = new QuestionReview
+                {
+                    Id = questionJsonBlob.Id,
+                    QuizId = questionJsonBlob.QuizId,
+                    QuestionText = questionJsonBlob.QuestionText,
+                    SortOrder = questionJsonBlob.SortOrder,
+                    Points = dto.Points,
+                    MinValue = dto.MinValue,
+                    MaxValue = dto.MaxValue
+                };
+                return result;
             }
             
             return null;
         }
+        
         public async Task<bool> ReturnBoolOnAnswer(QuestionJsonBlob question, string answer)
         {
             bool questionBool = false;
             if (question.QuestionType == "Open")
             {
                 var quest = JsonSerializer.Deserialize<QuestionOpen>(question.Blob);
-                if (quest.CorrectAnswer.ToLower() == answer)
+                if (quest.CorrectAnswer.ToLower() == answer.ToLower())
                 {
                     questionBool = true;
                 }
@@ -369,7 +388,12 @@ namespace LBQuiz.Services
                     questionBool = true;
                 }
             }
+            else if(question.QuestionType == "Review")
+            {
+                // Review questions don't have correct answers, any valid numeric answer is accepted
+                questionBool = int.TryParse(answer, out _);
+            }
             return questionBool;
-        } 
+        }
     }
 }

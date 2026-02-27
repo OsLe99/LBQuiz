@@ -88,6 +88,16 @@
             </MudPaper>
         </MudItem>
     }
+    else if (CurrentQuestion2 != null && CurrentQuestion2 is QuestionReview questionReview)
+    {
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Style="height: 250px">
+                <MudText Typo="Typo.h2" Class="mb-3">@questionReview.QuestionText</MudText>
+                <MudSlider @bind-Value="sliderValue" Min="@questionReview.MinValue" Max="@questionReview.MaxValue">Value: @sliderValue.ToString()</MudSlider>
+                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SaveAnswer(sliderValue.ToString()))">Submit answer</MudButton>
+            </MudPaper>
+        </MudItem>
+    }
     @* ChatComponent *@
     <MudGrid Spacing="2" Style="margin-top: 20px; height:100vh">
         <MudItem xs="12" md="8">
@@ -310,6 +320,21 @@ else
                 };
                 CurrentQuestion2 = wc;
                 _wordCloudEntries = new List<string>(new string[wc.MaxEntries]);
+            }
+            else if (questionType == "Review")
+            {
+                var dto = JsonSerializer.Deserialize<ReviewQuestionDTO>(CurrentQuestion.Blob);
+                var review = new QuestionReview
+                {
+                    Id = CurrentQuestion.Id,
+                    QuizId = CurrentQuestion.QuizId,
+                    QuestionText = CurrentQuestion.QuestionText,
+                    SortOrder = CurrentQuestion.SortOrder,
+                    Points = dto.Points,
+                    MinValue = dto.MinValue,
+                    MaxValue = dto.MaxValue
+                };
+                CurrentQuestion2 = review;
             }
         }
         catch (Exception ex)

@@ -9,6 +9,13 @@
 
 <h3>HandleAnswers</h3>
 
+@if (CurrentQuestion.QuestionType == "Review" && ParticipantAnswers.Count > 0)
+{
+    <MudPaper Class="pa-4 mb-4" Style="background-color: #e3f2fd;">
+        <MudText Typo="Typo.body2" Align="Align.Center" Class="mt-2">Based on @ParticipantAnswers.Count responses</MudText>
+    </MudPaper>
+}
+
 <MudGrid Spacing="3">
     @foreach (var item in ParticipantAnswers)
     {
@@ -64,27 +71,28 @@
 
     private async Task OnClickParticipantAnswer(ParticipantAnswer participantAnswer)
     {
-        if(CurrentQuestion.QuestionType != "Multiple")
+        if(CurrentQuestion.QuestionType == "Review" || CurrentQuestion.QuestionType == "Multiple")
         {
-            if(participantAnswer.AnswerColor == Color.Success)
-            {
-                participantAnswer.AnswerColor = Color.Error;
-            }
-            else if(participantAnswer.AnswerColor == Color.Error)
-            {
-                participantAnswer.AnswerColor = Color.Success;
-            }
-
-            if (participantAnswer.AnswerColor == Color.Error)
-            {
-                await LobbyHubConnection.DeductPoints(participantAnswer.Participant.Nickname, participantAnswer.QuestionJB, LobbyId);
-            }
-            else if (participantAnswer.AnswerColor == Color.Success)
-            {
-                await LobbyHubConnection.AwardPoints(participantAnswer.Participant.Nickname, participantAnswer.QuestionJB, LobbyId);
-            }
+            return;
         }
         
+        if(participantAnswer.AnswerColor == Color.Success)
+        {
+            participantAnswer.AnswerColor = Color.Error;
+        }
+        else if(participantAnswer.AnswerColor == Color.Error)
+        {
+            participantAnswer.AnswerColor = Color.Success;
+        }
+
+        if (participantAnswer.AnswerColor == Color.Error)
+        {
+            await LobbyHubConnection.DeductPoints(participantAnswer.Participant.Nickname, participantAnswer.QuestionJB, LobbyId);
+        }
+        else if (participantAnswer.AnswerColor == Color.Success)
+        {
+            await LobbyHubConnection.AwardPoints(participantAnswer.Participant.Nickname, participantAnswer.QuestionJB, LobbyId);
+        }
     }
     private async Task GoToNextSlide()
     {
