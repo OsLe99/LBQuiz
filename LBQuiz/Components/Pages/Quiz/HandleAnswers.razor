@@ -4,6 +4,7 @@
 @using LBQuiz.Services.Interfaces
 @using System.Text.Json
 @inject ILobbyHubConnection LobbyHubConnection
+@inject IQuestionManager QuestionManager
 
 
 
@@ -49,9 +50,11 @@
     [Parameter]
     public QuestionJsonBlob CurrentQuestion { get; set; }
 
+    public int MaxIndex = 0;
+
     public string MultipleString { get; set; } = string.Empty;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
 
         if(CurrentQuestion.QuestionType == "Multiple")
@@ -63,9 +66,9 @@
             {
                 if (numbers.Contains(test.Id)) MultipleString += $"[{test.Text}] ";
                 else MultipleString += test.Text + " ";
-
             }
         }
+        MaxIndex = await QuestionManager.ReturnMaxIndexForQuestion(CurrentQuestion.QuizId);
     }
 
 
@@ -75,7 +78,7 @@
         {
             return;
         }
-        
+
         if(participantAnswer.AnswerColor == Color.Success)
         {
             participantAnswer.AnswerColor = Color.Error;
@@ -96,7 +99,10 @@
     }
     private async Task GoToNextSlide()
     {
-        await LobbyHubConnection.GoToNextQuestionAsync(QuestionIndex, LobbyId);
+        if(MaxIndex >= QuestionIndex)
+        {
+            await LobbyHubConnection.GoToNextQuestionAsync(QuestionIndex, LobbyId);
+        }
         await OnCloseHandleAnswer.InvokeAsync();
     }
 }

@@ -256,7 +256,7 @@ else // Questions
         }
         _wordCloudWords.Clear();
         _reviewResponses.Clear();
-        
+
         if (_questionIndex == 0) previousButton = true;
         else if (_questionIndex == AllQuestions.Count - 1)
         {
@@ -273,7 +273,7 @@ else // Questions
             previousButton = false;
             nextButton = false;
         }
-
+        _submittedAnswers = new();
         await InvokeAsync(StateHasChanged);
     }
 

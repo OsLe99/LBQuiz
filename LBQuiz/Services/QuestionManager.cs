@@ -412,5 +412,10 @@ namespace LBQuiz.Services
             }
             return questionBool;
         }
+        public async Task<int> ReturnMaxIndexForQuestion(int quizId)
+        {
+            using var context = await _factory.CreateDbContextAsync();
+            return context.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToList().Count;
+        }
     }
 }
