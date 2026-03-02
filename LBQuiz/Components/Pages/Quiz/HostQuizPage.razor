@@ -250,7 +250,10 @@ else // Questions
 
     private async Task HandleNextQuestion(int questionIndex)
     {
-        _questionIndex = questionIndex;
+        if(questionIndex < AllQuestions.Count)
+        {
+            _questionIndex = questionIndex;
+        }
         _wordCloudWords.Clear();
         _reviewResponses.Clear();
         

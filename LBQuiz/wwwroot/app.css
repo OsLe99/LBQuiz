@@ -100,24 +100,26 @@ h1:focus {
     }
 }
 
-.page-wrapper {
+/*.page-wrapper {
     position: relative;
     min-height: 100vh;
     overflow: hidden;
-}
+}*/
 
-.aurora-main-bg {
+/*.aurora-main-bg {
     position: absolute;
     inset: 0;
     background: linear-gradient(135deg, #667eea 0%, #f093fb 50%, #4facfe 100%);
     filter: blur(80px);
     z-index: 0;
-}
+}*/
 
-.page-content {
+
+
+/*.page-content {
     position: relative;
     z-index: 1;
-}
+}*/
 
 .aurora-options {
     background-color: rgba(40, 44, 52, 0.85) !important;
@@ -129,4 +131,22 @@ h1:focus {
     background-color: rgba(128,0,128,0.9);
     backdrop-filter: blur(6px);
     border: 1px solid rgba(255, 140, 0, 0.5);
+}
+
+/*.aurora-main-bg {
+    color: black;
+    background: repeating-linear-gradient( #fff, #fff 1px, transparent 1px, transparent 40px );
+}
+*/
+.page-wrapper {
+    margin: 0;
+    min-height: 100vh;
+    background-color: #f8fafc;
+    background-image:
+    /* Grid */
+    linear-gradient(rgba(226,232,240,0.9) 1px, transparent 1px), linear-gradient(90deg, rgba(226,232,240,0.9) 1px, transparent 1px),
+    /* Spotlight längst bak */
+    radial-gradient( circle at 50% 30%, #ffffff 0%, #f8fafc 35%, #e2e8f0 70%, #cbd5e1 100% );
+    background-size: 40px 40px, 40px 40px, cover;
+    background-position: 0 0, 0 0, center;
 }
