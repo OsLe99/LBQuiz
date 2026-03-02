@@ -22,10 +22,7 @@
         <MudTextField @bind-Value="_quizName" Label="Quiz Name" Variant="Variant.Filled" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"></MudTextField>
         <MudTextField @bind-Value="_quizDescription" Label="Quiz Description" Variant="Variant.Filled" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"></MudTextField>
 
-        <MudSelect T="string" @bind-Value="_quizTypeValue" Label="Select QuestionType" HelperText="String" Placeholder="Please Select" AdornmentColor="Color.Primary" AdornmentIcon="@Icons.Material.Filled.Quiz">
-            <MudSelectItem T="string" Value="@("Competition")">Competition</MudSelectItem>
-            <MudSelectItem T="string" Value="@("Educational")">Educational</MudSelectItem>
-        </MudSelect>
+       
         @if (_quizSaved == false)
         {
             <MudButton Variant="Variant.Filled" OnClick="SaveQuizToDatabase">Save Quiz</MudButton>
@@ -56,12 +53,7 @@
     private bool _quizSaved { get; set; } = false;
     private string _currentUserId; 
 
-    //private readonly IDbContextFactory<ApplicationDbContext> _factory;
-
-    //public QuestionManager(IDbContextFactory<ApplicationDbContext> dbContext)
-    //{
-    //    _factory = dbContext;
-    //}
+   
 
     private readonly IDbContextFactory<ApplicationDbContext> _factory;
     public CreateQuiz(IDbContextFactory<ApplicationDbContext> dbContext)
