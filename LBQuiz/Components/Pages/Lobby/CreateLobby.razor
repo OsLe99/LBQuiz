@@ -1,6 +1,8 @@
 ﻿@using LBQuiz.Data
 @using System.Security.Claims
 @using LBQuiz.Components.Helpers
+@using LBQuiz.Models
+@using Microsoft.EntityFrameworkCore
 @using Services.Interfaces 
 @inject AuthenticationStateProvider AuthStateProvider
 @inject ApplicationDbContext DbContext
@@ -11,28 +13,63 @@
 @page "/lobby/create"
 
 <AuthorizeView>
-    <Authorized>
-        
-        <div class="createBar">
-            <MudText Align="Align.Center" Typo="Typo.h5">
-                Create a new lobby
-                <MudIcon Icon="@Icons.Material.Filled.BorderColor"></MudIcon>
-            </MudText>
-        </div>
-        
-        @foreach (var quiz in _quizzes)
-        {
-            <MudItem>
-                <MudLink Href="/">
-                    <MudPaper Class="pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px"
-                              @onclick="() => OnQuizClicked(quiz)">
-                        <MudText Typo="Typo.h4">@quiz.Name</MudText>
-                        <MudText Typo="Typo.h6">@quiz.Description</MudText>
-                    </MudPaper>
-                </MudLink>
-            </MudItem>
+  <Authorized>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+            <div class="createBar">
+                <MudText Align="Align.Center" Typo="Typo.h5">
+                    Pick a quiz to start a lobby
+                    <MudIcon Icon="@Icons.Material.Filled.BorderColor"></MudIcon>
+                </MudText>
+            </div>
 
-        }
+            @if (_quizzes == null)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4"/>
+            }
+            else if (_quizzes.Count == 0)
+            {
+                <MudPaper Class="pa-8 mt-4" Style="text-align: center;">
+                    <MudIcon Icon="@Icons.Material.Filled.Quiz" Style="font-size: 4rem; color: rgba(0,0,0,0.3);"/>
+                    <MudText Typo="Typo.h6" Class="mt-2" Style="color: rgba(0,0,0,0.5);">You have no quizzes yet</MudText>
+                    <MudButton Href="/quiz/create" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4"
+                               StartIcon="@Icons.Material.Filled.Add">Create a Quiz</MudButton>
+                </MudPaper>
+            }
+            else
+            {
+                <MudGrid Class="mt-2">
+                    @foreach (var q in _quizzes)
+                    {
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudCard Class="editPaper" Elevation="2" Style="height: 100%;">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.Quiz"/>
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">@q.Name</MudText>
+                                        <MudText Typo="Typo.caption">@((_questionCounts.GetValueOrDefault(q.Id, 0)) + " question(s)")</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudText Typo="Typo.body2" Style="color: dimgrey;">@q.Description</MudText>
+                                </MudCardContent>
+                                <MudCardActions>
+                                    <MudButton
+                                        OnClick="() => OnQuizClicked(q)"
+                                        Variant="Variant.Filled" Color="Color.Primary"
+                                        EndIcon="@Icons.Material.Filled.ArrowForward">
+                                        Start Lobby
+                                    </MudButton>
+                                </MudCardActions>
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+        </MudContainer>
     </Authorized>
     
     <NotAuthorized>
@@ -45,36 +82,44 @@
 @code {
 
     private bool isAuthenticated;
-    private List<Models.Quiz> _quizzes = new List<Models.Quiz>();
+    private List<Quiz> _quizzes = new List<Quiz>();
+    private Dictionary<int, int> _questionCounts = new();
+    private string _currentUserId;
+    private readonly IDbContextFactory<ApplicationDbContext> _factory;
 
 
-
+    public CreateLobby(IDbContextFactory<ApplicationDbContext> dbContext)
+    {
+        _factory = dbContext;
+    }
 
     protected override async Task OnInitializedAsync()
     {
+        using var context = await _factory.CreateDbContextAsync();
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         isAuthenticated = user.Identity != null && user.Identity.IsAuthenticated;
 
-
-        if(user != null)
+        if (user.Identity?.IsAuthenticated == true)
         {
-            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            _quizzes = DbContext.Quiz.Where(q => q.HostId == userId).ToList();
+            _currentUserId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         }
+        _quizzes = await context.Quiz
+            .Where(q => q.HostId == _currentUserId)
+            .ToListAsync();
 
+        _questionCounts = await context.QuestionJsonBlobs
+            .Where(b => _quizzes.Select(q => q.Id).Contains(b.QuizId))
+            .GroupBy(b => b.QuizId)
+            .ToDictionaryAsync(g => g.Key, g => g.Count());
+        
     }
 
     public async Task OnQuizClicked(Models.Quiz quiz)
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (userId == null)
-        {
-            // Error hantering bör gå här
-            return;
-        }
+        
         var lobby = await LobbyService.CreateLobbyAsync(quiz.Id, userId);
         string jC = lobby.JoinCode;
         Navigation.NavigateTo($"/quiz/{jC}");

@@ -15,119 +15,144 @@
 
 <AuthorizeView Context="authContext">
     <Authorized>
-        @if (SelectedQuestion == null)
-        {
-            @if (AllQuestions != null)
+        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+            @if (SelectedQuestion == null)
             {
-                <div class="createBar">
-                    <MudText Align="Align.Center" Typo="Typo.h5">
-                        Pick a question to edit
-                        <MudIcon Icon="@Icons.Material.Filled.Edit"></MudIcon>
-                    </MudText>
-                </div>
-                <MudDropContainer T="QuestionJsonBlob" Items="AllQuestions" ItemDropped="ItemUpdated" Class="d-flex flex-column" ItemsSelector="@((item, zone) => zone == "questions")" @key="AllQuestions">
-                    <ChildContent>
-                        <MudPaper>
-                            <MudList T="QuestionJsonBlob">
-                                <MudListSubheader>Question List</MudListSubheader>
-                                <MudDropZone T="QuestionJsonBlob" AllowReorder="true" Identifier="questions"></MudDropZone>
-                            </MudList>
+                @if (AllQuestions != null)
+                {
+                    <div class="createBar">
+                        <MudText Align="Align.Center" Typo="Typo.h5">
+                            Pick a question to edit
+                            <MudIcon Icon="@Icons.Material.Filled.Edit"></MudIcon>
+                        </MudText>
+                    </div>
+                    <MudDropContainer T="QuestionJsonBlob" Items="AllQuestions" ItemDropped="ItemUpdated" Class="d-flex flex-column" ItemsSelector="@((item, zone) => zone == "questions")" @key="AllQuestions">
+                        <ChildContent>
+                            <MudPaper>
+                                <MudList T="QuestionJsonBlob">
+                                    <MudListSubheader>Question List</MudListSubheader>
+                                    <MudDropZone T="QuestionJsonBlob" AllowReorder="true" Identifier="questions"></MudDropZone>
+                                </MudList>
+                            </MudPaper>
+                        </ChildContent>
+                        <ItemRenderer>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" spacing="2" Style="max-width: 400px; overflow:clip">
+                                <MudListItem T="QuestionJsonBlob" @onclick="() => OnQuestionClicked(context)">
+                                    @context.QuestionText
+                                </MudListItem>
+                                <MudButton OnClick="() => DeleteQuestionAsync(context)" Color="Color.Error">Delete</MudButton>
+                            </MudStack>
+                        </ItemRenderer>
+                    </MudDropContainer>
+                    <MudButton Style="border: 1px solid rgba(0,0,0,0.2); margin: 10px;" StartIcon="@Icons.Material.Filled.SubdirectoryArrowLeft" OnClick="SetAllQuestionsNull">Quiz</MudButton>
+                }
+                else
+                {
+                    <div class="createBar">
+                        <MudText Align="Align.Center" Typo="Typo.h5">
+                            Pick a quiz to edit
+                            <MudIcon Icon="@Icons.Material.Filled.Edit"></MudIcon>
+                        </MudText>
+                    </div>
+                    @if (AllQuizes == null)
+                    {
+                        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4"/>
+                    }
+                    else if (AllQuizes.Count == 0)
+                    {
+                        <MudPaper Class="pa-8 mt-4" Style="text-align: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.Quiz" Style="font-size: 4rem; color: rgba(0,0,0,0.3);"/>
+                            <MudText Typo="Typo.h6" Class="mt-2" Style="color: rgba(0,0,0,0.5);">You have no quizzes yet</MudText>
+                            <MudButton Href="/quiz/create" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4"
+                                       StartIcon="@Icons.Material.Filled.Add">Create a Quiz</MudButton>
                         </MudPaper>
-                    </ChildContent>
-                    <ItemRenderer>
-                        <MudStack Row="true" AlignItems="AlignItems.Center" spacing="2" Style="max-width: 400px; overflow:clip">
-                            <MudListItem T="QuestionJsonBlob" @onclick="() => OnQuestionClicked(context)">
-                                @context.QuestionText
-                            </MudListItem>
-                            <MudButton OnClick="() => DeleteQuestionAsync(context)" Color="Color.Error">Delete</MudButton>
-                        </MudStack>
-                    </ItemRenderer>
-                </MudDropContainer>
-                <MudButton Style="border: 1px solid rgba(0,0,0,0.2); margin: 10px;" StartIcon="@Icons.Material.Filled.SubdirectoryArrowLeft" OnClick="SetAllQuestionsNull">Quiz</MudButton>
+                    }
+                    else
+                    {
+                        <MudGrid Class="mt-2">
+                            @foreach (var q in AllQuizes)
+                            {
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudCard Class="editPaper" Elevation="2" Style="height: 100%; cursor: pointer;" @onclick="() => OnQuizClicked(q)">
+                                        <MudCardHeader>
+                                            <CardHeaderAvatar>
+                                                <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Quiz"/>
+                                                </MudAvatar>
+                                            </CardHeaderAvatar>
+                                            <CardHeaderContent>
+                                                <MudText Typo="Typo.h6">@q.Name</MudText>
+                                            </CardHeaderContent>
+                                        </MudCardHeader>
+                                        <MudCardContent>
+                                            <MudText Typo="Typo.body2" Style="color: dimgrey;">@q.Description</MudText>
+                                        </MudCardContent>
+                                        <MudCardActions>
+                                            <MudButton
+                                                OnClick="() => UpdateQuiz(q)"
+                                                Class="mt-2"
+                                                Variant="Variant.Filled"
+                                                Color="Color.Primary">Update Quiz</MudButton>
+                                            <MudButton
+                                                OnClick="() => DeleteQuiz(q)"
+                                                Class="mt-2"
+                                                Variant="Variant.Filled"
+                                                Color="Color.Error">Delete Quiz</MudButton>
+                                        </MudCardActions>
+                                    </MudCard>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    }
+                }
             }
             else
             {
                 <div class="createBar">
                     <MudText Align="Align.Center" Typo="Typo.h5">
-                        Pick a quiz to edit
+                        Edit question
                         <MudIcon Icon="@Icons.Material.Filled.Edit"></MudIcon>
                     </MudText>
                 </div>
-                <MudGrid>
-                    @if (AllQuizes != null)
-                    {
-                        @foreach (var item in AllQuizes)
-                        {
-                            <MudItem>
-                                <MudPaper Class="editPaper pa-4" Style="border: 1px solid black; margin-bottom: 6px;"
-                                          @onclick="() => OnQuizClicked(item)">
-                                    <MudText Typo="Typo.h4">@item.Name</MudText>
-                                    <MudText Typo="Typo.h6">@item.Description</MudText>
-                                    <MudButton 
-                                        OnClick="() => UpdateQuiz(item)"
-                                        Class="mt-2"
-                                        Variant="Variant.Filled"
-                                        Color="Color.Primary">Update Quiz</MudButton>
-                                    <MudButton
-                                        OnClick="() => DeleteQuiz(item)"
-                                        Class="mt-2"
-                                        Variant="Variant.Filled"
-                                        Color="Color.Error"
-                                    >Delete Quiz</MudButton>
-                                </MudPaper>
-                            </MudItem>
-                        }
-                    }
-                </MudGrid>
-            }
-        }
-        else
-        {
-            <div class="createBar">
-                <MudText Align="Align.Center" Typo="Typo.h5">
-                    Edit question
-                    <MudIcon Icon="@Icons.Material.Filled.Edit"></MudIcon>
-                </MudText>
-            </div>
-            @if (SelectedQuestion is QuestionOpen question)
-            {
-                <MudItem>
-                    <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;">
-                        <MudText>@question.QuestionText</MudText>
-                    </MudPaper>
-                    <MudPaper Class="pa-16 ma-2">
-                        <MudTextField Label="New Question Text" @bind-Value="question.QuestionText" Variant="Variant.Filled"></MudTextField>
-                        <MudTextField Label="New Question Answer" @bind-Value="question.CorrectAnswer" Variant="Variant.Filled"></MudTextField>
-                        <MudTextField Label="New Question Points" @bind-Value="question.Points" Variant="Variant.Filled"></MudTextField>
-                        <MudButton Variant="Variant.Filled" OnClick="() => SaveNewQuestionProps(question)" Style="margin-top: 10px; border: 1px solid rgba(0,0,0,0.4)">Save Changes</MudButton>
-                    </MudPaper>
-                </MudItem>
-            }
-            else if (SelectedQuestion is QuestionSlider questionSlider)
-            {
-                <MudItem>
-                    <MudPaper>
+                @if (SelectedQuestion is QuestionOpen question)
+                {
+                    <MudItem>
                         <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;">
-                            <MudText>@questionSlider.QuestionText</MudText>
+                            <MudText>@question.QuestionText</MudText>
                         </MudPaper>
                         <MudPaper Class="pa-16 ma-2">
-                            <MudTextField Label="New Quesion Text" @bind-Value="@questionSlider.QuestionText" Variant="Variant.Filled"></MudTextField>
-                            <MudTextField Label="New Minimum Value" @bind-Value="@questionSlider.MinValue" Variant="Variant.Filled"></MudTextField>
-                            <MudTextField Label="New Maximum Value" @bind-Value="@questionSlider.MaxValue" Variant="Variant.Filled"></MudTextField>
-                            <MudTextField Label="New Correct Value" @bind-Value="@questionSlider.CorrectValue" Variant="Variant.Filled"></MudTextField>
-                            <MudButton Variant="Variant.Filled" @onclick="() => SaveNewQuestionProps(questionSlider)" Style="margin-top: 10px; border: 1px solid rgba(0,0,0,0.4)">Save Changes</MudButton>
+                            <MudTextField Label="New Question Text" @bind-Value="question.QuestionText" Variant="Variant.Filled"></MudTextField>
+                            <MudTextField Label="New Question Answer" @bind-Value="question.CorrectAnswer" Variant="Variant.Filled"></MudTextField>
+                            <MudTextField Label="New Question Points" @bind-Value="question.Points" Variant="Variant.Filled"></MudTextField>
+                            <MudButton Variant="Variant.Filled" OnClick="() => SaveNewQuestionProps(question)" Style="margin-top: 10px; border: 1px solid rgba(0,0,0,0.4)">Save Changes</MudButton>
                         </MudPaper>
-                    </MudPaper>
-                </MudItem>
-            }
-            else if (SelectedQuestion is MultipleChoice multipleQuestion)
-            {
-                <MudItem>
-                    <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;">
-                        <MudTextField Label="New Question Text" @bind-Value="@multipleQuestion.QuestionText" Variant="Variant.Filled"></MudTextField>
-                    </MudPaper>
-                </MudItem>
-                <MudPaper Class="pa-16 ma-2">
+                    </MudItem>
+                }
+                else if (SelectedQuestion is QuestionSlider questionSlider)
+                {
+                    <MudItem>
+                        <MudPaper>
+                            <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;">
+                                <MudText>@questionSlider.QuestionText</MudText>
+                            </MudPaper>
+                            <MudPaper Class="pa-16 ma-2">
+                                <MudTextField Label="New Quesion Text" @bind-Value="@questionSlider.QuestionText" Variant="Variant.Filled"></MudTextField>
+                                <MudTextField Label="New Minimum Value" @bind-Value="@questionSlider.MinValue" Variant="Variant.Filled"></MudTextField>
+                                <MudTextField Label="New Maximum Value" @bind-Value="@questionSlider.MaxValue" Variant="Variant.Filled"></MudTextField>
+                                <MudTextField Label="New Correct Value" @bind-Value="@questionSlider.CorrectValue" Variant="Variant.Filled"></MudTextField>
+                                <MudButton Variant="Variant.Filled" @onclick="() => SaveNewQuestionProps(questionSlider)" Style="margin-top: 10px; border: 1px solid rgba(0,0,0,0.4)">Save Changes</MudButton>
+                            </MudPaper>
+                        </MudPaper>
+                    </MudItem>
+                }
+                else if (SelectedQuestion is MultipleChoice multipleQuestion)
+                {
+                    <MudItem>
+                        <MudPaper Class="editPaper pa-4" Style="height: 100px; border: 1px solid black; margin-bottom: 6px;">
+                            <MudTextField Label="New Question Text" @bind-Value="@multipleQuestion.QuestionText" Variant="Variant.Filled"></MudTextField>
+                        </MudPaper>
+                    </MudItem>
+                    <MudPaper Class="pa-16 ma-2">
                         <MudList T="String">
                             @foreach (var item in multipleQuestion.MultipleOptionsList)
                             {
@@ -140,11 +165,12 @@
                             }
                         </MudList>
                         <MudButton @onclick="() => SaveNewQuestionProps(multipleQuestion)" Style="margin-top: 10px; border: 1px solid rgba(0,0,0,0.4)">Save</MudButton>
-                </MudPaper>
-            }
-            <MudButton Style="border: 1px solid rgba(0,0,0,0.2); margin: 10px;" StartIcon="@Icons.Material.Filled.SubdirectoryArrowLeft" OnClick="SetSelectedQuestionNull">Questions</MudButton>
-        }
+                    </MudPaper>
+                }
 
+                <MudButton Style="border: 1px solid rgba(0,0,0,0.2); margin: 10px;" StartIcon="@Icons.Material.Filled.SubdirectoryArrowLeft" OnClick="SetSelectedQuestionNull">Questions</MudButton>
+            }
+        </MudContainer>
     </Authorized>
     
     <NotAuthorized>

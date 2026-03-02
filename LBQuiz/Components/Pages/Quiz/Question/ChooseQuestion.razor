@@ -2,40 +2,78 @@
 @using LBQuiz.Data
 @using Microsoft.EntityFrameworkCore
 @using Models
-@using Microsoft.AspNetCore.Components.Authorization
 @inject IDbContextFactory<ApplicationDbContext> ContextFactory
 @inject AuthenticationStateProvider AuthStateProvider
 @page "/quiz/question/choose"
 
 <AuthorizeView>
     <Authorized>
-        <div class="createBar">
-            <MudText Align="Align.Center" Typo="Typo.h5">
-                Pick a question
-                <MudIcon Icon="@Icons.Material.Filled.BorderColor"></MudIcon>
-            </MudText>
-        </div>
-        @foreach(var q in _allQuizes)
-        {
-            <MudItem xs="12" md="4" Style="text-align: center">
-                <MudPaper Class="pa-16 ma-2" Style="background-color: antiquewhite">
-                    <MudLink Href="@($"/quiz/{q.Id}/question/create")">
-                        <MudText Typo="Typo.h6" Class="mb-3">@q.Name</MudText>
-                    </MudLink>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+            <div class="createBar">
+                <MudText Align="Align.Center" Typo="Typo.h5">
+                    Pick a quiz to add questions
+                    <MudIcon Icon="@Icons.Material.Filled.BorderColor"></MudIcon>
+                </MudText>
+            </div>
+
+            @if (_allQuizes == null)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4"/>
+            }
+            else if (_allQuizes.Count == 0)
+            {
+                <MudPaper Class="pa-8 mt-4" Style="text-align: center;">
+                    <MudIcon Icon="@Icons.Material.Filled.Quiz" Style="font-size: 4rem; color: rgba(0,0,0,0.3);"/>
+                    <MudText Typo="Typo.h6" Class="mt-2" Style="color: rgba(0,0,0,0.5);">You have no quizzes yet</MudText>
+                    <MudButton Href="/quiz/create" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4"
+                               StartIcon="@Icons.Material.Filled.Add">Create a Quiz</MudButton>
                 </MudPaper>
-        
-            </MudItem>
-        }
+            }
+            else
+            {
+                <MudGrid Class="mt-2">
+                    @foreach (var q in _allQuizes)
+                    {
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudCard Class="editPaper" Elevation="2" Style="height: 100%;">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.Quiz"/>
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">@q.Name</MudText>
+                                        <MudText Typo="Typo.caption">@(_questionCounts.GetValueOrDefault(q.Id, 0)) question(s)</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudText Typo="Typo.body2" Style="color: dimgrey;">@q.Description</MudText>
+                                </MudCardContent>
+                                <MudCardActions>
+                                    <MudButton Href="@($"/quiz/{q.Id}/question/create")"
+                                               Variant="Variant.Filled" Color="Color.Primary"
+                                               EndIcon="@Icons.Material.Filled.ArrowForward">
+                                        Add Questions
+                                    </MudButton>
+                                </MudCardActions>
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+        </MudContainer>
     </Authorized>
-    
+
     <NotAuthorized>
         <NotAuthorizedHelper/>
     </NotAuthorized>
-    
+
 </AuthorizeView>
 
 @code {
     private List<Quiz> _allQuizes;
+    private Dictionary<int, int> _questionCounts = new();
     private string _currentUserId;
     private IDbContextFactory<ApplicationDbContext> _factory;
 
@@ -55,6 +93,13 @@
         {
             _currentUserId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         }
-        _allQuizes = context.Quiz.Where(q => q.HostId == _currentUserId).ToList();
+        _allQuizes = await context.Quiz
+            .Where(q => q.HostId == _currentUserId)
+            .ToListAsync();
+
+        _questionCounts = await context.QuestionJsonBlobs
+            .Where(b => _allQuizes.Select(q => q.Id).Contains(b.QuizId))
+            .GroupBy(b => b.QuizId)
+            .ToDictionaryAsync(g => g.Key, g => g.Count());
     }
 }
