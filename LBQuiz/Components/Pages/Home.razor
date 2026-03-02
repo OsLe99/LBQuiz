@@ -6,8 +6,18 @@
 
 
 <MudContainer Class="d-flex flex-column" Style="min-height: calc(100vh - 64px); overflow: hidden;">
-    <MudText Typo="Typo.h3" Class="mb-6">LBQuiz</MudText>
-    <MudText Typo="Typo.subtitle1" class="mb-8">Create, host and take quizzes live</MudText>
+    <span>
+        <MudGrid Spacing="2" Justify="Justify.Center" AlignItems="AlignItems.Center">
+            <MudItem xs="2">
+                <MudImage Src="/images/background/LBQuizPngLogo.png" Style="position:relative; width: 200px;"></MudImage>
+            </MudItem>
+            <MudItem xs="10" Style="display:flex; justify-content:center; align-items:center;">
+                <MudText Typo="Typo.h5" Style="font-family: 'Fredoka One', cursive; text-align:center;">Create, host and take quizzes live</MudText>
+            </MudItem>
+            
+        </MudGrid>
+     </span>
+    
     
     <MudStack Row="true" Spacing="2" Class="mb-lg-1" Justify="Justify.FlexStart">
         <MudButton OnClick="@(() => OpenJoinDialogueAsync())" Variant="Variant.Filled" Color="Color.Primary">Join a lobby</MudButton>
@@ -15,7 +25,7 @@
         <MudButton Href="/quiz/create" Variant="Variant.Filled" Color="Color.Primary">Create Quiz</MudButton>
     </MudStack>
     
-    <MudDivider DividerType="DividerType.Middle" Class="my-auto"></MudDivider>
+    @* <MudDivider DividerType="DividerType.Middle" Class="my-auto"></MudDivider> *@
     
     <MudGrid class="d-flex" Justify="Justify.SpaceBetween">
         
