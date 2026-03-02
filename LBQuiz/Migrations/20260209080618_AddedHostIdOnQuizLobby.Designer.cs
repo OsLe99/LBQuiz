@@ -4,6 +4,7 @@ using LBQuiz.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LBQuiz.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260209080618_AddedHostIdOnQuizLobby")]
+    partial class AddedHostIdOnQuizLobby
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,9 +66,6 @@ namespace LBQuiz.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
-
-                    b.Property<byte[]>("ProfilePicture")
-                        .HasColumnType("varbinary(max)");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -121,6 +121,32 @@ namespace LBQuiz.Migrations
                     b.ToTable("QuizLobby");
                 });
 
+            modelBuilder.Entity("LBQuiz.Models.MultipleChoiceAnswer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AnswerText")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsCorrectAnswer")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("QuestionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuestionId");
+
+                    b.ToTable("MultipleChoiceAnswer");
+                });
+
             modelBuilder.Entity("LBQuiz.Models.Question", b =>
                 {
                     b.Property<int>("Id")
@@ -160,37 +186,6 @@ namespace LBQuiz.Migrations
                     b.HasDiscriminator<string>("Discriminator").HasValue("Question");
 
                     b.UseTphMappingStrategy();
-                });
-
-            modelBuilder.Entity("LBQuiz.Models.QuestionJsonBlob", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Blob")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("QuestionText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("QuestionType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("QuizId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("QuestionJsonBlobs");
                 });
 
             modelBuilder.Entity("LBQuiz.Models.Quiz", b =>
@@ -353,6 +348,13 @@ namespace LBQuiz.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("LBQuiz.Models.QuestionMultiple", b =>
+                {
+                    b.HasBaseType("LBQuiz.Models.Question");
+
+                    b.HasDiscriminator().HasValue("QuestionMultiple");
+                });
+
             modelBuilder.Entity("LBQuiz.Models.QuestionOpen", b =>
                 {
                     b.HasBaseType("LBQuiz.Models.Question");
@@ -379,6 +381,17 @@ namespace LBQuiz.Migrations
                         .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue("QuestionSlider");
+                });
+
+            modelBuilder.Entity("LBQuiz.Models.MultipleChoiceAnswer", b =>
+                {
+                    b.HasOne("LBQuiz.Models.QuestionMultiple", "Question")
+                        .WithMany("AllAnswers")
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Question");
                 });
 
             modelBuilder.Entity("LBQuiz.Models.Question", b =>
@@ -444,6 +457,11 @@ namespace LBQuiz.Migrations
             modelBuilder.Entity("LBQuiz.Models.Quiz", b =>
                 {
                     b.Navigation("Questions");
+                });
+
+            modelBuilder.Entity("LBQuiz.Models.QuestionMultiple", b =>
+                {
+                    b.Navigation("AllAnswers");
                 });
 #pragma warning restore 612, 618
         }

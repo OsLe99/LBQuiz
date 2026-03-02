@@ -28,7 +28,7 @@
     @if(CurrentQuestion2 != null && CurrentQuestion2 is QuestionOpen questionOpen)
     {
         <MudItem xs="12" md="4">
-            <MudPaper Class="pa-4" Style="height: 250px">
+            <MudPaper Class="pa-4" Style="height: auto">
                 <MudText Typo="Typo.h2" Class="mb-3">@questionOpen.QuestionText</MudText>
                 <MudTextField @bind-Value="Answer" Label="Answer" Variant="Variant.Filled"></MudTextField>
                 <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SaveAnswer(Answer))">Submit answer</MudButton>
@@ -38,7 +38,7 @@
     else if (CurrentQuestion2 != null && CurrentQuestion2 is QuestionSlider questionSlider)
     {
         <MudItem xs="12" md="4">
-            <MudPaper Class="pa-4" Style="height: 250px">
+            <MudPaper Class="pa-4" Style="height: auto">
                 <MudText Typo="Typo.h2" Class="mb-3">@questionSlider.QuestionText</MudText>
                 <MudSlider @bind-Value="sliderValue" Min="@questionSlider.MinValue" Max="@questionSlider.MaxValue">Value: @sliderValue.ToString()</MudSlider>
                 <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() =>SaveAnswer(sliderValue.ToString()))">Submit answer</MudButton>
@@ -48,7 +48,7 @@
     else if(CurrentQuestion2 != null && CurrentQuestion2 is MultipleChoice questionMultiple)
     {
         <MudItem xs="12" md="4">
-            <MudPaper Class="pa-4" Style="height: 250px; background:linear-gradient(90deg,rgba(0, 200, 0, 0.4) 0%, rgba(200, 0, 0, 0.4) 100%);">
+            <MudPaper Class="pa-4" Style="height: auto; background:linear-gradient(90deg,rgba(0, 200, 0, 0.4) 0%, rgba(200, 0, 0, 0.4) 100%);">
                 <MudText Typo="Typo.h2" Class="mb-3">@questionMultiple.QuestionText</MudText>
                 
                 <MudButton Disabled="answerButtonShow" OnClick="() => SubmitMulipleChoice()">Submit answers</MudButton>
@@ -74,7 +74,7 @@
     else if (CurrentQuestion2 != null && CurrentQuestion2 is QuestionWordCloud questionWordCloud)
     {
         <MudItem xs="12" md="4">
-            <MudPaper Class="pa-4" Style="height: 250px">
+            <MudPaper Class="pa-4" Style="height: auto">
                 <MudText Typo="Typo.h2" Class="mb-3">@questionWordCloud.QuestionText</MudText>
                 @for (int i = 0; i < questionWordCloud.MaxEntries; i++)
                 {
@@ -91,7 +91,7 @@
     else if (CurrentQuestion2 != null && CurrentQuestion2 is QuestionReview questionReview)
     {
         <MudItem xs="12" md="4">
-            <MudPaper Class="pa-4" Style="height: 250px">
+            <MudPaper Class="pa-4" Style="height: auto">
                 <MudText Typo="Typo.h2" Class="mb-3">@questionReview.QuestionText</MudText>
                 <MudSlider @bind-Value="sliderValue" Min="@questionReview.MinValue" Max="@questionReview.MaxValue">Value: @sliderValue.ToString()</MudSlider>
                 <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SaveAnswer(sliderValue.ToString()))">Submit answer</MudButton>

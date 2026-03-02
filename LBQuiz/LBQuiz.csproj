@@ -30,8 +30,4 @@
       <_ContentIncludedByDefault Remove="Pages\_ViewStart.cshtml" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="wwwroot\images\" />
-    </ItemGroup>
-
 </Project>
