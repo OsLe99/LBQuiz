@@ -50,6 +50,14 @@ namespace LBQuiz.Services.ChatHub
             await _hubConnection.StartAsync();
         }
 
+        public async Task JoinLobbyChatAsync(string lobbyId)
+        {
+            if (_hubConnection?.State == HubConnectionState.Connected)
+            {
+                await _hubConnection.InvokeAsync("JoinLobbyChat", lobbyId);
+            }
+        }
+
         public async Task SendMessage(ChatMessage playMessage)
         {
             if (_hubConnection != null)

@@ -71,95 +71,177 @@ else if (_showResults == true) // Show scoreboard
 }
 else // Questions
 {
+    <MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
 
-    <div class="hostPageContainer">
-        <div>
+    <MudGrid Spacing="4">
+        
+        <MudItem xs="12" md="8">
+
+            <MudCard Elevation="4" Class="pa-6 rounded-lg d-flex flex-column" Style="min-height: 60vh;">
+
+                @if (AllQuestions == null || AllQuestions.Count == 0)
+                {
+                    <MudText Typo="Typo.h6">No Questions</MudText>
+                }
+                else
+                {
+                    <div class="d-flex justify-space-between align-center mb-3">
+                        <MudChip T="string" Color="Color.Primary" Size="Size.Small">
+                            Question @(_questionIndex + 1) / @AllQuestions.Count
+                        </MudChip>
+                        <MudText Class="@_animationClass" Typo="Typo.body2" Style="color: rgba(0,0,0,0.5);">
+                            <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Small" Class="mr-1" />
+                            @_submittedAnswers.Count / @_userList.Count answered
+                        </MudText>
+                    </div>
+                    <MudProgressLinear Value="@((_questionIndex + 1) * 100.0 / AllQuestions.Count)" Color="Color.Primary" Class="mb-6" Rounded="true" Size="Size.Small" />
+
+                    <div class="d-flex flex-column align-center justify-center flex-grow-1" style="width: 100%;">
+                        @if (AllQuestions[_questionIndex].QuestionType == "WordCloud")
+                        {
+                            <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">@AllQuestions[_questionIndex].QuestionText</MudText>
+                            <canvas id="wordCloudCanvas"
+                                    style="width: 100%; height: 400px;"></canvas>
+                        }
+                        else if (AllQuestions[_questionIndex].QuestionType == "Review")
+                        {
+                            <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">
+                                @AllQuestions[_questionIndex].QuestionText
+                            </MudText>
+
+                            @if (_reviewResponses.Count > 0)
+                            {
+                                <MudPaper Class="pa-4 mt-4 rounded-lg" Elevation="2">
+                                    <MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Primary">
+                                        Average: @CalculateAverage()
+                                    </MudText>
+                                    <MudText Align="Align.Center">
+                                        Based on @_reviewResponses.Count responses
+                                    </MudText>
+                                </MudPaper>
+                            }
+                            else
+                            {
+                                <MudText Align="Align.Center" Class="mt-8" Typo="Typo.h6" Style="color: rgba(0,0,0,0.4);">
+                                    Waiting for responses...
+                                </MudText>
+                            }
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.h4" Align="Align.Center">
+                                @AllQuestions[_questionIndex].QuestionText
+                            </MudText>
+                        }
+                    </div>
+                }
+
+            </MudCard>
             
-            @if (AllQuestions == null || AllQuestions.Count == 0)
-            {
-                <MudItem>No Questions</MudItem>
-            }
-            else if (AllQuestions[_questionIndex].QuestionType == "WordCloud")
-            {
-                <MudPaper Class="pe-4" Style="height: 60vh;">
-                    <canvas id="wordCloudCanvas" style="width: 100%; height: 100%;"></canvas>
-                </MudPaper>
-            }
-            else if (AllQuestions[_questionIndex].QuestionType == "Review")
-            {
-                <MudPaper Class="pa-4" Style="min-height: 400px; background-color: #f5f5f5;">
-                    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">@AllQuestions[_questionIndex].QuestionText</MudText>
-                    
-                    @if (_reviewResponses.Count > 0)
+            <div class="d-flex justify-center gap-4 mt-4">
+                <MudButton Disabled="previousButton"
+                           Variant="Variant.Outlined"
+                           OnClick="PreviousQuestion">
+                    Previous
+                </MudButton>
+
+                <MudButton Disabled="nextButton"
+                           Variant="Variant.Outlined"
+                           OnClick="NextQuestion">
+                    Next
+                </MudButton>
+
+                <MudButton Disabled="_resultButton"
+                           Variant="Variant.Outlined"
+                           OnClick="ShowResults">
+                    Show Results
+                </MudButton>
+
+                <MudButton Variant="Variant.Outlined"
+                           OnClick="() => ShowHandleAnswers = true">
+                    Handle Answers
+                </MudButton>
+            </div>
+
+        </MudItem>
+        
+        <MudItem xs="12" md="4">
+
+            <MudCard Elevation="4" Class="pa-4">
+
+                <MudText Typo="Typo.h5" Align="Align.Center">
+                    Participants (@_userList.Count)
+                </MudText>
+
+                <MudDivider Class="my-2" />
+
+                <div style="max-height: 60vh; overflow-y:auto;">
+                    @foreach (var user in _userList)
                     {
-                        <MudPaper Class="pa-4 mb-4" Style="background-color: #e3f2fd;">
-                            <MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Primary">Average: @CalculateAverage()</MudText>
-                            <MudText Typo="Typo.body1" Align="Align.Center" Class="mt-2">Based on @_reviewResponses.Count responses</MudText>
+                        <MudPaper Class="pa-2 mb-2 d-flex align-center justify-space-between">
+
+                            <div class="d-flex align-center gap-2">
+                                <MudAvatar Color="Color.Primary" Size="Size.Small">
+                                    @user.Nickname[0]
+                                </MudAvatar>
+
+                                <MudText>@user.Nickname</MudText>
+                            </div>
+
+                            <MudChip T="int" Color="Color.Secondary">
+                                @user.Score pts
+                            </MudChip>
+
                         </MudPaper>
                     }
-                    else
-                    {
-                        <MudText Typo="Typo.body1" Align="Align.Center" Class="mt-4">Waiting for responses...</MudText>
-                    }
-                </MudPaper>
-            }
-            else
-            {
-                <MudItem xs="12" md="4">
-                    <MudPaper Class="pa-4" Style="height: 250px; background-color: antiquewhite; border: 1px solid black">
-                        <MudItem>@AllQuestions[_questionIndex].QuestionText</MudItem>
-                    </MudPaper>
-                </MudItem>
-            }
-            <MudButton Disabled="previousButton" OnClick="PreviousQuestion">Previous question</MudButton>
-            <MudButton Disabled="nextButton" OnClick="NextQuestion">Next question</MudButton>
-            <MudButton Disabled="_resultButton" OnClick="ShowResults">Show results</MudButton>
-            <MudButton OnClick="() => ShowHandleAnswers = true">Handle Answers</MudButton>
-        </div>
-        <div>
-            <MudText Typo="Typo.h2" Align="Align.Center" Style="text-decoration: underline">Participants</MudText>
-            <ul>
-                @foreach (var user in _userList)
-                {
-                    <li>
-                        <MudAvatar Color="Color.Tertiary"
-                                   Size="Size.Small">
-                            @user.Nickname[0]
-                        </MudAvatar>
-                        - @user.Nickname - @user.Score points
-                    </li>
-                }
-                @foreach (var text in particapantSliderList)
-                {
-                    <li>
-                        <p>@text</p>
-                    </li>
-                }
-                @foreach (var text in _multipleAnswersList)
-                {
-                    <li>
-                        <p>@text</p>
-                    </li>
-                }
-            </ul>
-        </div>
-    </div>
+                </div>
 
-    <MudGrid Spacing="2" Style="margin-top: 20px; height:100vh">
+            </MudCard>
 
-
-        <MudItem xs="12" md="8" Style="text-align: center;">
-            <MudText Class="@_animationClass" Style="color: rgba(0,0,0,0.4);" Typo="Typo.h6">Answers: @_submittedAnswers.Count / @_userList.Count</MudText>
         </MudItem>
 
-
-        <MudItem xs="12" md="4" Style="border: 1px solid rgba(255,144,0,0.6); box-shadow: 4px 4px 2px orange inset; background-color: rgba(147,202,237,0.4);">
-            <LBQuiz.Components.Pages.Chat.ChatComponent HostId="@_currentHostId" LobbyId="@_currentLobby.Id.ToString()"></LBQuiz.Components.Pages.Chat.ChatComponent>
-        </MudItem>
     </MudGrid>
+
+</MudContainer>
 
 }
 
+@if (!_chatOpen)
+{
+    <div style="position:fixed; bottom:20px; right:20px; z-index:2000;">
+        <MudBadge Content="@_unreadChatCount" Color="Color.Error" Overlap="true" Visible="@(_unreadChatCount > 0)">
+            <MudFab Icon="@Icons.Material.Filled.Chat"
+                    Label="Chat"
+                    Color="Color.Secondary"
+                    OnClick="@OpenChat" />
+        </MudBadge>
+    </div>
+}
+
+<MudDrawer Anchor="Anchor.Right"
+           Open="_chatOpen"
+           OpenChanged="OnDrawerOpenChanged"
+           Variant="DrawerVariant.Temporary"
+           Elevation="6"
+           Width="400px">
+
+    <MudDrawerHeader>
+        <MudText Typo="Typo.h6">Chat</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                       OnClick="@(() => _chatOpen = false)" />
+    </MudDrawerHeader>
+
+    <MudDivider />
+
+    <MudDrawerContent>
+
+        <LBQuiz.Components.Pages.Chat.ChatComponent 
+            HostId="@_currentHostId" 
+            LobbyId="@_currentLobby.Id.ToString()" />
+
+    </MudDrawerContent>
+</MudDrawer>
 
 @code {
 
@@ -185,7 +267,8 @@ else // Questions
     private List<string> _wordCloudWords = new();
     private Dictionary<string, int> _reviewResponses = new();
     private string _animationClass = "";
-
+    private bool _chatOpen = false;
+    private int _unreadChatCount = 0;
 
     public HostQuizPage(IDbContextFactory<ApplicationDbContext> dbContext)
     {
@@ -203,6 +286,8 @@ else // Questions
 
         await LobbyHub.InitializeAsync(Navigation, userId);
         await ChatHubConnection.InitializeAsync(Navigation);
+        await ChatHubConnection.JoinLobbyChatAsync(_currentLobby.Id.ToString());
+        ChatHubConnection.OnMessageRecived += HandleChatMessageReceived;
 
         foreach (var participant in LobbyHub.Participants)
         {
@@ -494,6 +579,26 @@ else // Questions
 
         _animationClass = "";
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleChatMessageReceived(ChatMessage message)
+    {
+        if (!_chatOpen)
+        {
+            _unreadChatCount++;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void OpenChat()
+    {
+        _chatOpen = true;
+        _unreadChatCount = 0;
+    }
+
+    private void OnDrawerOpenChanged(bool isOpen)
+    {
+        _chatOpen = isOpen;
     }
 
 }

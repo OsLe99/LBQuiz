@@ -12,9 +12,17 @@ namespace LBQuiz.Hubs
             await base.OnConnectedAsync();
         }
 
+        public async Task JoinLobbyChat(string lobbyId)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"chat-{lobbyId}");
+        }
+
         public async Task SendMessages(ChatMessage playMessage)
         {
-            await Clients.All.SendAsync("ReceiveMessage", playMessage);
+            if (!string.IsNullOrEmpty(playMessage.LobbyId))
+            {
+                await Clients.Group($"chat-{playMessage.LobbyId}").SendAsync("ReceiveMessage", playMessage);
+            }
         }
     }
 }

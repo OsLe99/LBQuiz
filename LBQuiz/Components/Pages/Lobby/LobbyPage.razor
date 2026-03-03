@@ -28,7 +28,7 @@
 {
     @if (CurrentLobby == null)
     {
-        <h1>Creating lobby...</h1>
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4"/>
     }
     else if (_quizStart == false)
     {

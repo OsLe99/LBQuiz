@@ -189,6 +189,7 @@ else
 
         await HubConnection.InitializeAsync(Navigation);
         await ChatHubConnection.InitializeAsync(Navigation);
+        await ChatHubConnection.JoinLobbyChatAsync(lobbyId);
 
         ParticipantsList = LobbyManager.GetLeaderboard(lobby.Id);
         HubConnection.OnAnswerRecieved += HandleAnswerReceived;
@@ -267,12 +268,8 @@ else
         // Get current participant using connection ID
         if (HubConnection.ConnectionId != null)
         {
-            try
-            {
-                _currentParticipant = LobbyManager.GetLobbyParticipant(HubConnection.ConnectionId);
-                _currentParticipantRank = ParticipantsList.FindIndex(p => p.ConnectionId == HubConnection.ConnectionId) + 1;
-            }
-            catch { /* Participant not found */ }
+            _currentParticipant = ParticipantsList.FirstOrDefault(p => p.ConnectionId == HubConnection.ConnectionId);
+            _currentParticipantRank = ParticipantsList.FindIndex(p => p.ConnectionId == HubConnection.ConnectionId) + 1;
         }
 
         await InvokeAsync(StateHasChanged);
