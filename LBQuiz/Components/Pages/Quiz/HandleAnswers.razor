@@ -17,23 +17,32 @@
     </MudPaper>
 }
 
-<MudGrid Spacing="3">
-    @foreach (var item in ParticipantAnswers)
-    {
-        <MudItem @onclick="() => OnClickParticipantAnswer(item)" xs="12" sm="6" md="4">
-            <MudPaper Class="pa-4">
-                <MudBadge Color="@item.AnswerColor" Overlap="true" Size="Size.Medium" Bordered="true">
-                    <MudText Typo="Typo.h6" Style="text-decoration: underline;">@item.Participant.Nickname : </MudText>
-                    <MudText Typo="Typo.h6">@item.Answer</MudText>
-                    @if(CurrentQuestion.QuestionType == "Multiple")
-                    {
-                        <MudText>@MultipleString</MudText>
-                    }
-                </MudBadge>
-            </MudPaper>
-        </MudItem>
-    }
-</MudGrid>
+@if (ParticipantAnswers.Count == 0)
+{
+    <MudContainer Class="pa-4 mb-4">
+        <MudText Typo="Typo.h4" Align="Align.Center" Class="mt-2">No answers have been submitted...</MudText>
+    </MudContainer>
+}
+else
+{
+    <MudGrid Spacing="3">
+        @foreach (var item in ParticipantAnswers)
+        {
+            <MudItem @onclick="() => OnClickParticipantAnswer(item)" xs="12" sm="6" md="4">
+                <MudPaper Class="pa-4">
+                    <MudBadge Color="@item.AnswerColor" Overlap="true" Size="Size.Medium" Bordered="true">
+                        <MudText Typo="Typo.h6" Style="text-decoration: underline;">@item.Participant.Nickname : </MudText>
+                        <MudText Typo="Typo.h6">@item.Answer</MudText>
+                        @if(CurrentQuestion.QuestionType == "Multiple")
+                        {
+                            <MudText>@MultipleString</MudText>
+                        }
+                    </MudBadge>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+}
 
 <MudButton OnClick="GoToNextSlide">Next Slide</MudButton>
 
