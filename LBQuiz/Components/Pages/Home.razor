@@ -21,10 +21,14 @@
         </MudGrid>
      </span>
     
-    <MudStack Row="true" Spacing="2" Class="mb-lg-1" Justify="Justify.FlexStart">
-        <MudButton OnClick="@(() => OpenJoinDialogueAsync())" Variant="Variant.Filled" Color="Color.Primary">Join a lobby</MudButton>
+    <MudStack  Row="true" Spacing="2" Class="mb-lg-1" Justify="Justify.FlexStart">
+        <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
+            <MudButton OnClick="@(() => OpenJoinDialogueAsync())" Variant="Variant.Filled" Color="Color.Primary">Join a lobby</MudButton>
+            <MudButton Href="/quiz/create" Variant="Variant.Filled" Color="Color.Primary">Create Quiz</MudButton>
+        </MudButtonGroup>
+        @* <MudButton OnClick="@(() => OpenJoinDialogueAsync())" Variant="Variant.Filled" Color="Color.Primary">Join a lobby</MudButton>
         <MudDivider Vertical="true" FlexItem="true"></MudDivider>
-        <MudButton Href="/quiz/create" Variant="Variant.Filled" Color="Color.Primary">Create Quiz</MudButton>
+        <MudButton Href="/quiz/create" Variant="Variant.Filled" Color="Color.Primary">Create Quiz</MudButton> *@
     </MudStack>
     
     <MudPaper Class="pa-4 my-4 rounded-xl text-center" Elevation="2">
