@@ -145,7 +145,7 @@ h1:focus {
     background-image:
     /* Grid */
     linear-gradient(rgba(226,232,240,0.9) 1px, transparent 1px), linear-gradient(90deg, rgba(226,232,240,0.9) 1px, transparent 1px),
-    /* Spotlight längst bak */
+    /* Spotlight lï¿½ngst bak */
     radial-gradient( circle at 50% 30%, #ffffff 0%, #f8fafc 35%, #e2e8f0 70%, #cbd5e1 100% );
     background-size: 40px 40px, 40px 40px, cover;
     background-position: 0 0, 0 0, center;

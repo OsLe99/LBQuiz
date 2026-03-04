@@ -8,7 +8,7 @@ public static class LBQuizCustomTheme
     {
         public static MudTheme Instance { get;  } = new MudTheme
         {
-            PaletteLight = new PaletteLight()
+            PaletteLight = new PaletteLight
             {
                 Primary = "#FF8C00",
                 Secondary = "#1A237E",
@@ -22,6 +22,22 @@ public static class LBQuizCustomTheme
                 Info = "#2196F3",
                 Warning = "#FFC107",
                 Error = "#F44336"
+            },
+            
+            PaletteDark = new PaletteDark
+            {
+                Primary = "#FF8C00",
+                Secondary = "#1A237E",
+                Background = "#121212", 
+                Surface = "#1E1E1E",
+                AppbarBackground = "#FF8C00",
+                AppbarText = "#FFFFFF",
+                DrawerBackground = "#1E1E1E",
+                DrawerText = "#FFFFFF",
+                Success = "#4CAF50",
+                Info = "#2196F3",
+                Warning = "#FFC107",
+                Error = "#F44336",
             }
         };
     }

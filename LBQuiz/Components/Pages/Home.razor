@@ -21,7 +21,6 @@
         </MudGrid>
      </span>
     
-    
     <MudStack Row="true" Spacing="2" Class="mb-lg-1" Justify="Justify.FlexStart">
         <MudButton OnClick="@(() => OpenJoinDialogueAsync())" Variant="Variant.Filled" Color="Color.Primary">Join a lobby</MudButton>
         <MudDivider Vertical="true" FlexItem="true"></MudDivider>
@@ -29,6 +28,9 @@
     </MudStack>
     
     <MudPaper Class="pa-4 my-4 rounded-xl text-center" Elevation="2">
+        
+        <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-4" Style="font-family: 'Fredoka One', cursive;">Current Statistics</MudText>
+        
         <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="6">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                 <MudIcon Icon="@Icons.Material.Filled.Leaderboard" Color="Color.Primary" Size="Size.Large"/>
@@ -37,7 +39,7 @@
                     <MudText Typo="Typo.body2">quizzes created</MudText>
                 </MudStack>
             </MudStack>
-            
+
             <MudDivider Vertical="true" FlexItem="true"/>
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                 <MudIcon Icon="@Icons.Material.Filled.QuestionAnswer" Color="Color.Secondary" Size="Size.Large"/>
@@ -46,7 +48,7 @@
                     <MudText Typo="Typo.body2">questions written</MudText>
                 </MudStack>
             </MudStack>
-            
+
             <MudDivider Vertical="true" FlexItem="true"/>
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                 <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Info" Size="Size.Large"/>
@@ -126,20 +128,26 @@
     </MudPaper>
 
     <MudPaper Class="pa-6 mt-6 rounded-xl" Elevation="0">
+        
         <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-4" Style="font-family: 'Fredoka One', cursive;">Frequently Asked Questions</MudText>
+        
         <MudExpansionPanels MultiExpansion="true" Elevation="1">
             <MudExpansionPanel Text="Do I need an account to join a quiz?">
                 <MudText Typo="Typo.body2">No! Participants can join any live session without creating an account. Just enter the lobby code and you're in.</MudText>
             </MudExpansionPanel>
+            
             <MudExpansionPanel Text="What question types are supported?">
                 <MudText Typo="Typo.body2">You can create multiple choice, open-ended, and slider questions — with more types coming soon.</MudText>
             </MudExpansionPanel>
+            
             <MudExpansionPanel Text="How many players can join a session?">
                 <MudText Typo="Typo.body2">There is no hard player limit. Sessions scale with your server, so invite as many as you'd like.</MudText>
             </MudExpansionPanel>
+            
             <MudExpansionPanel Text="Is LBQuiz free to use?">
                 <MudText Typo="Typo.body2">Yes — creating quizzes, hosting sessions, and joining lobbies are all completely free.</MudText>
             </MudExpansionPanel>
+            
         </MudExpansionPanels>
     </MudPaper>
     
