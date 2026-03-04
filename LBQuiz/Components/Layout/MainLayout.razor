@@ -11,7 +11,7 @@
 
 
 
-<MudThemeProvider/>
+<MudThemeProvider Theme="@LBQuiz.Themes.LBQuizCustomTheme.LBQuizTheme.Instance"/>
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -72,6 +72,27 @@
     </MudMainContent>
         </div>
     </div>
+
+    <CookieBanner />
+
+    <footer class="mud-appbar mud-appbar-dense" style="position: relative; padding: 16px 24px;">
+        <MudGrid Justify="Justify.Center" Spacing="2">
+            <MudItem xs="12" sm="4" Class="text-center">
+                <MudText Typo="Typo.subtitle2" Style="font-family: 'Fredoka One', cursive;">LBQuiz</MudText>
+                <MudText Typo="Typo.caption">Create, host and take quizzes live.</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="4" Class="text-center">
+                <MudStack Spacing="0">
+                    <MudLink Href="/" Typo="Typo.caption" Color="Color.Inherit">Home</MudLink>
+                    <MudLink Href="/quiz/create" Typo="Typo.caption" Color="Color.Inherit">Create Quiz</MudLink>
+                    <MudLink Href="/lobby/create" Typo="Typo.caption" Color="Color.Inherit">Host Quiz</MudLink>
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" sm="4" Class="text-center">
+                <MudText Typo="Typo.caption">&copy; @DateTime.Now.Year LBQuiz. All rights reserved.</MudText>
+            </MudItem>
+        </MudGrid>
+    </footer>
 
 </MudLayout>
 

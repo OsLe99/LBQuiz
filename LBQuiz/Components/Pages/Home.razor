@@ -1,7 +1,10 @@
 ﻿@page "/"
 @using Pages.PopUps
 @using LBQuiz.Components.Pages.Lobby
+@using LBQuiz.Data
+@using Microsoft.EntityFrameworkCore
 @inject IDialogService DialogService
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
 @rendermode InteractiveServer
 
 
@@ -25,69 +28,138 @@
         <MudButton Href="/quiz/create" Variant="Variant.Filled" Color="Color.Primary">Create Quiz</MudButton>
     </MudStack>
     
-    @* <MudDivider DividerType="DividerType.Middle" Class="my-auto"></MudDivider> *@
+    <MudPaper Class="pa-4 my-4 rounded-xl text-center" Elevation="2">
+        <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="6">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudIcon Icon="@Icons.Material.Filled.Leaderboard" Color="Color.Primary" Size="Size.Large"/>
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.h4" Color="Color.Primary" Style="font-family: 'Fredoka One', cursive;">@_quizCount</MudText>
+                    <MudText Typo="Typo.body2">quizzes created</MudText>
+                </MudStack>
+            </MudStack>
+            
+            <MudDivider Vertical="true" FlexItem="true"/>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudIcon Icon="@Icons.Material.Filled.QuestionAnswer" Color="Color.Secondary" Size="Size.Large"/>
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.h4" Color="Color.Secondary" Style="font-family: 'Fredoka One', cursive;">@_questionCount</MudText>
+                    <MudText Typo="Typo.body2">questions written</MudText>
+                </MudStack>
+            </MudStack>
+            
+            <MudDivider Vertical="true" FlexItem="true"/>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Info" Size="Size.Large"/>
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.h4" Color="Color.Info" Style="font-family: 'Fredoka One', cursive;">@_userCount</MudText>
+                    <MudText Typo="Typo.body2">registered users</MudText>
+                </MudStack>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
     
-    <MudGrid class="d-flex" Justify="Justify.SpaceBetween">
-        
+    <MudDivider DividerType="DividerType.Middle" Class="my-auto"></MudDivider>
+    
+    <MudGrid Class="pa-8" Justify="Justify.Center" Spacing="4">
+
         <MudItem xs="12" md="4">
-            <MudPaper Class="p-4" Style="height: 250px; border-radius: 20px;">
-                <MudText Typo="Typo.h6" Class="mb-3">Create Quizzes</MudText>
-                <MudText Typo="Typo.body1">Create custom quizzes as a member and share them with others.</MudText>
-            </MudPaper>
-        </MudItem>
-        
-        <MudItem xs="12" md="4">
-            <MudPaper Class="p-4" Style="height: 250px; border-radius: 20px;">
-                <MudText Typo="Typo.h6" Class="mb-3">Create Questions</MudText>
-                <MudText Typo="Typo.body1">Create different questions for your quiz. Questions with sliders, open ended and multiple choice.</MudText>
+            <MudPaper Elevation="4" Class="pa-6 text-center rounded-xl">
+                <MudIcon Icon="@Icons.Material.Filled.Edit" Size="Size.Large" Color="Color.Primary" Class="mb-3"/>
+                <MudText Typo="Typo.h6" Class="mb-2">Create Quizzes</MudText>
+                <MudText Typo="Typo.body2">
+                    Create custom quizzes and share them instantly.
+                </MudText>
             </MudPaper>
         </MudItem>
 
-        <MudItem xs="12" md="4" >
-            <MudPaper Class="p-4" Style="height: 250px; border-radius: 20px;">
-                <MudText Typo="Typo.h6" Class="mb-3"> Take Quizzes</MudText>
-                <MudText Typo="Typo.body1">Start quizzes as a host and let others join in on a live quiz session.</MudText>
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="4" Class="pa-6 text-center rounded-xl">
+                <MudIcon Icon="@Icons.Material.Filled.Help" Size="Size.Large" Color="Color.Secondary" Class="mb-3"/>
+                <MudText Typo="Typo.h6" Class="mb-2">Create Questions</MudText>
+                <MudText Typo="Typo.body2">
+                    Sliders, open-ended, multiple choice and more.
+                </MudText>
             </MudPaper>
         </MudItem>
-        
+
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="4" Class="pa-6 text-center rounded-xl">
+                <MudIcon Icon="@Icons.Material.Filled.Groups" Size="Size.Large" Color="Color.Info" Class="mb-3"/>
+                <MudText Typo="Typo.h6" Class="mb-2">Take Quizzes</MudText>
+                <MudText Typo="Typo.body2">
+                    Host live sessions and let players join instantly.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
     </MudGrid>
     
-    <MudCarousel Style="height: 200px; width: 100%" Class="mt-auto" ShowArrows="true" ShowBullets="false" EnableSwipeGesture="true" AutoCycle="true" AutoCycleTime="@TimeSpan.FromSeconds(5)" TData="CarouselItem" ItemsSource="@_carouselItems">
-        <ItemTemplate>
-            <div class="d-flex align-items-center justify-content-center" style="height: 100%; background-color: @context.Color;">
-                <MudStack>
-                    <MudText Typo="Typo.h6">@context.Title</MudText>
-                    <MudText Typo="Typo.body1">@context.Description</MudText>
+    <MudPaper Class="pa-6 mt-auto rounded-xl" Elevation="2">
+        
+        <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-4" Style="font-family: 'Fredoka One', cursive;">How It Works</MudText>
+
+        <MudGrid Justify="Justify.Center" Spacing="4">
+            <MudItem xs="12" sm="4">
+                <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                    <MudAvatar Color="Color.Primary" Size="Size.Large"><MudIcon Icon="@Icons.Material.Filled.PersonAdd"/></MudAvatar>
+                    <MudText Typo="Typo.subtitle1">1. Sign Up</MudText>
+                    <MudText Typo="Typo.body2" Align="Align.Center">Create a free account to start building quizzes.</MudText>
                 </MudStack>
-            </div>
-        </ItemTemplate>
-    </MudCarousel>
+            </MudItem>
+            
+            <MudItem xs="12" sm="4">
+                <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                    <MudAvatar Color="Color.Secondary" Size="Size.Large"><MudIcon Icon="@Icons.Material.Filled.Quiz"/></MudAvatar>
+                    <MudText Typo="Typo.subtitle1">2. Build a Quiz</MudText>
+                    <MudText Typo="Typo.body2" Align="Align.Center">Add questions — multiple choice, sliders, open-ended and more.</MudText>
+                </MudStack>
+            </MudItem>
+            
+            <MudItem xs="12" sm="4">
+                <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                    <MudAvatar Color="Color.Info" Size="Size.Large"><MudIcon Icon="@Icons.Material.Filled.RocketLaunch"/></MudAvatar>
+                    <MudText Typo="Typo.subtitle1">3. Go Live</MudText>
+                    <MudText Typo="Typo.body2" Align="Align.Center">Host a session and invite players — no login required for participants.</MudText>
+                </MudStack>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudPaper Class="pa-6 mt-6 rounded-xl" Elevation="0">
+        <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-4" Style="font-family: 'Fredoka One', cursive;">Frequently Asked Questions</MudText>
+        <MudExpansionPanels MultiExpansion="true" Elevation="1">
+            <MudExpansionPanel Text="Do I need an account to join a quiz?">
+                <MudText Typo="Typo.body2">No! Participants can join any live session without creating an account. Just enter the lobby code and you're in.</MudText>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="What question types are supported?">
+                <MudText Typo="Typo.body2">You can create multiple choice, open-ended, and slider questions — with more types coming soon.</MudText>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="How many players can join a session?">
+                <MudText Typo="Typo.body2">There is no hard player limit. Sessions scale with your server, so invite as many as you'd like.</MudText>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="Is LBQuiz free to use?">
+                <MudText Typo="Typo.body2">Yes — creating quizzes, hosting sessions, and joining lobbies are all completely free.</MudText>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    </MudPaper>
     
 </MudContainer>
   
-@* <CookieBanner Show="_showCookieBanner" OnAccept="HandleCookieAccept"></CookieBanner> *@
-
 @code {
-    private bool _showCookieBanner = true;
-    
-    private record CarouselItem(string Title, string Description, string Color);
-    private readonly List<CarouselItem> _carouselItems = new()
+    private int _quizCount;
+    private int _questionCount;
+    private int _userCount;
+
+    protected override async Task OnInitializedAsync()
     {
-        new("Create Quizzes", "Create custom quizzes as a member and share them with others.", "var(--mud-palette-primary)"),
-        new("Create Questions", "Create different question types: sliders, open ended, multiple choice.", "var(--mud-palette-secondary)"),
-        new("Take Quizzes", "Start quizzes as a host and let others join live sessions.", "var(--mud-palette-tertiary)"),
-        new("Anonymous Access", "No login required as a participant.", "var(--mud-palette-info)"),
-        new CarouselItem("Register Account", "Create an account and start your quiz making today.", "#D4E157")
-    };
-    
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _quizCount = await db.Quiz.CountAsync();
+        _questionCount = await db.QuestionJsonBlobs.CountAsync();
+        _userCount = await db.Users.CountAsync();
+    }
+
     private Task OpenJoinDialogueAsync()
     {
         return DialogService.ShowAsync<JoinLobbyPopup>("JoinLobby");
-    }
-
-    private async Task HandleCookieAccept()
-    {
-        _showCookieBanner = false;
-        StateHasChanged();
     }
 }

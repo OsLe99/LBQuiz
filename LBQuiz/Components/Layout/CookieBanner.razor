@@ -1,5 +1,7 @@
-﻿
-@if (Show)
+﻿@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+@if (_show)
 {
     <MudPaper Elevation="6" Class="pa-4 d-flex align-items-center justify-content-between"
               Style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999; background-color: #a6b5cc">
@@ -9,18 +11,23 @@
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AcceptCookies">Accept Cookies</MudButton>
     </MudPaper>
 }
-    
-    
-@code {
-    [Parameter] public bool Show { get; set; }
 
-    [Parameter] public EventCallback OnAccept { get; set; }
+@code {
+    private bool _show;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var accepted = await JS.InvokeAsync<string>("eval", "document.cookie.split('; ').find(c => c.startsWith('cookies_accepted='))?.split('=')[1] || ''");
+            _show = accepted != "true";
+            StateHasChanged();
+        }
+    }
 
     private async Task AcceptCookies()
     {
-        if (OnAccept.HasDelegate)
-        {
-            await OnAccept.InvokeAsync(null);
-        }
+        await JS.InvokeVoidAsync("eval", "document.cookie = 'cookies_accepted=true; path=/; max-age=' + (365 * 24 * 60 * 60)");
+        _show = false;
     }
 }
