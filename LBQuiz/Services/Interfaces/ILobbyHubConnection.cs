@@ -11,16 +11,19 @@ namespace LBQuiz.Services.Interfaces
         Task JoinLobbyAsync(string joinCode, string nickname);
         Task JoinLobbyAsHostAsync(int lobbyId);
         Task LeaveLobbyAsync();
-        Task StartQuizAsync(int lobbyId, int quizId);
+        Task StartQuizAsync(int lobbyId, int quizId, int countDownTimer);
         List<LobbyParticipant> Participants { get; }
         string? ConnectionId { get; }
         event Func<Task>? OnParticipantsChanged;
         event Func<int, Task>? OnQuestionChanged;
         event Func<string, LobbyParticipant, Task>? OnAnswerRecieved;
         event Func<bool, List<LobbyParticipant>, Task>? OnResultShow;
-        event Func<string, QuestionJsonBlob, LobbyParticipant, Task>? OnCalculateScoreBoard;
+        event Func<string, QuestionJsonBlob, LobbyParticipant,int, Task>? OnCalculateScoreBoard;
         event Func<int, int, LobbyParticipant, string, Task>? OnShowSliderValueToHost;
         event Func<LobbyParticipant, int, List<MultipleOptions>, int, Task>? OnShowMultipleAnswersToHost;
+        event Func<string, QuestionJsonBlob, Task>? OnPointsDeducted;
+        event Func<string, QuestionJsonBlob, Task>? OnPointsAwarded;
+        event Func<int, Task>? OnCountDownStart;
         Task SubmitAnswer(int lobbyId, string answer, int quizId);
         Task UpdateScoreBoard(int questionId, string answer);
         Task GoToNextQuestionAsync(int questionIndex, int lobbyId);
@@ -29,7 +32,8 @@ namespace LBQuiz.Services.Interfaces
         Task EndQuizAsync(int lobbyId);
         Task SubmitSliderAnswer(int lobbyId, int sliderValue, int quizId, string questionText);
         Task SubmitMultipleAnswers(int lobbyId, int quizId, List<MultipleOptions> participantAnswers, int questionId);
-
-
+        Task RejoinLobbyAsync(int lobbyId, string nickname);
+        Task DeductPoints(string nickName, QuestionJsonBlob question, int lobbyId);
+        Task AwardPoints(string nickName, QuestionJsonBlob question, int lobbyId);
     }
 }

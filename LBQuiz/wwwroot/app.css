@@ -78,3 +78,92 @@ h1:focus {
 .editPaper:Hover {
     background-color: antiquewhite;
 }
+.createBar {
+    background-color: #C3CBD6;
+    margin-bottom: 10px;
+}
+.grow-animate{
+    display: inline-block;
+    animation: growText 0.3s ease-in-out;
+}
+@keyframes growText {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(2);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/*.page-wrapper {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+}*/
+
+/*.aurora-main-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #667eea 0%, #f093fb 50%, #4facfe 100%);
+    filter: blur(80px);
+    z-index: 0;
+}*/
+
+
+
+/*.page-content {
+    position: relative;
+    z-index: 1;
+}*/
+
+.aurora-options {
+    background-color: rgba(40, 44, 52, 0.85) !important;
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 140, 0, 0.15);
+}
+
+.aurora-list-items {
+    background-color: rgba(128,0,128,0.9);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 140, 0, 0.5);
+}
+
+/*.aurora-main-bg {
+    color: black;
+    background: repeating-linear-gradient( #fff, #fff 1px, transparent 1px, transparent 40px );
+}
+*/
+.page-wrapper {
+    margin: 0;
+    min-height: 100vh;
+    background-color: #f8fafc;
+    background-image:
+    /* Grid */
+    linear-gradient(rgba(226,232,240,0.9) 1px, transparent 1px), linear-gradient(90deg, rgba(226,232,240,0.9) 1px, transparent 1px),
+    /* Spotlight l�ngst bak */
+    radial-gradient( circle at 50% 30%, #ffffff 0%, #f8fafc 35%, #e2e8f0 70%, #cbd5e1 100% );
+    background-size: 40px 40px, 40px 40px, cover;
+    background-position: 0 0, 0 0, center;
+}
+
+.page-wrapper.dark {
+    margin: 0;
+    min-height: 100vh;
+    background-color: #1E1E1E; /* m�rk bakgrund ist�llet f�r ljus */
+    background-image:
+    /* Grid */
+    linear-gradient(rgba(55,65,81,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(55,65,81,0.5) 1px, transparent 1px),
+    /* Spotlight l�ngst bak */
+    radial-gradient(circle at 50% 30%, #374151 0%, #1f2937 35%, #111827 70%, #0f172a 100%);
+    background-size: 40px 40px, 40px 40px, cover;
+    background-position: 0 0, 0 0, center;
+}
+
+.page-wrapper.dark .pen-image {
+    filter: invert(1);
+}

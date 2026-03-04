@@ -4,6 +4,7 @@ using LBQuiz.Services.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using LBQuiz.Models.Helpers;
+using System.Runtime.InteropServices;
 
 namespace LBQuiz.Services
 {
@@ -22,13 +23,17 @@ namespace LBQuiz.Services
         public event Func<bool, List<LobbyParticipant>, Task>? OnResultShow;
         public event Func<int, int, LobbyParticipant, string, Task>? OnShowSliderValueToHost;
         public event Func<LobbyParticipant, int, List<MultipleOptions>, int, Task>? OnShowMultipleAnswersToHost;
+        public event Func<string, QuestionJsonBlob, Task>? OnPointsDeducted;
+        public event Func<string, QuestionJsonBlob, Task>? OnPointsAwarded;
+        public event Func<int, Task>? OnCountDownStart;
+
 
         public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
         public int? CurrentLobbyId => _currentLobbyId;
         public string? ConnectionId => _hubConnection?.ConnectionId;
 
         public event Func<string, LobbyParticipant, Task>? OnAnswerRecieved;
-        public event Func<string, QuestionJsonBlob, LobbyParticipant, Task>? OnCalculateScoreBoard;
+        public event Func<string, QuestionJsonBlob, LobbyParticipant, int, Task>? OnCalculateScoreBoard;
 
         public LobbyHubConnection(IHttpContextAccessor httpContextAccessor)
         {
@@ -71,19 +76,24 @@ namespace LBQuiz.Services
                         await OnParticipantsChanged.Invoke();
                 });
 
-            _hubConnection.On<int, int, string>("QuizLobbyStarted",
-                (quizId, lobbyId, hostId) =>
+            _hubConnection.On<string, string, int>("QuizLobbyStarted",
+                async (joinCode, hostId, countDownTimer) =>
                 {
+                    if(OnCountDownStart != null)
+                    {
+                        await OnCountDownStart.Invoke(countDownTimer);
+                    }
                     // If host, go to host page
                     if (_currentUserId != null && _currentUserId == hostId)
                     {
-                        navigation.NavigateTo($"/quiz/host/{quizId}/{lobbyId}");
+                        navigation.NavigateTo($"/quiz/host/{joinCode}");
                     }
                     // All other users
                     else
                     {
-                        navigation.NavigateTo($"/quiz/play/{quizId}/{lobbyId}");
+                        navigation.NavigateTo($"/quiz/play/{joinCode}");
                     }
+                    
                 });
 
             // Listen for server event with corrected name and payload
@@ -96,12 +106,12 @@ namespace LBQuiz.Services
                     }
                 });
 
-            _hubConnection.On<QuestionJsonBlob, string, LobbyParticipant>("ScoreBoardCalculated",
-                async (question, answer, participant) =>
+            _hubConnection.On<QuestionJsonBlob, string, LobbyParticipant, int>("ScoreBoardCalculated",
+                async (question, answer, participant, points) =>
                 {
                     if (OnCalculateScoreBoard != null)
                     {
-                        await OnCalculateScoreBoard.Invoke(answer, question, participant);
+                        await OnCalculateScoreBoard.Invoke(answer, question, participant, points);
                     }
                 });
 
@@ -151,6 +161,20 @@ namespace LBQuiz.Services
                     await OnShowMultipleAnswersToHost.Invoke(participant, quizId, participantAnswers, questionId);
                 }
             });
+            _hubConnection.On<string, QuestionJsonBlob>("OnDeductPoints", async (nickName, question) =>
+            {
+                if(OnPointsDeducted != null)
+                {
+                    await OnPointsDeducted.Invoke(nickName, question);
+                }
+            });
+            _hubConnection.On<string, QuestionJsonBlob>("OnAwardPoints", async (nickName, question) =>
+            {
+                if(OnPointsAwarded != null)
+                {
+                    await OnPointsAwarded.Invoke(nickName, question);
+                }
+            });
 
             await _hubConnection.StartAsync();
         }
@@ -171,6 +195,15 @@ namespace LBQuiz.Services
                 _currentLobbyId = lobbyId;
             }
         }
+
+        public async Task RejoinLobbyAsync(int lobbyId, string nickname)
+        {
+            if (_hubConnection != null)
+            {
+                await _hubConnection.InvokeAsync("RejoinLobby", lobbyId, nickname);
+                _currentLobbyId = lobbyId;
+            }
+        }
         
         public async Task LeaveLobbyAsync()
         {
@@ -181,11 +214,11 @@ namespace LBQuiz.Services
                 Participants.Clear();
             }
         }
-        public async Task StartQuizAsync(int lobbyId, int quizId)
+        public async Task StartQuizAsync(int lobbyId, int quizId, int countDownTimer)
         {
             if (_hubConnection?.State == HubConnectionState.Connected)
             {
-                await _hubConnection.SendAsync("StartQuiz", lobbyId, quizId);
+                await _hubConnection.SendAsync("StartQuiz", lobbyId, quizId, countDownTimer);
             }
         }
         
@@ -249,5 +282,21 @@ namespace LBQuiz.Services
                 await _hubConnection.InvokeAsync("SubmitMultipleAnswers", lobbyId, quizId, participantAnswers, questionId);
             }
         }
+        public async Task DeductPoints(string nickName, QuestionJsonBlob question, int lobbyId)
+        {
+            if(_hubConnection != null)
+            {
+                await _hubConnection.InvokeAsync("DeductPoints", nickName, question, lobbyId);
+            }
+        }
+
+        public async Task AwardPoints(string nickName, QuestionJsonBlob question, int lobbyId)
+        {
+            if (_hubConnection != null)
+            {
+                await _hubConnection.InvokeAsync("AwardPoints", nickName, question, lobbyId);
+            }
+        }
+
     }
 }

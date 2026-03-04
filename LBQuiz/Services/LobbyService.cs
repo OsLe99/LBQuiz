@@ -8,16 +8,19 @@ namespace LBQuiz.Services;
 
 public class LobbyService : ILobbyService
 {
-    private readonly ApplicationDbContext _db;
+    private readonly IDbContextFactory<ApplicationDbContext> _factory;
 
-    public LobbyService(ApplicationDbContext db)
+    public LobbyService(IDbContextFactory<ApplicationDbContext> dbContext)
     {
-        _db = db;
+        _factory = dbContext;
     }
+
+    
 
     public async Task<QuizLobby> CreateLobbyAsync(int quizId, string hostId)
     {
-        var quizExists = await _db.Quiz.AnyAsync(q => q.Id == quizId);
+        using var context = await _factory.CreateDbContextAsync();
+        var quizExists = await context.Quiz.AnyAsync(q => q.Id == quizId);
 
         if (!quizExists)
         {
@@ -33,30 +36,33 @@ public class LobbyService : ILobbyService
             CreatedAt = DateTime.UtcNow,
             QuizHostId = hostId
         };
-        
-        _db.QuizLobby.Add(lobby);
-        await _db.SaveChangesAsync();
+
+        context.QuizLobby.Add(lobby);
+        await context.SaveChangesAsync();
         return lobby;
     }
 
     public async Task<QuizLobby?> GetLobbyByJoinCodeAsync(string joinCode)
     {
+        using var context = await _factory.CreateDbContextAsync();
         var normalizedJoinCode = joinCode.ToUpperInvariant();
-        return await _db.QuizLobby.FirstOrDefaultAsync(q => q.JoinCode == normalizedJoinCode && q.IsActive);
+        return await context.QuizLobby.FirstOrDefaultAsync(q => q.JoinCode == normalizedJoinCode && q.IsActive);
     }
     
     public async Task<QuizLobby?> GetLobbyByIdAsync(int lobbyId)
     {
-        return await _db.QuizLobby.FirstOrDefaultAsync(ql => ql.Id == lobbyId);
+        using var context = await _factory.CreateDbContextAsync();
+        return await context.QuizLobby.FirstOrDefaultAsync(ql => ql.Id == lobbyId);
     }
 
     public async Task EndQuizAsync(int lobbyId)
     {
-        var lobby = await _db.QuizLobby.FirstOrDefaultAsync(q => q.Id == lobbyId);
+        using var context = await _factory.CreateDbContextAsync();
+        var lobby = await context.QuizLobby.FirstOrDefaultAsync(q => q.Id == lobbyId);
         if (lobby != null)
         {
             lobby.IsActive = false;
-            await _db.SaveChangesAsync();
+            await context.SaveChangesAsync();
         }
     }
     
@@ -65,12 +71,13 @@ public class LobbyService : ILobbyService
     // Generates a code until we hit one that doesn't exist. Can be made faster
     private async Task<string> GenerateUniqueJoinCodeAsync()
     {
+        using var context = await _factory.CreateDbContextAsync();
         string code;
         do
         {
             code = GenerateJoinCode();
         } 
-        while (await _db.QuizLobby.AnyAsync(q => q.JoinCode == code));
+        while (await context.QuizLobby.AnyAsync(q => q.JoinCode == code));
         return code;
     }
     

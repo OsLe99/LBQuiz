@@ -2,24 +2,34 @@
 using LBQuiz.Models;
 using LBQuiz.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace LBQuiz.Test.Services.LobbyServiceTests;
 
 public class CreateLobbyAsyncTests
 {
-    private ApplicationDbContext CreateInMemoryContext()
+    private IDbContextFactory<ApplicationDbContext> CreateInMemoryFactory()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
-        return new ApplicationDbContext(options);
+
+        var factory = new PooledDbContextFactory<ApplicationDbContext>(options);
+
+        return factory;
     }
+
+    
+
 
     [Fact]
     public async Task CreateLobbyAsync_WithValidQuiz_ShouldCreateLobby()
     {
         // Arrange
-        await using var context = CreateInMemoryContext();
+        var factory = CreateInMemoryFactory();
+
+        using var context = await factory.CreateDbContextAsync();
+
         var quiz = new Quiz
         {
             Id = 1,
@@ -30,7 +40,7 @@ public class CreateLobbyAsyncTests
         context.Quiz.Add(quiz);
         await context.SaveChangesAsync();
         
-        var service = new LobbyService(context);
+        var service = new LobbyService(factory);
         
         // Act
         var result = await service.CreateLobbyAsync(1, "host123");
@@ -49,7 +59,9 @@ public class CreateLobbyAsyncTests
     public async Task CreateLobbyAsync_ShouldGenerateUniqueJoinCode()
     {
         // Arrange
-        await using var context = CreateInMemoryContext();
+        var factory = CreateInMemoryFactory();
+
+        using var context = await factory.CreateDbContextAsync();
         var quiz = new Quiz
         {
             Id = 1,
@@ -60,7 +72,7 @@ public class CreateLobbyAsyncTests
         context.Quiz.Add(quiz);
         await context.SaveChangesAsync();
         
-        var service = new LobbyService(context);
+        var service = new LobbyService(factory);
         
         // Act
         var lobby1 = await service.CreateLobbyAsync(1, "host123");
@@ -77,7 +89,9 @@ public class CreateLobbyAsyncTests
     public async Task CreateLobbyAsync_ShouldPersistToDatabase()
     {
         // Arrange
-        await using var context = CreateInMemoryContext();
+        var factory = CreateInMemoryFactory();
+        using var context = await factory.CreateDbContextAsync();
+
         var quiz = new Quiz
         {
             Id = 1,
@@ -87,7 +101,7 @@ public class CreateLobbyAsyncTests
         };
         context.Quiz.Add(quiz);
         await context.SaveChangesAsync();
-        var service = new LobbyService(context);
+        var service = new LobbyService(factory);
         
         // Act
         var createdLobby = await service.CreateLobbyAsync(1, "host123");
@@ -103,7 +117,9 @@ public class CreateLobbyAsyncTests
     public async Task CreateLobbyAsync_WithNonExistingQuiz_ShouldThrowException()
     {
         // Arrange
-        await using var context = CreateInMemoryContext();
+        var factory = CreateInMemoryFactory();
+        using var context = await factory.CreateDbContextAsync();
+
         var quiz = new Quiz
         {
             Id = 1,
@@ -114,7 +130,7 @@ public class CreateLobbyAsyncTests
         context.Quiz.Add(quiz);
         await context.SaveChangesAsync();
         
-        var service = new LobbyService(context);
+        var service = new LobbyService(factory);
         
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(async () => await service.CreateLobbyAsync(2, "host123"));

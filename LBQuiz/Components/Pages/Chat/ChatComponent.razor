@@ -75,6 +75,7 @@
             playerMessage.SenderId = userId;
             playerMessage.SenderName = "Host";
             playerMessage.TimeSent = DateTime.UtcNow;
+            playerMessage.LobbyId = LobbyId;
             await ChatHubConnection.SendMessage(playerMessage);
             playerMessage = new();
             return;
@@ -85,6 +86,7 @@
             playerMessage.SenderId = currentParticipant.ConnectionId;
             playerMessage.SenderName = currentParticipant.Nickname;
             playerMessage.TimeSent = DateTime.UtcNow;
+            playerMessage.LobbyId = LobbyId;
             await ChatHubConnection.SendMessage(playerMessage);
             playerMessage = new();
             return;

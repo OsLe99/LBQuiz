@@ -1,0 +1,117 @@
+﻿@using LBQuiz.Models;
+@using LBQuiz.Models.Helpers
+@using LBQuiz.Models.Lobby;
+@using LBQuiz.Services.Interfaces
+@using System.Text.Json
+@inject ILobbyHubConnection LobbyHubConnection
+@inject IQuestionManager QuestionManager
+
+
+
+<h3>HandleAnswers</h3>
+
+@if (CurrentQuestion.QuestionType == "Review" && ParticipantAnswers.Count > 0)
+{
+    <MudPaper Class="pa-4 mb-4" Style="background-color: #e3f2fd;">
+        <MudText Typo="Typo.body2" Align="Align.Center" Class="mt-2">Based on @ParticipantAnswers.Count responses</MudText>
+    </MudPaper>
+}
+
+@if (ParticipantAnswers.Count == 0)
+{
+    <MudContainer Class="pa-4 mb-4">
+        <MudText Typo="Typo.h4" Align="Align.Center" Class="mt-2">No answers have been submitted...</MudText>
+    </MudContainer>
+}
+else
+{
+    <MudGrid Spacing="3">
+        @foreach (var item in ParticipantAnswers)
+        {
+            <MudItem @onclick="() => OnClickParticipantAnswer(item)" xs="12" sm="6" md="4">
+                <MudPaper Class="pa-4">
+                    <MudBadge Color="@item.AnswerColor" Overlap="true" Size="Size.Medium" Bordered="true">
+                        <MudText Typo="Typo.h6" Style="text-decoration: underline;">@item.Participant.Nickname : </MudText>
+                        <MudText Typo="Typo.h6">@item.Answer</MudText>
+                        @if(CurrentQuestion.QuestionType == "Multiple")
+                        {
+                            <MudText>@MultipleString</MudText>
+                        }
+                    </MudBadge>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+<MudButton OnClick="GoToNextSlide">Next Slide</MudButton>
+
+
+    @code {
+    [Parameter]
+    public List<ParticipantAnswer> ParticipantAnswers { get; set; } = new();
+    [Parameter]
+    public int QuestionIndex { get; set; } = 0;
+    [Parameter]
+    public int LobbyId { get; set; }
+    [Parameter]
+    public EventCallback OnCloseHandleAnswer { get; set; }
+    [Parameter]
+    public QuestionJsonBlob CurrentQuestion { get; set; }
+
+    public int MaxIndex = 0;
+
+    public string MultipleString { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        if(CurrentQuestion.QuestionType == "Multiple")
+        {
+            var numbers = JsonSerializer.Deserialize<int[]>(ParticipantAnswers[0].Answer);
+            var quest = JsonSerializer.Deserialize<MultipleChoice>(CurrentQuestion.Blob);
+            MultipleString = "Options: ";
+            foreach(var test in quest.MultipleOptionsList)
+            {
+                if (numbers.Contains(test.Id)) MultipleString += $"[{test.Text}] ";
+                else MultipleString += test.Text + " ";
+            }
+        }
+        MaxIndex = await QuestionManager.ReturnMaxIndexForQuestion(CurrentQuestion.QuizId);
+    }
+
+
+    private async Task OnClickParticipantAnswer(ParticipantAnswer participantAnswer)
+    {
+        if(CurrentQuestion.QuestionType == "Review" || CurrentQuestion.QuestionType == "Multiple")
+        {
+            return;
+        }
+
+        if(participantAnswer.AnswerColor == Color.Success)
+        {
+            participantAnswer.AnswerColor = Color.Error;
+        }
+        else if(participantAnswer.AnswerColor == Color.Error)
+        {
+            participantAnswer.AnswerColor = Color.Success;
+        }
+
+        if (participantAnswer.AnswerColor == Color.Error)
+        {
+            await LobbyHubConnection.DeductPoints(participantAnswer.Participant.Nickname, participantAnswer.QuestionJB, LobbyId);
+        }
+        else if (participantAnswer.AnswerColor == Color.Success)
+        {
+            await LobbyHubConnection.AwardPoints(participantAnswer.Participant.Nickname, participantAnswer.QuestionJB, LobbyId);
+        }
+    }
+    private async Task GoToNextSlide()
+    {
+        if(MaxIndex >= QuestionIndex)
+        {
+            await LobbyHubConnection.GoToNextQuestionAsync(QuestionIndex, LobbyId);
+        }
+        await OnCloseHandleAnswer.InvokeAsync();
+    }
+}

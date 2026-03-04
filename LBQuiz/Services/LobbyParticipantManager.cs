@@ -11,7 +11,7 @@ public class LobbyParticipantManager : ILobbyParticipantManager
     private readonly ConcurrentDictionary<int, ConcurrentDictionary<string, LobbyParticipant>> _lobbyParticipants = new();
     private readonly ConcurrentDictionary<string, int> _connectionToLobby = new();
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<int, string>> AnswerDictionary = new();
-
+    
     public bool AddParticipant(int lobbyId, LobbyParticipant participant)
     {
         if (lobbyId <= 0)
@@ -102,6 +102,26 @@ public class LobbyParticipantManager : ILobbyParticipantManager
             AnswerDictionary.TryAdd(connectionId, dict);
         }
     }
+    public bool UpdateParticipantConnectionId(string oldConnectionId, string newConnectionId)
+    {
+        if (_connectionToLobby.TryRemove(oldConnectionId, out var lobbyId))
+        {
+            if (_lobbyParticipants.TryGetValue(lobbyId, out var participants))
+            {
+                if (participants.TryRemove(oldConnectionId, out var participant))
+                {
+                    participant.ConnectionId = newConnectionId;
+                    if (participants.TryAdd(newConnectionId, participant))
+                    {
+                        _connectionToLobby.TryAdd(newConnectionId, lobbyId);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     public async Task<bool> CheckAnswer(string correctAnswer, int questionId, string connectionId)
     {
         

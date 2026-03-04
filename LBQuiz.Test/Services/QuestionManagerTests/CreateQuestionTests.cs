@@ -1,28 +1,34 @@
 ﻿using LBQuiz.Data;
-using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
-using LBQuiz.Services;
 using LBQuiz.Models.Helpers;
 using LBQuiz.Models.Helpers.AnswerDTO;
+using LBQuiz.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using System.Text.Json;
 
 namespace LBQuiz.Test.Services.QuestionManagerTests
 {
     public class CreateQuestionTests
     {
-        private ApplicationDbContext CreateInMemoryContext()
+        private IDbContextFactory<ApplicationDbContext> CreateInMemoryFactory()
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-           .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-           .Options;
-            return new ApplicationDbContext(options);
+                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .Options;
+
+            var factory = new PooledDbContextFactory<ApplicationDbContext>(options);
+
+            return factory;
         }
 
         [Fact]
         public async Task CreateQuestionSliderToJsonBlob_WithValidData()
         {
             //Arrange
-            await using var context = CreateInMemoryContext();
-            var service = new QuestionManager(context);
+            var factory = CreateInMemoryFactory();
+
+            using var context = await factory.CreateDbContextAsync();
+            var service = new QuestionManager(factory);
 
             //Act
             var result = service.CreateSliderQuestion(1,1,10, 2, 1000,"TestSliderQuestionText");
@@ -38,8 +44,10 @@ namespace LBQuiz.Test.Services.QuestionManagerTests
         public async Task CreateQuestionOpenToJsonBlob_WithValidData()
         {
             //Arrange
-            await using var context = CreateInMemoryContext();
-            var service = new QuestionManager(context);
+            var factory = CreateInMemoryFactory();
+
+            using var context = await factory.CreateDbContextAsync();
+            var service = new QuestionManager(factory);
 
             //Act
             var result = service.CreateOpenQuestion(1, "Test Question", "Test", 1000);
@@ -55,8 +63,10 @@ namespace LBQuiz.Test.Services.QuestionManagerTests
         public async Task CreateQuestionMultipleToJsonBlob_WithValidData()
         {
             //Arrange
-            await using var context = CreateInMemoryContext();
-            var service = new QuestionManager(context);
+            var factory = CreateInMemoryFactory();
+
+            using var context = await factory.CreateDbContextAsync();
+            var service = new QuestionManager(factory);
 
             var multiList = new List<MultipleOptions>
             {
@@ -88,8 +98,10 @@ namespace LBQuiz.Test.Services.QuestionManagerTests
         public async Task SortorderShouldReturnNextIndex()
         {
             //Arrange
-            await using var context = CreateInMemoryContext();
-            var service = new QuestionManager(context);
+            var factory = CreateInMemoryFactory();
+
+            using var context = await factory.CreateDbContextAsync();
+            var service = new QuestionManager(factory);
 
             //Act
             service.CreateOpenQuestion(1, "Test Question1", "Test1", 1000);
@@ -107,8 +119,10 @@ namespace LBQuiz.Test.Services.QuestionManagerTests
         public async Task QuestionTypeShouldReturn_Open()
         {
             //Arrange
-            await using var context = CreateInMemoryContext();
-            var service = new QuestionManager(context);
+            var factory = CreateInMemoryFactory();
+
+            using var context = await factory.CreateDbContextAsync();
+            var service = new QuestionManager(factory);
 
             //Act
             service.CreateOpenQuestion(1, "Test Question1", "Test1", 1000);

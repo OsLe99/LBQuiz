@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using LBQuiz.Data;
 using Microsoft.EntityFrameworkCore;
+using LBQuiz.Migrations;
+using System.Text.Json;
 
 namespace LBQuiz.Hubs
 {
@@ -15,14 +17,14 @@ namespace LBQuiz.Hubs
         private readonly ILobbyParticipantManager _lobbyParticipantManager;
         private readonly ILobbyService _lobbyService;
         private readonly IQuestionScoringService _scoringService;
-        private readonly ApplicationDbContext _dbContext;
+        private IDbContextFactory<ApplicationDbContext> _factory;
         private string? GetUserId() => Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        public LobbyHub(ILobbyParticipantManager lobbyParticipantManager, ILobbyService lobbyService, IQuestionScoringService scoringService, ApplicationDbContext dbContext)
+        public LobbyHub(ILobbyParticipantManager lobbyParticipantManager, ILobbyService lobbyService, IQuestionScoringService scoringService, IDbContextFactory<ApplicationDbContext> dbContext)
         {
             _lobbyParticipantManager = lobbyParticipantManager;
             _lobbyService = lobbyService;
             _scoringService = scoringService;
-            _dbContext = dbContext;
+            _factory = dbContext;
         }
 
         public override async Task OnConnectedAsync()
@@ -49,6 +51,12 @@ namespace LBQuiz.Hubs
             if (lobby == null)
             {
                 throw new HubException("Invalid join code");
+            }
+
+            var existingParticipants = _lobbyParticipantManager.GetParticipants(lobby.Id);
+            if (existingParticipants.Any(p => p.Nickname.Equals(nickname, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new HubException("A player with that nickname is already in the lobby.");
             }
 
             var participant = new LobbyParticipant
@@ -88,16 +96,70 @@ namespace LBQuiz.Hubs
             }
             await base.OnDisconnectedAsync(exception);
         }
-        public async Task StartQuiz(int lobbyId, int quizId)
+        public async Task StartQuiz(int lobbyId, int quizId, int countDownTimer)
         {
             await EnsureIsHostAsync(lobbyId);
             var hostId = GetUserId();
-            await Clients.Group(lobbyId.ToString()).SendAsync("QuizLobbyStarted", quizId, lobbyId, hostId);
+            var lobby = await _lobbyService.GetLobbyByIdAsync(lobbyId);
+            var joinCode = lobby.JoinCode;
+            await Clients.Group(lobbyId.ToString()).SendAsync("QuizLobbyStarted", joinCode, hostId, countDownTimer);
         }
         
         public async Task JoinLobbyAsHost(int lobbyId)
         {
             // Join group as host but not as a participant
+            await EnsureIsHostAsync(lobbyId);
+            await Groups.AddToGroupAsync(Context.ConnectionId, lobbyId.ToString());
+        }
+
+        public async Task RejoinLobby(int lobbyId, string nickname)
+        {
+            var lobby = await _lobbyService.GetLobbyByIdAsync(lobbyId);
+            if (lobby == null)
+            {
+                throw new HubException("Lobby not found");
+            }
+
+            // Check if there's already a participant with this nickname
+            var existingParticipants = _lobbyParticipantManager.GetParticipants(lobbyId);
+            var existing = existingParticipants.FirstOrDefault(p => p.Nickname == nickname);
+
+            if (existing != null)
+            {
+                if (existing.ConnectionId == Context.ConnectionId)
+                {
+                    // Already connected, just ensure group membership
+                    await Groups.AddToGroupAsync(Context.ConnectionId, lobbyId.ToString());
+                    return;
+                }
+
+                // Update to the new connection ID
+                _lobbyParticipantManager.UpdateParticipantConnectionId(existing.ConnectionId, Context.ConnectionId);
+                await Groups.AddToGroupAsync(Context.ConnectionId, lobbyId.ToString());
+                var participants = _lobbyParticipantManager.GetParticipants(lobbyId);
+                await Clients.Group(lobbyId.ToString()).SendAsync("ParticipantJoined", nickname, participants);
+                return;
+            }
+
+            // Re add as a participant 
+            var participant = new LobbyParticipant
+            {
+                ConnectionId = Context.ConnectionId,
+                LobbyId = lobbyId,
+                Nickname = nickname,
+                Score = 0
+            };
+
+            if (_lobbyParticipantManager.AddParticipant(lobbyId, participant))
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, lobbyId.ToString());
+                var participants = _lobbyParticipantManager.GetParticipants(lobbyId);
+                await Clients.Group(lobbyId.ToString()).SendAsync("ParticipantJoined", nickname, participants);
+            }
+        }
+
+        public async Task RejoinLobbyAsHost(int lobbyId)
+        {
             await EnsureIsHostAsync(lobbyId);
             await Groups.AddToGroupAsync(Context.ConnectionId, lobbyId.ToString());
         }
@@ -123,25 +185,23 @@ namespace LBQuiz.Hubs
             }
         }
 
-        //H�r ska logiken f�r att r�kna ut po�ngst�llningen in
         public async Task CalculateScoreBoard(int questionId, string answer)
         {
-            Console.WriteLine($"Incoming questionId: {questionId}");
+            using var context = await _factory.CreateDbContextAsync();
             
             var participant =  _lobbyParticipantManager.GetLobbyParticipant(Context.ConnectionId);
             
-            var question = await _dbContext.QuestionJsonBlobs.FirstOrDefaultAsync(q => q.Id == questionId);
+            var question = await context.QuestionJsonBlobs.FirstOrDefaultAsync(q => q.Id == questionId);
             
-            Console.WriteLine(question == null 
-                ? "QUESTION NOT FOUND" 
-                : "Question found");
-
             var result = _scoringService.IsCorrect(question, answer, out int points);
 
             if (result)
             {
-                participant.Score += points;
-                await Clients.Group(participant.LobbyId.ToString()).SendAsync("ScoreBoardCalculated", question, answer, participant);
+                //Den här participanten har inte fått updaterat score än om vi trycker på handlescore. Uträkning borde därför inte ske här.
+                //All uträkning borde ske på hostsidan på _userList
+                //Skicka med point, ta bort "participant.Score += points;"
+                //participant.Score += points;
+                await Clients.Group(participant.LobbyId.ToString()).SendAsync("ScoreBoardCalculated", question, answer, participant, points);
             }
             
             var participants = _lobbyParticipantManager.GetParticipants(participant.LobbyId);
@@ -199,6 +259,21 @@ namespace LBQuiz.Hubs
             }
         }
 
+        public async Task DeductPoints(string nickName, QuestionJsonBlob question, int lobbyId)
+        {
+            if (!string.IsNullOrEmpty(lobbyId.ToString()))
+            {
+                await Clients.Group(lobbyId.ToString()).SendAsync("OnDeductPoints", nickName, question);
+            }
+        }
 
+        public async Task AwardPoints(string nickName, QuestionJsonBlob question, int lobbyId)
+        {
+            if (!string.IsNullOrEmpty(lobbyId.ToString()))
+            {
+                await Clients.Group(lobbyId.ToString()).SendAsync("OnAwardPoints", nickName, question);
+            }
+
+        }
     }
 }

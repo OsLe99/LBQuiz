@@ -8,6 +8,8 @@ namespace LBQuiz.Services.Interfaces
         Task CreateOpenQuestion(int quizId, string questionText, string correctAnswer, int points);
         Task CreateSliderQuestion(int quizId, int minValue, int maxValue, int correctValue, int points, string questionText);
         Task CreateMultipleChoiceQuestion(int quizId, int questionPoints, string questionText, List<MultipleOptions> multiple);
+        Task CreateReviewQuestion(int quizId, string questionText, int minValue, int maxValue, int points);
+        Task CreateWordCloudQuestion(int quizId, string questionText, int maxEntries);
         Task<int> GetSortOrderAsync(int quizId);
         Task<string> GetQuestionTypeStringAsync(QuestionJsonBlob question);
         Task<List<QuestionJsonBlob>> GetAllQuestionJsonBlobAsync(int quizId);
@@ -16,9 +18,12 @@ namespace LBQuiz.Services.Interfaces
         Task<QuestionJsonBlob> UpdateQuestionTextAsync(Question question, string questionText);
         Task<QuestionJsonBlob> UpdateQuestionPointsAsync(Question question, int points);
         Task DeleteQuestionAsync(Question question);
-        Task UpdateSortOrderAsync(int quizId, int oldIndex, int newIndex);
+        Task UpdateSortOrderAsync(List<QuestionJsonBlob> allQuestions);
         Task<Question> GetQuestionFromBlob(QuestionJsonBlob blob);
         Task UpdateQuestionText(Question question);
+        Task DeleteQuestionAsync(QuestionJsonBlob question);
+        Task<bool> ReturnBoolOnAnswer(QuestionJsonBlob question, string answer);
+        Task<int> ReturnMaxIndexForQuestion(int quizId);
 
     }
 }

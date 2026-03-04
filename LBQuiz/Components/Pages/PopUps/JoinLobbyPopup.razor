@@ -2,6 +2,7 @@
 @inject ILobbyHubConnection LobbyHub
 @inject ILobbyService LobbyService
 @inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JS
 @using LBQuiz.Services.Interfaces
 @using LBQuiz.Models.Lobby
 @inject ISnackbar Snackbar
@@ -22,8 +23,8 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton @onclick="Cancel" Variant="Variant.Outlined" Color="Color.Error">Cancel</MudButton>
-        <MudButton @onclick="AddUser" Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true">Join lobby</MudButton>
+        <MudButton @onclick="Cancel" Variant="Variant.Filled" Color="Color.Error">Cancel</MudButton>
+        <MudButton @onclick="AddUser" Variant="Variant.Filled" Color="Color.Success">Join lobby</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -59,25 +60,27 @@
         
         try
         {
-            if (_joinCode.Length != 6 || string.IsNullOrEmpty(_joinCode))
+            if (string.IsNullOrEmpty(_joinCode) || _joinCode.Length != 6)
             {
                 _errorMessage = "Invalid join code.";
+                return;
             }
-            else if (string.IsNullOrEmpty(_participant.Nickname))
+            if (string.IsNullOrEmpty(_participant.Nickname))
             {
                 _errorMessage = "Invalid nickname.";
+                return;
             }
             
             await LobbyHub.JoinLobbyAsync(_joinCode, _participant.Nickname);
+            await JS.InvokeVoidAsync("sessionStorage.setItem", "lobbyNickname", _participant.Nickname);
             var quizLobby = await LobbyService.GetLobbyByJoinCodeAsync(_joinCode);
             
             MudDialog.Close();
-            Navigation.NavigateTo($"/quiz/{quizLobby.QuizId}/{quizLobby.Id}");
+            Navigation.NavigateTo($"/quiz/{_joinCode}");
         }
-        
         catch (Exception ex)
         {
-            // Do something
+            _errorMessage = ex.Message;
         }
     }
 }

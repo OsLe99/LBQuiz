@@ -1,0 +1,30 @@
+﻿@using MudBlazor
+@using Models
+@inject IDialogService DialogService
+@inherits ComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField Label="New Quiz Name" @bind-Value="updateQuiz.Name"></MudTextField>
+        <MudTextField Label="New Quiz Description" @bind-Value="updateQuiz.Description"></MudTextField>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="@Color" OnClick="Submit">@ButtonText</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialogInstance { get; set; }
+
+    [Parameter] public Quiz updateQuiz { get; set; } = new Quiz();
+    [Parameter] public string ButtonText { get; set; } = "";
+    [Parameter] public Color Color { get; set; } = Color.Primary;
+
+    void Submit() => MudDialogInstance.Close(DialogResult.Ok(true));
+
+    void Cancel() => MudDialogInstance.Cancel();
+}

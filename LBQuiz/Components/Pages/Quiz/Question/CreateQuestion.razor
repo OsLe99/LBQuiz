@@ -1,17 +1,24 @@
 ﻿@page "/quiz/{QuizId:int}/question/create"
-@inject ApplicationDbContext _dbcontext
+@inject IDbContextFactory<ApplicationDbContext> ContextFactory
 @inject IQuestionManager QuestionManager
 @inject NavigationManager NavigationManager
 @using LBQuiz.Models;
 @using Microsoft.EntityFrameworkCore
 @using Data
+@using LBQuiz.Components.Helpers
 @using Services.Interfaces
+@using Mono.TextTemplating
 @using Models.Helpers
 
 <AuthorizeView>
     <Authorized>
+        <div class="createBar">
+            <MudText Align="Align.Center" Typo="Typo.h5">
+                Create a new question
+                <MudIcon Icon="@Icons.Material.Filled.QuestionAnswer"></MudIcon>
+            </MudText>
+        </div>
         
-        <h3>Create Question</h3>
 
         @if (string.IsNullOrEmpty(picked))
         {
@@ -134,12 +141,60 @@
 
             </MudForm>
         }
-        <h6 style="text-decoration: underline; text-align:center; margin-top:20px">Number of Quetions in Quiz: @_numberOfQuestionsInQuiz</h6>
+        else if (picked == "Word Cloud")
+        {
+            <MudForm @ref="_questionForm" OnValidSubmit="SaveQuestion">
+                <MudTextField @bind-Value="_questionText"
+                              Label="Question"
+                              Variant="Variant.Filled"
+                              Required="true"/>
+                
+                <MudNumericField @bind-Value="_maxEntries"
+                                 Label="Max entries"
+                                 Variant="Variant.Filled"
+                                 Min="1"
+                                 Max="10"
+                                 Required="true"/>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
+            </MudForm>
+        }
+        else if (picked == "Review")
+        {
+            <MudForm @ref="_questionForm" OnValidSubmit="SaveQuestion">
+                <MudTextField @bind-Value="_questionText"
+                              Label="Question"
+                              Variant="Variant.Filled"
+                              Required="true"
+                              For="@(() => _questionText)"/>
+
+                <MudNumericField @bind-Value="_minValue"
+                                 Variant="Variant.Filled"
+                                 Min="0"
+                                 Max="1000000"
+                                 Label="Minimum value"/>
+                
+                <MudNumericField @bind-Value="_maxValue"
+                                 Variant="Variant.Filled"
+                                 Min="0"
+                                 Max="1000000"
+                                 Label="Maximum value"/>
+
+                <MudNumericField @bind-Value="_questionPoints"
+                                 Label="Points"
+                                 Variant="Variant.Filled"
+                                 Min="0"
+                                 Max="1000"
+                                 For="@(() => _questionPoints)"/>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
+            </MudForm>
+        }
+        <MudText Align="Align.Center" Style="margin-top: 100px; color: rgba(0,0,0,0.4);">Total questions in this quiz: @_numberOfQuestionsInQuiz</MudText>
 
     </Authorized>
     
     <NotAuthorized>
-        <NotAuthorized/>
+        <NotAuthorizedHelper/>
     </NotAuthorized>
 
 </AuthorizeView>
@@ -154,23 +209,31 @@
     private string _questionText { get; set; } = string.Empty;
     private string _correctAnswer { get; set; } = string.Empty;
     private int _questionPoints { get; set; }
-    public List<string> questionTypes = new() { "Open Question", "Slider", "Multiple Picker" };
+    public List<string> questionTypes = new() { "Open Question", "Slider", "Multiple Picker", "Word Cloud", "Review" };
     public string picked { get; set; }
     private int _minValue;
     private int _maxValue;
     private int _correctValue;
     private int _numberOfOptions = 0;
+    private int _maxEntries;
     private List<MultipleOptions> _multipleOptions = new();
     private int _numberOfQuestionsInQuiz;
+    private IDbContextFactory<ApplicationDbContext> _factory;
+
+    public CreateQuestion(IDbContextFactory<ApplicationDbContext> dbContext)
+    {
+        _factory = dbContext;
+    }
 
     protected override async Task OnInitializedAsync()
     {
         _numberOfQuestionsInQuiz = await QuestionManager.GetNumberOfQuestionInQuizAsync(QuizId);
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task SaveQuestion()
     {
+        using var context = await _factory.CreateDbContextAsync();
         await _questionForm.Validate();
         if (picked == "Slider" && _minValue > _maxValue)
         {
@@ -203,18 +266,26 @@
             }
             await QuestionManager.CreateMultipleChoiceQuestion(QuizId, _questionPoints, _questionText, _multipleOptions);
         }
+        else if (picked == "Word Cloud")
+        {
+            await QuestionManager.CreateWordCloudQuestion(QuizId, _questionText, _maxEntries);
+        }
+        else if (picked == "Review")
+        {
+            await QuestionManager.CreateReviewQuestion(QuizId, _questionText, _minValue, _maxValue, _questionPoints);
+        }
 
         try
         {
-            await _dbcontext.SaveChangesAsync();
+            await context.SaveChangesAsync();
         }
         catch (Exception ex)
         {
             Console.WriteLine($"An error occurred while saving the question: {ex.Message}");
         }
         picked = "";
-        StateHasChanged();
-
+        _numberOfQuestionsInQuiz = await QuestionManager.GetNumberOfQuestionInQuizAsync(QuizId);
+        await InvokeAsync(StateHasChanged);
     }
 
     private void UpdateMultipleOptions()

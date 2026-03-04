@@ -29,7 +29,7 @@ builder.Services.AddAuthentication(options =>
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
                        throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -55,6 +55,7 @@ builder.Services.AddScoped<ILobbyHubService, LobbyHubService>();
 builder.Services.AddScoped<IQuizManager, QuizManager>();
 builder.Services.AddScoped<IQuestionScoringService, QuestionScoringService>();
 builder.Services.AddScoped<IChatHubConnection, ChatHubConnection>();
+builder.Services.AddScoped<IQRCodeService, QRCodeService>();
 
 var app = builder.Build();
 

@@ -6,27 +6,40 @@
 @using System.Text.Json
 @using LBQuiz.Models.Helpers.AnswerDTO
 @using Microsoft.AspNetCore.Components.Web
-@inject ApplicationDbContext DbContext
+
 @inject IQuestionManager QuestionManager
 @inject ILobbyHubService LobbyHub
 @inject ILobbyParticipantManager LobbyManager
 @inject ILobbyHubConnection HubConnection
 @inject ISnackbar Snackbar
 @inject IChatHubConnection ChatHubConnection
+@inject IJSRuntime JS
 @inject IQuizManager QuizManager
+@inject ILobbyService LobbyService
 @inject NavigationManager Navigation
 
 
-@page "/quiz/play/{quizId}/{lobbyId}"
+@page "/quiz/play/{LobbyCode}"
 
 <h3>PlayQuiz</h3>
 
 @if (_showResults == false)
 {
+    @if (CurrentQuestion2 != null)
+    {
+        <div class="d-flex justify-space-between align-center mb-3">
+            <MudChip T="string" Color="Color.Primary" Size="Size.Small">
+                Question @(CurrentQuestion2.SortOrder) / @AllQuestions.Count
+            </MudChip>
+        </div>
+        <MudProgressLinear Value="@((CurrentQuestion2.SortOrder) * 100.0 / AllQuestions.Count)" Color="Color.Primary" Class="mb-6" Rounded="true" Size="Size.Small" />
+
+    }
+    <div class="d-flex flex-column align-center justify-center flex-grow-1" style="width: 100%;">
     @if(CurrentQuestion2 != null && CurrentQuestion2 is QuestionOpen questionOpen)
     {
         <MudItem xs="12" md="4">
-            <MudPaper Class="pa-4" Style="height: 250px">
+            <MudPaper Class="pa-4" Style="height: auto">
                 <MudText Typo="Typo.h2" Class="mb-3">@questionOpen.QuestionText</MudText>
                 <MudTextField @bind-Value="Answer" Label="Answer" Variant="Variant.Filled"></MudTextField>
                 <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SaveAnswer(Answer))">Submit answer</MudButton>
@@ -36,7 +49,7 @@
     else if (CurrentQuestion2 != null && CurrentQuestion2 is QuestionSlider questionSlider)
     {
         <MudItem xs="12" md="4">
-            <MudPaper Class="pa-4" Style="height: 250px">
+            <MudPaper Class="pa-4" Style="height: auto">
                 <MudText Typo="Typo.h2" Class="mb-3">@questionSlider.QuestionText</MudText>
                 <MudSlider @bind-Value="sliderValue" Min="@questionSlider.MinValue" Max="@questionSlider.MaxValue">Value: @sliderValue.ToString()</MudSlider>
                 <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() =>SaveAnswer(sliderValue.ToString()))">Submit answer</MudButton>
@@ -46,10 +59,10 @@
     else if(CurrentQuestion2 != null && CurrentQuestion2 is MultipleChoice questionMultiple)
     {
         <MudItem xs="12" md="4">
-            <MudPaper Class="pa-4" Style="height: 250px; background:linear-gradient(90deg,rgba(0, 200, 0, 0.4) 0%, rgba(200, 0, 0, 0.4) 100%);">
+            <MudPaper Class="pa-4" Style="height: auto; background:linear-gradient(90deg,rgba(0, 200, 0, 0.4) 0%, rgba(200, 0, 0, 0.4) 100%);">
                 <MudText Typo="Typo.h2" Class="mb-3">@questionMultiple.QuestionText</MudText>
                 
-                <MudButton OnClick="() => SubmitMulipleChoice()">Submit answers</MudButton>
+                <MudButton Disabled="answerButtonShow" OnClick="() => SubmitMulipleChoice()">Submit answers</MudButton>
             </MudPaper>
         </MudItem>
         <MudGrid Style="margin-top: 20px;">
@@ -69,15 +82,69 @@
             }
         </MudGrid>
     }
-    @* ChatComponent *@
-    <MudGrid Spacing="2" Style="margin-top: 20px; height:100vh">
-        <MudItem xs="12" md="8">
+    else if (CurrentQuestion2 != null && CurrentQuestion2 is QuestionWordCloud questionWordCloud)
+    {
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Style="height: auto">
+                <MudText Typo="Typo.h2" Class="mb-3">@questionWordCloud.QuestionText</MudText>
+                @for (int i = 0; i < questionWordCloud.MaxEntries; i++)
+                {
+                    var index = i;
+                    <MudTextField @bind-Value="_wordCloudEntries[index]"
+                                  Label="@($"Word {index + 1}")"
+                                  Variant="Variant.Filled"
+                                  Class="mb-2"/>
+                }
+                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitWordCloud">Submit answer</MudButton>
+            </MudPaper>
+        </MudItem>
+    }
+    else if (CurrentQuestion2 != null && CurrentQuestion2 is QuestionReview questionReview)
+    {
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Style="height: auto">
+                <MudText Typo="Typo.h2" Class="mb-3">@questionReview.QuestionText</MudText>
+                <MudSlider @bind-Value="sliderValue" Min="@questionReview.MinValue" Max="@questionReview.MaxValue">Value: @sliderValue.ToString()</MudSlider>
+                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SaveAnswer(sliderValue.ToString()))">Submit answer</MudButton>
+            </MudPaper>
+        </MudItem>
+    }
+    </div>
+    @if (!_chatOpen)
+    {
+        <div style="position:fixed; bottom:20px; right:20px; z-index:2000;">
+            <MudBadge Content="@_unreadChatCount" Color="Color.Error" Overlap="true" Visible="@(_unreadChatCount > 0)">
+                <MudFab Icon="@Icons.Material.Filled.Chat"
+                        Label="Chat"
+                        Color="Color.Secondary"
+                        OnClick="@OpenChat" />
+            </MudBadge>
+        </div>
+    }
+    <MudDrawer Anchor="Anchor.Right"
+           Open="_chatOpen"
+           OpenChanged="OnDrawerOpenChanged"
+           Variant="DrawerVariant.Temporary"
+           Elevation="6"
+           Width="400px">
 
-        </MudItem>
-        <MudItem xs="12" md="4" Style="border: 1px solid rgba(255,144,0,0.6); box-shadow: 10px 10px 5px orange inset; background-color: rgba(147,202,237,0.4);">
-            <LBQuiz.Components.Pages.Chat.ChatComponent HostId="@_currentHostId" LobbyId="@lobbyId"></LBQuiz.Components.Pages.Chat.ChatComponent>
-        </MudItem>
-    </MudGrid>
+    <MudDrawerHeader>
+        <MudText Typo="Typo.h6">Chat</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                       OnClick="@(() => _chatOpen = false)" />
+    </MudDrawerHeader>
+
+    <MudDivider />
+
+    <MudDrawerContent>
+
+        <LBQuiz.Components.Pages.Chat.ChatComponent 
+            HostId="@_currentHostId" 
+            LobbyId="@_currentLobby.Id.ToString()" />
+
+    </MudDrawerContent>
+</MudDrawer>
 }
 else
 {
@@ -119,6 +186,8 @@ else
     public string quizId { get; set; }
     [Parameter]
     public string lobbyId { get; set; }
+    [Parameter]
+    public string LobbyCode { get; set; }
 
     public QuestionJsonBlob CurrentQuestion { get; set; }
     public Models.Question CurrentQuestion2 { get; set; }
@@ -135,6 +204,7 @@ else
     private bool _showScoreboard = false;
     private LobbyParticipant? _currentParticipant;
     private int _currentParticipantRank;
+    private List<string> _wordCloudEntries = new();
 
     private List<LobbyParticipant> ParticipantsList { get; set; } = new();
 
@@ -146,16 +216,27 @@ else
 
     public ChatMessage playerMessage { get; set; } = new();
 
+    private bool _chatOpen = false;
+    private int _unreadChatCount = 0;
+
+    private Models.Lobby.QuizLobby _currentLobby = new();
+
 
 
     protected override async Task OnInitializedAsync()
     {
-        int qId = int.Parse(quizId);
+        var lobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+        lobbyId = lobby.Id.ToString();
+        int qId = lobby.QuizId;
         AllQuestions = await QuestionManager.GetAllQuestionJsonBlobAsync(qId);
 
+        await HubConnection.InitializeAsync(Navigation);
         await ChatHubConnection.InitializeAsync(Navigation);
+        await ChatHubConnection.JoinLobbyChatAsync(lobbyId);
 
-        ParticipantsList = LobbyManager.GetLeaderboard(int.Parse(lobbyId));
+        ChatHubConnection.OnMessageRecived += HandleChatMessageReceived;
+
+        ParticipantsList = LobbyManager.GetLeaderboard(lobby.Id);
         HubConnection.OnAnswerRecieved += HandleAnswerReceived;
         HubConnection.OnQuestionChanged += HandleNextQuestion;
         HubConnection.OnResultShow += HandleShowResults;
@@ -165,6 +246,7 @@ else
         CurrentQuestion = AllQuestions[_index];
         //Hämta HostId från quizmanager. GetHostIdFromQuiz metod.
         _currentHostId = await QuizManager.GetHostIdFromQuiz(CurrentQuestion.QuizId);
+        _currentLobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
 
         await GetQuestionType();
 
@@ -183,15 +265,30 @@ else
 
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var nickname = await JS.InvokeAsync<string>("sessionStorage.getItem", "lobbyNickname");
+            if (!string.IsNullOrEmpty(nickname))
+            {
+                var lobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+                await HubConnection.RejoinLobbyAsync(lobby.Id, nickname);
+            }
+        }
+    }
+
     public async Task SaveAnswer(string formattedAnswer)
     {
-        var lobby = int.Parse(lobbyId);
-        var quiz = int.Parse(quizId);
+        var lobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+        int lobbyId = lobby.Id;
+        var quizId = lobby.QuizId;
 
-        await HubConnection.SubmitAnswer(lobby, formattedAnswer, quiz);
+        await HubConnection.SubmitAnswer(lobbyId, formattedAnswer, quizId);
         await HubConnection.UpdateScoreBoard(CurrentQuestion.Id, formattedAnswer);
 
         answerButtonShow = true;
+        Answer = string.Empty;
     }
 
     private Task HandleAnswerReceived(string answer, LobbyParticipant lobbyParticipant)
@@ -204,7 +301,7 @@ else
     {
         answerButtonShow = false;
         _index = questionIndex;
-        CurrentQuestion = AllQuestions[_index];
+        CurrentQuestion = questionIndex < AllQuestions.Count ? AllQuestions[_index] : AllQuestions[_index - 1];
         await GetQuestionType();
         await InvokeAsync(StateHasChanged);
     }
@@ -213,18 +310,14 @@ else
     {
         ParticipantsList = scoreBoard.OrderByDescending(p => p.Score).ToList();
         _showResults = showResults;
-        
+
         // Get current participant using connection ID
         if (HubConnection.ConnectionId != null)
         {
-            try
-            {
-                _currentParticipant = LobbyManager.GetLobbyParticipant(HubConnection.ConnectionId);
-                _currentParticipantRank = ParticipantsList.FindIndex(p => p.ConnectionId == HubConnection.ConnectionId) + 1;
-            }
-            catch { /* Participant not found */ }
+            _currentParticipant = ParticipantsList.FirstOrDefault(p => p.ConnectionId == HubConnection.ConnectionId);
+            _currentParticipantRank = ParticipantsList.FindIndex(p => p.ConnectionId == HubConnection.ConnectionId) + 1;
         }
-        
+
         await InvokeAsync(StateHasChanged);
     }
     private async Task GetQuestionType()
@@ -244,7 +337,8 @@ else
             }
             else if (questionType == "Multiple")
             {
-                int so = await QuestionManager.GetSortOrderAsync(int.Parse(quizId));
+                var lobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+                int so = await QuestionManager.GetSortOrderAsync(lobby.QuizId);
                 var multiple = JsonSerializer.Deserialize<MultipleChoiceQuestionDTO>(CurrentQuestion.Blob);
                 CurrentQuestion2 = new MultipleChoice
                     {
@@ -256,6 +350,36 @@ else
                         MultipleOptionsList = multiple.MultipleOptionsList
                     };
             }
+            else if (questionType == "WordCloud")
+            {
+                var dto = JsonSerializer.Deserialize<WordCloudQuestionDTO>(CurrentQuestion.Blob);
+                var wc = new QuestionWordCloud
+                {
+                    Id = CurrentQuestion.Id,
+                    QuizId = CurrentQuestion.QuizId,
+                    QuestionText = CurrentQuestion.QuestionText,
+                    SortOrder = CurrentQuestion.SortOrder,
+                    Points = dto.Points,
+                    MaxEntries = dto.MaxEntries
+                };
+                CurrentQuestion2 = wc;
+                _wordCloudEntries = new List<string>(new string[wc.MaxEntries]);
+            }
+            else if (questionType == "Review")
+            {
+                var dto = JsonSerializer.Deserialize<ReviewQuestionDTO>(CurrentQuestion.Blob);
+                var review = new QuestionReview
+                {
+                    Id = CurrentQuestion.Id,
+                    QuizId = CurrentQuestion.QuizId,
+                    QuestionText = CurrentQuestion.QuestionText,
+                    SortOrder = CurrentQuestion.SortOrder,
+                    Points = dto.Points,
+                    MinValue = dto.MinValue,
+                    MaxValue = dto.MaxValue
+                };
+                CurrentQuestion2 = review;
+            }
         }
         catch (Exception ex)
         {
@@ -265,7 +389,15 @@ else
 
     private async Task SubmitMulipleChoice()
     {
+        answerButtonShow = true;
         var formattedAnswer = JsonSerializer.Serialize(SelectedOptionIds.ToList());
+        await SaveAnswer(formattedAnswer);
+    }
+
+    private async Task SubmitWordCloud()
+    {
+        var words = _wordCloudEntries.Where(w => !string.IsNullOrWhiteSpace(w)).ToList();
+        var formattedAnswer = JsonSerializer.Serialize(words);
         await SaveAnswer(formattedAnswer);
     }
     
@@ -316,6 +448,24 @@ else
         if(e.Key == "Enter")
         {
             await OnHandleChatSend();
+        }
+    }
+    private void OpenChat()
+    {
+        _chatOpen = true;
+        _unreadChatCount = 0;
+    }
+    private void OnDrawerOpenChanged(bool isOpen)
+    {
+        _chatOpen = isOpen;
+    }
+
+    private async Task HandleChatMessageReceived(ChatMessage message)
+    {
+        if (!_chatOpen)
+        {
+            _unreadChatCount++;
+            await InvokeAsync(StateHasChanged);
         }
     }
 }
