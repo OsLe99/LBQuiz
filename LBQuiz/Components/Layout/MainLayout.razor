@@ -67,8 +67,8 @@
             <MudNavLink Href="/AboutUs" Icon="@Icons.Material.Outlined.Info" Disabled="false">About Us</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
-    <div class="page-wrapper">
-        <div class="aurora-main-bg" ></div>
+    <div class="page-wrapper @(_isDarkMode ? "dark" : "")">
+        <div class="aurora-main-bg"></div>
         <div class="page-content">
     <MudMainContent>
         @Body
