@@ -145,8 +145,25 @@ h1:focus {
     background-image:
     /* Grid */
     linear-gradient(rgba(226,232,240,0.9) 1px, transparent 1px), linear-gradient(90deg, rgba(226,232,240,0.9) 1px, transparent 1px),
-    /* Spotlight längst bak */
+    /* Spotlight lï¿½ngst bak */
     radial-gradient( circle at 50% 30%, #ffffff 0%, #f8fafc 35%, #e2e8f0 70%, #cbd5e1 100% );
     background-size: 40px 40px, 40px 40px, cover;
     background-position: 0 0, 0 0, center;
+}
+
+.page-wrapper.dark {
+    margin: 0;
+    min-height: 100vh;
+    background-color: #1E1E1E; /* mï¿½rk bakgrund istï¿½llet fï¿½r ljus */
+    background-image:
+    /* Grid */
+    linear-gradient(rgba(55,65,81,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(55,65,81,0.5) 1px, transparent 1px),
+    /* Spotlight lï¿½ngst bak */
+    radial-gradient(circle at 50% 30%, #374151 0%, #1f2937 35%, #111827 70%, #0f172a 100%);
+    background-size: 40px 40px, 40px 40px, cover;
+    background-position: 0 0, 0 0, center;
+}
+
+.page-wrapper.dark .pen-image {
+    filter: invert(1);
 }

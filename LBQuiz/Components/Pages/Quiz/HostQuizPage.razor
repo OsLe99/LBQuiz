@@ -580,7 +580,6 @@ else // Questions
         _animationClass = "";
         await InvokeAsync(StateHasChanged);
     }
-
     private async Task HandleChatMessageReceived(ChatMessage message)
     {
         if (!_chatOpen)
@@ -589,16 +588,13 @@ else // Questions
             await InvokeAsync(StateHasChanged);
         }
     }
-
     private void OpenChat()
     {
         _chatOpen = true;
         _unreadChatCount = 0;
     }
-
     private void OnDrawerOpenChanged(bool isOpen)
     {
         _chatOpen = isOpen;
     }
-
 }
