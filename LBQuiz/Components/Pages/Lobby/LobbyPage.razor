@@ -130,7 +130,8 @@ else
 
         try
         {
-            CurrentLobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+            QuizLobby quizLobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
+            CurrentLobby = quizLobby;
             CurrentQuiz = await QuizManager.GetQuizFromQuizId(CurrentLobby.QuizId);
             // CurrentQuiz = await DbContext.Quiz.Where(q => q.Id == CurrentLobby.QuizId).FirstOrDefaultAsync();
         }

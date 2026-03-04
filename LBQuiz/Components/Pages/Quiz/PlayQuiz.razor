@@ -17,6 +17,7 @@
 @inject IQuizManager QuizManager
 @inject ILobbyService LobbyService
 @inject NavigationManager Navigation
+@inject IChatHubConnection ChatHubConnection
 
 
 @page "/quiz/play/{LobbyCode}"
@@ -25,6 +26,17 @@
 
 @if (_showResults == false)
 {
+    @if (CurrentQuestion2 != null)
+    {
+        <div class="d-flex justify-space-between align-center mb-3">
+            <MudChip T="string" Color="Color.Primary" Size="Size.Small">
+                Question @(CurrentQuestion2.SortOrder) / @AllQuestions.Count
+            </MudChip>
+        </div>
+        <MudProgressLinear Value="@((CurrentQuestion2.SortOrder) * 100.0 / AllQuestions.Count)" Color="Color.Primary" Class="mb-6" Rounded="true" Size="Size.Small" />
+
+    }
+    <div class="d-flex flex-column align-center justify-center flex-grow-1" style="width: 100%;">
     @if(CurrentQuestion2 != null && CurrentQuestion2 is QuestionOpen questionOpen)
     {
         <MudItem xs="12" md="4">
@@ -98,15 +110,42 @@
             </MudPaper>
         </MudItem>
     }
-    @* ChatComponent *@
-    <MudGrid Spacing="2" Style="margin-top: 20px; height:100vh">
-        <MudItem xs="12" md="8">
+    </div>
+    @if (!_chatOpen)
+    {
+        <div style="position:fixed; bottom:20px; right:20px; z-index:2000;">
+            <MudBadge Content="@_unreadChatCount" Color="Color.Error" Overlap="true" Visible="@(_unreadChatCount > 0)">
+                <MudFab Icon="@Icons.Material.Filled.Chat"
+                        Label="Chat"
+                        Color="Color.Secondary"
+                        OnClick="@OpenChat" />
+            </MudBadge>
+        </div>
+    }
+    <MudDrawer Anchor="Anchor.Right"
+           Open="_chatOpen"
+           OpenChanged="OnDrawerOpenChanged"
+           Variant="DrawerVariant.Temporary"
+           Elevation="6"
+           Width="400px">
 
-        </MudItem>
-        <MudItem xs="12" md="4" Style="border: 1px solid rgba(255,144,0,0.6); box-shadow: 10px 10px 5px orange inset; background-color: rgba(147,202,237,0.4);">
-            <LBQuiz.Components.Pages.Chat.ChatComponent HostId="@_currentHostId" LobbyId="@lobbyId"></LBQuiz.Components.Pages.Chat.ChatComponent>
-        </MudItem>
-    </MudGrid>
+    <MudDrawerHeader>
+        <MudText Typo="Typo.h6">Chat</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                       OnClick="@(() => _chatOpen = false)" />
+    </MudDrawerHeader>
+
+    <MudDivider />
+
+    <MudDrawerContent>
+
+        <LBQuiz.Components.Pages.Chat.ChatComponent 
+            HostId="@_currentHostId" 
+            LobbyId="@_currentLobby.Id.ToString()" />
+
+    </MudDrawerContent>
+</MudDrawer>
 }
 else
 {
@@ -178,6 +217,11 @@ else
 
     public ChatMessage playerMessage { get; set; } = new();
 
+    private bool _chatOpen = false;
+    private int _unreadChatCount = 0;
+
+    private Models.Lobby.QuizLobby _currentLobby = new();
+
 
 
     protected override async Task OnInitializedAsync()
@@ -191,6 +235,8 @@ else
         await ChatHubConnection.InitializeAsync(Navigation);
         await ChatHubConnection.JoinLobbyChatAsync(lobbyId);
 
+        ChatHubConnection.OnMessageRecived += HandleChatMessageReceived;
+
         ParticipantsList = LobbyManager.GetLeaderboard(lobby.Id);
         HubConnection.OnAnswerRecieved += HandleAnswerReceived;
         HubConnection.OnQuestionChanged += HandleNextQuestion;
@@ -201,6 +247,7 @@ else
         CurrentQuestion = AllQuestions[_index];
         //Hämta HostId från quizmanager. GetHostIdFromQuiz metod.
         _currentHostId = await QuizManager.GetHostIdFromQuiz(CurrentQuestion.QuizId);
+        _currentLobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
 
         await GetQuestionType();
 
@@ -255,7 +302,7 @@ else
     {
         answerButtonShow = false;
         _index = questionIndex;
-        CurrentQuestion = AllQuestions[_index];
+        CurrentQuestion = questionIndex < AllQuestions.Count ? AllQuestions[_index] : AllQuestions[_index - 1];
         await GetQuestionType();
         await InvokeAsync(StateHasChanged);
     }
@@ -402,6 +449,24 @@ else
         if(e.Key == "Enter")
         {
             await OnHandleChatSend();
+        }
+    }
+    private void OpenChat()
+    {
+        _chatOpen = true;
+        _unreadChatCount = 0;
+    }
+    private void OnDrawerOpenChanged(bool isOpen)
+    {
+        _chatOpen = isOpen;
+    }
+
+    private async Task HandleChatMessageReceived(ChatMessage message)
+    {
+        if (!_chatOpen)
+        {
+            _unreadChatCount++;
+            await InvokeAsync(StateHasChanged);
         }
     }
 }

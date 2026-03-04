@@ -1,0 +1,110 @@
+﻿@page "/AboutUs"
+
+<MudContainer>
+    <!-- HERO SECTION -->
+    <MudPaper Elevation="3" Class="pa-8 text-center rounded-lg">
+        <MudText Typo="Typo.h3" Class="mb-2">
+            About LBQuiz
+        </MudText>
+        <MudText Typo="Typo.subtitle1" Color="Color.Secondary">
+            Making learning stick through repetition and reflection
+        </MudText>
+    </MudPaper>
+
+    <!-- ABOUT SECTION -->
+    <MudGrid Class="mt-8">
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-6 mt-6  rounded-lg">
+                <MudText Typo="Typo.h5" Class="mb-3">
+                    Our Story
+                </MudText>
+                <MudText Typo="Typo.body1">
+                    We are two .NET students, Emil Berg and Oscar Lejon, with a strong passion for building meaningful web applications. LBQuiz was created during our internship at Consid, where we finally had the opportunity to bring our idea to life.
+                </MudText>
+                <MudText Typo="Typo.body1" Class="mt-3">
+                    As students ourselves, we noticed that many learners move on from a lecture without taking time to reflect on what they just learned. Research shows that repetition and active recall are key to transferring knowledge from short-term memory to long-term memory. We wanted to make that process simple and accessible for teachers.
+                </MudText>
+                <MudText Typo="Typo.body1">
+                    LBQuiz is a web application that allows teachers to easily create short quizzes for students to complete after a lecture. The platform also includes review features where students can share feedback using rating scales or word clouds, helping teachers improve their teaching while reinforcing student learning.
+                </MudText>
+                <MudText Typo="Typo.body1">
+                    Our goal is to make learning more effective through immediate repetition and reflection — while also providing valuable insights for educators.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudImage Src="images/background/penbg.png" Class="w-100 h-100 rounded-lg" Style="object-fit: cover;"></MudImage>
+        </MudItem>
+        
+    </MudGrid>
+    <!-- VISION SECTION -->
+    <MudPaper Class="pa-6 mt-6 rounded-lg">
+        <MudText Typo="Typo.h5" Class="mb-3">
+            Our Vision
+        </MudText>
+
+        <MudText Typo="Typo.body1">
+            We believe more schools should integrate short, structured repetition into their teaching. Our vision is to create a simple, intuitive, and powerful tool that supports better learning outcomes.
+        </MudText>
+        <MudText Typo="Typo.body1">
+            We are continuously improving LBQuiz and are always open to feedback — whether it’s about new features, design improvements, or ideas that can make the platform even better. You can find our contact information in the footer.
+        </MudText>
+    </MudPaper>
+    <!-- TEAM SECTION -->
+    <MudGrid Class="mt-8">
+        <MudItem xs="12">
+            <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-6">
+                Meet the Team
+            </MudText>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudCard Class="pa-4 rounded-lg">
+                <MudAvatar Size="Size.Large" Class="mb-3">
+                    <MudImage Src="https://github.com/emil94berg.png"></MudImage>
+                </MudAvatar>
+                <MudText Typo="Typo.h6">Emil Berg</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    .NET Developer & Co-Founder
+                </MudText>
+                <MudStack Row="true" Justify="Justify.FlexStart">
+                    <MudIconButton Icon="@Icons.Custom.Brands.GitHub"
+                                   Href="https://github.com/emil94berg"
+                                   Target="_blank"
+                                   Color="Color.Default" />
+                    <MudIconButton Icon="@Icons.Custom.Brands.LinkedIn"
+                                   Href="https://www.linkedin.com/in/emil-berg-017b16351/"
+                                   Target="_blank"
+                                   Color="Color.Default" />
+                </MudStack>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudCard Class="pa-4  rounded-lg">
+                <MudAvatar Size="Size.Large" Class="mb-3">
+                    <MudImage Src="https://github.com/OsLe99.png"></MudImage>
+                </MudAvatar>
+                <MudText Typo="Typo.h6">Oscar Lejon</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    .NET Developer & Co-Founder
+                </MudText>
+                <MudStack Row="true" Justify="Justify.FlexStart">
+                    <MudIconButton Icon="@Icons.Custom.Brands.GitHub"
+                                   Href="https://github.com/OsLe99"
+                                   Target="_blank"
+                                   Color="Color.Default" />
+                    <MudIconButton Icon="@Icons.Custom.Brands.LinkedIn"
+                                   Href="https://www.linkedin.com/in/oscar-lejon-92067b34b/"
+                                   Target="_blank"
+                                   Color="Color.Default" />
+
+                </MudStack>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+
+}
