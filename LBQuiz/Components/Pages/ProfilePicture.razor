@@ -1,0 +1,60 @@
+﻿@inject ApplicationDbContext dbContext
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthStateProvider
+@using LBQuiz.Data
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@page "/profile-picture"
+
+
+<h3>ProfilePicture</h3>
+@if(_imageUrl != null)
+{
+    <MudImage Src="@_imageUrl" Width="200"></MudImage>
+}
+
+<InputFile OnChange="UploadImage" />
+
+
+@code {
+    private string _imageUrl;
+    private string _currentUserId;
+
+    private async Task UploadImage(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.Name);
+
+        var path = Path.Combine("wwwroot/images/profile", fileName);
+
+        await using FileStream fs = new(path, FileMode.Create);
+
+        await file.OpenReadStream(5 * 1024 * 1024).CopyToAsync(fs);
+
+        _imageUrl = "/images/profile/" + fileName;
+
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated != true)
+            return;
+
+        _currentUserId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        var userToUpdate = await UserManager.FindByIdAsync(_currentUserId);
+
+        if (userToUpdate != null)
+        {
+            userToUpdate.ProfilePicture = _imageUrl;
+
+            var result = await UserManager.UpdateAsync(userToUpdate);
+
+            if (!result.Succeeded)
+            {
+                Console.WriteLine("Update failed");
+            }
+        }
+    }
+}
