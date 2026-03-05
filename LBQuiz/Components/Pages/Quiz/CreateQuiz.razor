@@ -1,60 +1,67 @@
 ﻿@page "/Quiz/Create"
 @using Data
-@using Microsoft.AspNetCore.Components.Authorization
-@inject AuthenticationStateProvider AuthStateProvider
-@inject NavigationManager NavigationManager
-@inject IDbContextFactory<ApplicationDbContext> ContextFactory
-@using Microsoft.AspNetCore.Components
-@using System.Globalization;
 @using LBQuiz.Components.Helpers
 @using Microsoft.EntityFrameworkCore
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
 
 <AuthorizeView>
     <Authorized>
-        <MudGrid Class="mt-8" Justify="Justify.Center">
-            <MudItem xs="12" md="8">
-                <MudPaper Class="pa-6 mt-6 rounded-lg">
-                    <div class="createBar">
-                        <MudText Align="Align.Center" Typo="Typo.h5">
-                            Create a new quiz
-                            <MudIcon Icon="@Icons.Material.Filled.BorderColor"></MudIcon>
-                        </MudText>
-                    </div>
-                    <MudTextField @bind-Value="_quizName" Label="Quiz Name" Variant="Variant.Filled" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"></MudTextField>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+            <div class="createBar">
+                <MudText Align="Align.Center" Typo="Typo.h5">
+                    Create a New Quiz
+                    <MudIcon Icon="@Icons.Material.Filled.BorderColor" />
+                </MudText>
+            </div>
+
+            <MudPaper Class="pa-8 mt-4" Style="text-align: center; max-width: 500px; margin: 0 auto;">
+                <MudStack Spacing="4">
+                    <MudIcon Icon="@Icons.Material.Filled.Quiz" Style="font-size: 3rem;"/>
+                    <MudText Typo="Typo.h6">Give your quiz a name and description to get started.</MudText>
+
+                    <MudTextField @bind-Value="_quizName"
+                                  Label="Quiz Name"
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"
+                                  Class="mt-4" />
+
                     <MudTextField @bind-Value="_quizDescription"
-                        Label="Quiz Description" Variant="Variant.Filled"
-                        Adornment="Adornment.Start"
-                        AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"
-                        Lines="3"
-                        AutoGrow="true"
-                    ></MudTextField>
+                                  Label="Quiz Description"
+                                  Variant="Variant.Outlined"
+                                  Lines="3"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Description" />
 
-
-                    @if (_quizSaved == false)
+                    @if (!_quizSaved)
                     {
-                        <MudButton Variant="Variant.Filled" OnClick="SaveQuizToDatabase">Save Quiz</MudButton>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Large"
+                                   FullWidth="true"
+                                   StartIcon="@Icons.Material.Filled.Save"
+                                   OnClick="SaveQuizToDatabase"
+                                   Class="mt-4">
+                            Save Quiz
+                        </MudButton>
                     }
                     else
                     {
-                        <MudText Typo="Typo.h4">Your quiz was saved successfully <MudIcon Icon="@Icons.Material.Filled.GppGood" Color="Color.Success"></MudIcon></MudText>
+                        <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="mt-4">
+                            Your quiz was saved successfully!
+                        </MudAlert>
                     }
-                </MudPaper>
-            </MudItem>
-        </MudGrid>
+                </MudStack>
+            </MudPaper>
+        </MudContainer>
     </Authorized>
 
     <NotAuthorized>
-        <NotAuthorizedHelper/>
+        <NotAuthorizedHelper />
     </NotAuthorized>
-
-</AuthorizeView>
-
     
-
-
-
-
-
+</AuthorizeView>
 
 @code {
     private string _quizTypeValue { get; set; }
