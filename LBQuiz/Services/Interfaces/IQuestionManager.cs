@@ -24,6 +24,6 @@ namespace LBQuiz.Services.Interfaces
         Task DeleteQuestionAsync(QuestionJsonBlob question);
         Task<bool> ReturnBoolOnAnswer(QuestionJsonBlob question, string answer);
         Task<int> ReturnMaxIndexForQuestion(int quizId);
-
+        Task<List<QuizQuestionPreview>> GetQuestionPreviewAsync(int quizId);
     }
 }
