@@ -1,0 +1,114 @@
+﻿@inject ApplicationDbContext dbContext
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthStateProvider
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> userManager
+@using LBQuiz.Data
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@page "/profile-picture"
+
+
+<h3 style="text-align: center;">Profile picture</h3>
+<AuthorizeView>
+    <Authorized>
+        <MudGrid Class="mt-8" Justify="Justify.Center">
+            <MudItem xs="12" md="8">
+                <MudPaper Class="pa-6 mt-6 rounded-lg">
+                    @if (!string.IsNullOrEmpty(_imageUrl))
+                    {
+                        <MudImage Src="@_imageUrl" Width="200" Elevation="25" Class="rounded-lg ma-4"></MudImage>
+                        <br />
+
+                        <br />
+                    }
+                    <InputFile OnChange="UploadImage" />
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </Authorized>
+    <NotAuthorized>
+        <LBQuiz.Components.Helpers.NotAuthorizedHelper></LBQuiz.Components.Helpers.NotAuthorizedHelper>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+
+@code {
+    private string? _imageUrl;
+    private string? _currentUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if(user != null)
+        {
+            var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var currentUser = await userManager.GetUserAsync(user);
+            if(currentUser != null)
+            {
+                _imageUrl = currentUser.ProfilePicture;
+            }
+        }
+    }
+
+    private async Task UploadImage(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+
+      
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated != true)
+            return;
+
+        _currentUserId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (_currentUserId == null) return;
+
+        var userToUpdate = await UserManager.FindByIdAsync(_currentUserId);
+        if (userToUpdate == null) return;
+
+        
+        if (!string.IsNullOrEmpty(userToUpdate.ProfilePicture))
+        {
+            var oldFilePath = Path.Combine("wwwroot", userToUpdate.ProfilePicture.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+            if (File.Exists(oldFilePath))
+            {
+                try
+                {
+                    File.Delete(oldFilePath);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Kunde inte ta bort gammal bild: {ex.Message}");
+                }
+            }
+        }
+
+        
+        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.Name);
+        var savePath = Path.Combine("wwwroot", "images", "profile", fileName);
+
+        Directory.CreateDirectory(Path.GetDirectoryName(savePath)!); // Säkerställ att mappen finns
+
+        await using var fs = new FileStream(savePath, FileMode.Create);
+        await file.OpenReadStream(5 * 1024 * 1024).CopyToAsync(fs);
+
+        _imageUrl = $"/images/profile/{fileName}";
+
+       
+        userToUpdate.ProfilePicture = _imageUrl;
+        var result = await UserManager.UpdateAsync(userToUpdate);
+
+        if (!result.Succeeded)
+        {
+            Console.WriteLine("Update failed");
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+}
