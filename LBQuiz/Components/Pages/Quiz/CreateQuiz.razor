@@ -4,8 +4,6 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager NavigationManager
 @inject IDbContextFactory<ApplicationDbContext> ContextFactory
-
-
 @using Microsoft.AspNetCore.Components
 @using System.Globalization;
 @using LBQuiz.Components.Helpers
@@ -13,24 +11,36 @@
 
 <AuthorizeView>
     <Authorized>
-        <div class="createBar">
-            <MudText Align="Align.Center" Typo="Typo.h5">
-                Create a new quiz
-                <MudIcon Icon="@Icons.Material.Filled.BorderColor"></MudIcon>
-            </MudText>
-        </div>
-        <MudTextField @bind-Value="_quizName" Label="Quiz Name" Variant="Variant.Filled" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"></MudTextField>
-        <MudTextField @bind-Value="_quizDescription" Label="Quiz Description" Variant="Variant.Filled" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"></MudTextField>
+        <MudGrid Class="mt-8" Justify="Justify.Center">
+            <MudItem xs="12" md="8">
+                <MudPaper Class="pa-6 mt-6 rounded-lg">
+                    <div class="createBar">
+                        <MudText Align="Align.Center" Typo="Typo.h5">
+                            Create a new quiz
+                            <MudIcon Icon="@Icons.Material.Filled.BorderColor"></MudIcon>
+                        </MudText>
+                    </div>
+                    <MudTextField @bind-Value="_quizName" Label="Quiz Name" Variant="Variant.Filled" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"></MudTextField>
+                    <MudTextField @bind-Value="_quizDescription"
+                        Label="Quiz Description" Variant="Variant.Filled"
+                        Adornment="Adornment.Start"
+                        AdornmentIcon="@Icons.Material.Filled.DriveFileRenameOutline"
+                        Lines="3"
+                        AutoGrow="true"
+                    ></MudTextField>
 
-       
-        @if (_quizSaved == false)
-        {
-            <MudButton Variant="Variant.Filled" OnClick="SaveQuizToDatabase">Save Quiz</MudButton>
-        }
-        else
-        {
-            <MudText Typo="Typo.h4">Your quiz was saved successfully <MudIcon Icon="@Icons.Material.Filled.GppGood" Color="Color.Success"></MudIcon></MudText>
-        }
+
+                    @if (_quizSaved == false)
+                    {
+                        <MudButton Variant="Variant.Filled" OnClick="SaveQuizToDatabase">Save Quiz</MudButton>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.h4">Your quiz was saved successfully <MudIcon Icon="@Icons.Material.Filled.GppGood" Color="Color.Success"></MudIcon></MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
     </Authorized>
 
     <NotAuthorized>
