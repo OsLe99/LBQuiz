@@ -3,6 +3,7 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject UserManager<ApplicationUser> userManager
+@inject NavigationManager NavigationManager
 @using LBQuiz.Data
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Identity
@@ -59,7 +60,7 @@
         var file = e.File;
         if (file == null) return;
 
-      
+
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
@@ -72,7 +73,7 @@
         var userToUpdate = await UserManager.FindByIdAsync(_currentUserId);
         if (userToUpdate == null) return;
 
-        
+
         if (!string.IsNullOrEmpty(userToUpdate.ProfilePicture))
         {
             var oldFilePath = Path.Combine("wwwroot", userToUpdate.ProfilePicture.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
@@ -89,7 +90,7 @@
             }
         }
 
-        
+
         var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.Name);
         var savePath = Path.Combine("wwwroot", "images", "profile", fileName);
 
@@ -100,7 +101,7 @@
 
         _imageUrl = $"/images/profile/{fileName}";
 
-       
+
         userToUpdate.ProfilePicture = _imageUrl;
         var result = await UserManager.UpdateAsync(userToUpdate);
 
@@ -110,5 +111,6 @@
         }
 
         await InvokeAsync(StateHasChanged);
+        NavigationManager.NavigateTo("/", true);
     }
 }
