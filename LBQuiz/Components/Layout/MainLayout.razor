@@ -136,6 +136,7 @@
         var darkModeValue = await localStorage.GetLocalStorage("darkmode");
         _isDarkMode = darkModeValue == "True";
 
+        Navigation.LocationChanged += OnLocationChanged;
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
@@ -160,28 +161,18 @@
             await InvokeAsync(StateHasChanged);
         }
     }
-    // protected override async Task OnAfterRenderAsync(bool firstRender)
-    // {
-    //     if (firstRender)
-    //     {
-    //         string darkModeValue = await localStorage.GetLocalStorage("darkmode");
-    //         if (darkModeValue == "True")
-    //         {
-    //             _isDarkMode = true;
-    //             await InvokeAsync(StateHasChanged);
-    //         }
-    //         else
-    //         {
-    //             _isDarkMode = false;
-    //             await InvokeAsync(StateHasChanged);
-    //         } 
-    //     }
-        
-    // }
 
-    public async Task DarkModeLocalStorage()
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        _isDarkMode = !_isDarkMode;
-        await localStorage.SetLocalStorage("darkmode", _isDarkMode.ToString());
+        await InvokeAsync(() =>
+        {
+            _open = false;
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
     }
 }
