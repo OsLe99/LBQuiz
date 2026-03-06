@@ -12,184 +12,182 @@
 
 <AuthorizeView>
     <Authorized>
-        <div class="createBar">
-            <MudText Align="Align.Center" Typo="Typo.h5">
-                Create a new question
-                <MudIcon Icon="@Icons.Material.Filled.QuestionAnswer"></MudIcon>
-            </MudText>
-        </div>
-        
+        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+            <div class="createBar">
+                <MudText Align="Align.Center" Typo="Typo.h5">
+                    Create a new question
+                    <MudIcon Icon="@Icons.Material.Filled.QuestionAnswer"/>
+                </MudText>
+            </div>
 
-        @if (string.IsNullOrEmpty(picked))
-        {
-            <MudSelect T="string" @bind-Value="picked" Label="Select QuestionType" HelperText="String" Placeholder="Please Select" AdornmentColor="Color.Primary" AdornmentIcon="@Icons.Material.Filled.Quiz">
-                @foreach (var qt in questionTypes)
+    <MudGrid Class="mt-4">
+
+        <MudItem xs="12" md="8">
+
+            <MudCard Elevation="2" Class="pa-4">
+
+                <MudText Typo="Typo.h6" Class="mb-2">
+                    Question Settings
+                </MudText>
+
+                <MudSelect T="string"
+                           @bind-Value="picked"
+                           Label="Question Type"
+                           Variant="Variant.Outlined"
+                           AdornmentIcon="@Icons.Material.Filled.Quiz">
+
+                    @foreach (var qt in questionTypes)
+                    {
+                        <MudSelectItem Value="@qt">@qt</MudSelectItem>
+                    }
+
+                </MudSelect>
+
+                <MudDivider Class="my-4"/>
+
+                @if (!string.IsNullOrEmpty(picked))
                 {
-                    <MudSelectItem T="string" Value="@(qt)">@qt</MudSelectItem>
+                    <MudForm @ref="_questionForm">
+
+                        <MudTextField @bind-Value="_questionText"
+                                      Label="Question"
+                                      Variant="Variant.Filled"
+                                      Required="true"/>
+
+                        @if (picked == "Open Question")
+                        {
+                            <MudTextField @bind-Value="_correctAnswer"
+                                          Label="Correct Answer"
+                                          Variant="Variant.Filled"/>
+                        }
+
+                        @if (picked == "Slider")
+                        {
+                            <MudNumericField @bind-Value="_minValue" Label="Min Value"/>
+                            <MudNumericField @bind-Value="_maxValue" Label="Max Value"/>
+                            <MudNumericField @bind-Value="_correctValue" Label="Correct Value"/>
+                        }
+
+                        @if (picked == "Multiple Picker")
+                        {
+                            <MudNumericField
+                                @bind-Value="_numberOfOptions"
+                                Label="Number of options"
+                                @bind-Value:after="UpdateMultipleOptions"/>
+
+                            @for (int i = 0; i < _numberOfOptions; i++)
+                            {
+                                var index = i;
+
+                                <MudStack AlignItems="AlignItems.Center">
+
+                                    <MudTextField @bind-Value="_multipleOptions[index].Text"
+                                                  Label="Option"
+                                                  Variant="Variant.Filled"/>
+
+                                    <MudCheckBox
+                                        @bind-Value="_multipleOptions[index].CorrectFalse"
+                                        Color="Color.Success"/>
+
+                                </MudStack>
+                            }
+                        }
+
+                        @if (picked == "Word Cloud")
+                        {
+                            <MudNumericField
+                                @bind-Value="_maxEntries"
+                                Label="Max entries"/>
+                        }
+
+                        @if (picked == "Review")
+                        {
+                            <MudNumericField @bind-Value="_minValue" Label="Min"/>
+                            <MudNumericField @bind-Value="_maxValue" Label="Max"/>
+                        }
+
+                        <MudNumericField @bind-Value="_questionPoints"
+                                         Label="Points"
+                                         Variant="Variant.Filled"/>
+
+                        <MudButton Class="mt-4"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   OnClick="SaveQuestion"
+                                   StartIcon="@Icons.Material.Filled.Save">
+
+                            Save Question
+
+                        </MudButton>
+
+                    </MudForm>
                 }
 
-            </MudSelect>
-        }
-        else if (picked == "Open Question")
-        {
-            <MudForm @ref="_questionForm" OnValidSubmit="SaveQuestion">
+            </MudCard>
 
-                <MudTextField @bind-Value="_questionText"
-                              Label="Question"
-                              Variant="Variant.Filled"
-                              Required="true"
-                              For="@(() => _questionText)"/>
+        </MudItem>
 
-                <MudTextField @bind-Value="_correctAnswer"
-                              Label="Correct Answer"
-                              Variant="Variant.Filled"
-                              Required="true"
-                              For="@(() => _correctAnswer)"/>
+        <MudItem xs="12" md="4">
 
-                <MudNumericField @bind-Value="_questionPoints"
-                                 Label="Points"
-                                 Variant="Variant.Filled"
-                                 Min="0"
-                                 Max="1000"
-                                 For="@(() => _questionPoints)"/>
+            <MudCard Elevation="2" Class="pa-4">
 
+                <MudText Typo="Typo.h6">
+                    Questions in Quiz
+                </MudText>
 
+                <MudDivider Class="my-2"/>
 
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
-
-            </MudForm>
-        }
-        else if (picked == "Slider")
-        {
-            <MudForm @ref="_questionForm" OnValidSubmit="SaveQuestion">
-
-                <MudTextField @bind-Value="_questionText"
-                              Label="Question"
-                              Variant="Variant.Filled"
-                              Required="true"
-                              For="@(() => _questionText)"/>
-
-                <MudNumericField @bind-Value="_minValue"
-                                 Variant="Variant.Filled"
-                                 Min="0"
-                                 Max="1000000"
-                                 Label="Minimal value">
-                </MudNumericField>
-                <MudNumericField @bind-Value="_maxValue"
-                                 Variant="Variant.Filled"
-                                 Min="0"
-                                 Max="1000000">
-
-                </MudNumericField>
-                <MudNumericField @bind-Value="_correctValue"
-                                 Variant="Variant.Filled"
-                                 Min="_minValue"
-                                 Max="_maxValue"
-                                 Label="Correct Value">
-
-                </MudNumericField>
-
-                <MudNumericField @bind-Value="_questionPoints"
-                                 Label="Points"
-                                 Variant="Variant.Filled"
-                                 Min="0"
-                                 Max="1000"
-                                 For="@(() => _questionPoints)"/>
-
-
-
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
-
-            </MudForm>
-        }
-        else if (picked == "Multiple Picker")
-        {
-            <MudForm @ref="_questionForm" OnValidSubmit="SaveQuestion">
-
-                <MudTextField @bind-Value="_questionText"
-                              Label="Question"
-                              Variant="Variant.Filled"
-                              Required="true"/>
-                <MudNumericField @bind-Value="_questionPoints"
-                                 Label="Points"
-                                 Variant="Variant.Filled">
-                </MudNumericField>
-                <MudNumericField
-                    @bind-Value="_numberOfOptions"
-                    Variant="Variant.Filled"
-                    Min="0"
-                    Max="10"
-                    Label="Number of options"
-                    @bind-Value:after="UpdateMultipleOptions">
-                </MudNumericField>
-                @for (int i = 0; i < _numberOfOptions; i++)
+                @if (_questions.Count == 0)
                 {
-                    var index = i;
-                    <MudTextField @bind-Value="_multipleOptions[index].Text"
-                                  Label="Option"
-                                  Variant="Variant.Filled"
-                                  Required="true"/>
-
-                    <MudCheckBox @bind-Value="_multipleOptions[index].CorrectFalse"
-                                 CheckedIcon="@Icons.Material.Filled.Bookmark"
-                                 Color="Color.Tertiary"
-                                 Label="True/False"/>
-
+                    <MudText Color="Color.Secondary">
+                        No questions yet
+                    </MudText>
+                }
+                else
+                {
+                    <MudStack Spacing="2" Style="width: 100%;">
+                        @foreach (var q in _questions)
+                        {
+                            <MudPaper
+                                Class="pa-3 d-flex flex-column"
+                                Elevation="2"
+                                Style="border-radius: 8px; background: white;">
+                                
+                                <MudStack
+                                    Row="true"
+                                    AlignItems="AlignItems.Center"
+                                    Spacing="2"
+                                    Class="mb-2">
+                                    <MudIcon
+                                        Icon="@GetIcon(q.Type)"
+                                        Size="Size.Large"
+                                        Color="Color.Primary"/>
+                                    <MudText Typo="Typo.body2">
+                                        @GetDisplayName(q.Type)
+                                    </MudText>
+                                </MudStack>
+                                
+                                <MudText Typo="Typo.subtitle1" Class="font-weight-medium">
+                                    @q.QuestionText
+                                </MudText>
+                            </MudPaper>
+                        }
+                    </MudStack>
                 }
 
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
+                <MudDivider Class="my-4"/>
 
-            </MudForm>
-        }
-        else if (picked == "Word Cloud")
-        {
-            <MudForm @ref="_questionForm" OnValidSubmit="SaveQuestion">
-                <MudTextField @bind-Value="_questionText"
-                              Label="Question"
-                              Variant="Variant.Filled"
-                              Required="true"/>
-                
-                <MudNumericField @bind-Value="_maxEntries"
-                                 Label="Max entries"
-                                 Variant="Variant.Filled"
-                                 Min="1"
-                                 Max="10"
-                                 Required="true"/>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
-            </MudForm>
-        }
-        else if (picked == "Review")
-        {
-            <MudForm @ref="_questionForm" OnValidSubmit="SaveQuestion">
-                <MudTextField @bind-Value="_questionText"
-                              Label="Question"
-                              Variant="Variant.Filled"
-                              Required="true"
-                              For="@(() => _questionText)"/>
+                <MudText Typo="Typo.caption">
+                    Total questions: @_numberOfQuestionsInQuiz
+                </MudText>
 
-                <MudNumericField @bind-Value="_minValue"
-                                 Variant="Variant.Filled"
-                                 Min="0"
-                                 Max="1000000"
-                                 Label="Minimum value"/>
-                
-                <MudNumericField @bind-Value="_maxValue"
-                                 Variant="Variant.Filled"
-                                 Min="0"
-                                 Max="1000000"
-                                 Label="Maximum value"/>
+            </MudCard>
 
-                <MudNumericField @bind-Value="_questionPoints"
-                                 Label="Points"
-                                 Variant="Variant.Filled"
-                                 Min="0"
-                                 Max="1000"
-                                 For="@(() => _questionPoints)"/>
+        </MudItem>
 
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="SaveQuestion">Save Question</MudButton>
-            </MudForm>
-        }
-        <MudText Align="Align.Center" Style="margin-top: 100px; color: rgba(0,0,0,0.4);">Total questions in this quiz: @_numberOfQuestionsInQuiz</MudText>
+    </MudGrid>
+
+</MudContainer>
 
     </Authorized>
     
@@ -219,6 +217,7 @@
     private List<MultipleOptions> _multipleOptions = new();
     private int _numberOfQuestionsInQuiz;
     private IDbContextFactory<ApplicationDbContext> _factory;
+    private List<QuizQuestionPreview> _questions = new();
 
     public CreateQuestion(IDbContextFactory<ApplicationDbContext> dbContext)
     {
@@ -227,6 +226,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        _questions = await QuestionManager.GetQuestionPreviewAsync(QuizId);
         _numberOfQuestionsInQuiz = await QuestionManager.GetNumberOfQuestionInQuizAsync(QuizId);
         await InvokeAsync(StateHasChanged);
     }
@@ -285,6 +285,7 @@
         }
         picked = "";
         _numberOfQuestionsInQuiz = await QuestionManager.GetNumberOfQuestionInQuizAsync(QuizId);
+        _questions = await QuestionManager.GetQuestionPreviewAsync(QuizId);
         await InvokeAsync(StateHasChanged);
     }
 
@@ -295,5 +296,28 @@
         .Select(_ => new MultipleOptions()).ToList(); 
     }
 
-    
+    private string GetIcon(string type)
+    {
+        return type switch
+        {
+            "Open" => Icons.Material.Filled.Edit,
+            "Slider" => Icons.Material.Filled.Tune,
+            "Multiple" => Icons.Material.Filled.CheckBox,
+            "WordCloud" => Icons.Material.Filled.Cloud,
+            "Review" => Icons.Material.Filled.Star,
+            _ => Icons.Material.Filled.Help
+        };
+    }
+    private string GetDisplayName(string type)
+    {
+        return type switch
+        {
+            "Open" => "Open Question",
+            "Slider" => "Slider",
+            "Multiple" => "Multiple Choice",
+            "WordCloud" => "Word Cloud",
+            "Review" => "Review",
+            _ => type
+        };
+    }
 }

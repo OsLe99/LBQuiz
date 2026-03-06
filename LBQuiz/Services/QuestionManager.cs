@@ -417,5 +417,19 @@ namespace LBQuiz.Services
             using var context = await _factory.CreateDbContextAsync();
             return context.QuestionJsonBlobs.Where(q => q.QuizId == quizId).ToList().Count;
         }
+
+        public async Task<List<QuizQuestionPreview>> GetQuestionPreviewAsync(int quizId)
+        {
+            await using var context = await _factory.CreateDbContextAsync();
+            
+            return await context.QuestionJsonBlobs
+                .Where(q => q.QuizId == quizId)
+                .Select(q => new QuizQuestionPreview
+                {
+                    Type = q.QuestionType,
+                    QuestionText = q.QuestionText
+                })
+                .ToListAsync();
+        }
     }
 }

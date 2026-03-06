@@ -21,14 +21,29 @@
         </MudGrid>
      </span>
     
-    <MudStack  Row="true" Spacing="2" Class="mb-lg-1" Justify="Justify.FlexStart">
-        <MudButtonGroup Color="Color.Primary" Variant="Variant.Filled">
-            <MudButton OnClick="@(() => OpenJoinDialogueAsync())" Variant="Variant.Filled" Color="Color.Primary">Join a lobby</MudButton>
-            <MudButton Href="/quiz/create" Variant="Variant.Filled" Color="Color.Primary">Create Quiz</MudButton>
-        </MudButtonGroup>
-        @* <MudButton OnClick="@(() => OpenJoinDialogueAsync())" Variant="Variant.Filled" Color="Color.Primary">Join a lobby</MudButton>
-        <MudDivider Vertical="true" FlexItem="true"></MudDivider>
-        <MudButton Href="/quiz/create" Variant="Variant.Filled" Color="Color.Primary">Create Quiz</MudButton> *@
+    <MudStack Row="true"
+              Spacing="3"
+              Justify="Justify.Center"
+              Class="my-6">
+
+        <MudButton OnClick="@(() => OpenJoinDialogueAsync())"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Size="Size.Large"
+                   StartIcon="@Icons.Material.Filled.Login"
+                   Class="px-8 py-3">
+            Join a Lobby
+        </MudButton>
+
+        <MudButton Href="/quiz/create"
+                   Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   Size="Size.Large"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   Class="px-8 py-3">
+            Create Quiz
+        </MudButton>
+
     </MudStack>
     
     <MudPaper Class="pa-4 my-4 rounded-xl text-center" Elevation="2">
@@ -131,7 +146,7 @@
         </MudGrid>
     </MudPaper>
 
-    <MudPaper Class="pa-6 mt-6 rounded-xl" Elevation="0">
+    <MudPaper Class="pa-6 mt-6 rounded-xl" Elevation="2">
         
         <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-4" Style="font-family: 'Fredoka One', cursive;">Frequently Asked Questions</MudText>
         
@@ -156,7 +171,7 @@
     </MudPaper>
     
 </MudContainer>
-  
+<MudDivider Class="mt-3"></MudDivider>
 @code {
     private int _quizCount;
     private int _questionCount;
