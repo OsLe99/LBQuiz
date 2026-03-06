@@ -133,8 +133,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var darkModeValue = await localStorage.GetLocalStorage("darkmode");
-        _isDarkMode = darkModeValue == "True";
+        // var darkModeValue = await localStorage.GetLocalStorage("darkmode");
+        // _isDarkMode = darkModeValue == "True";
 
         Navigation.LocationChanged += OnLocationChanged;
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -161,6 +161,24 @@
             await InvokeAsync(StateHasChanged);
         }
     }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            string darkModeValue = await localStorage.GetLocalStorage("darkmode");
+            if (darkModeValue == "True")
+            {
+                _isDarkMode = true;
+                await InvokeAsync(StateHasChanged);
+            }
+            else
+            {
+                _isDarkMode = false;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+
+    }
 
     private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
@@ -170,7 +188,13 @@
             StateHasChanged();
         });
     }
+    
 
+    public async Task DarkModeLocalStorage()
+    {
+        _isDarkMode = !_isDarkMode;
+        await localStorage.SetLocalStorage("darkmode", _isDarkMode.ToString());
+    }
     public void Dispose()
     {
         Navigation.LocationChanged -= OnLocationChanged;
