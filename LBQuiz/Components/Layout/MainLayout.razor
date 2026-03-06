@@ -133,6 +133,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var darkModeValue = await localStorage.GetLocalStorage("darkmode");
+        _isDarkMode = darkModeValue == "True";
 
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
@@ -142,36 +144,40 @@
         var currentUser = await userManager.GetUserAsync(user);
         if(currentUser != null)
         {
-            var filePath = Path.Combine("wwwroot", currentUser.ProfilePicture.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
-            if (currentUser != null)
+            if (!string.IsNullOrEmpty(currentUser.ProfilePicture))
             {
+                var filePath = Path.Combine("wwwroot", currentUser.ProfilePicture.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                
                 _profilePicture = currentUser.ProfilePicture;
+                
+                if (File.Exists(filePath))
+                {
+                    _profilePicExists = true;
+                }
             }
-            if (File.Exists(filePath))
-            {
-                _profilePicExists = true;
-            }
+            
+            
             await InvokeAsync(StateHasChanged);
         }
     }
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            string darkModeValue = await localStorage.GetLocalStorage("darkmode");
-            if (darkModeValue == "True")
-            {
-                _isDarkMode = true;
-                await InvokeAsync(StateHasChanged);
-            }
-            else
-            {
-                _isDarkMode = false;
-                await InvokeAsync(StateHasChanged);
-            } 
-        }
+    // protected override async Task OnAfterRenderAsync(bool firstRender)
+    // {
+    //     if (firstRender)
+    //     {
+    //         string darkModeValue = await localStorage.GetLocalStorage("darkmode");
+    //         if (darkModeValue == "True")
+    //         {
+    //             _isDarkMode = true;
+    //             await InvokeAsync(StateHasChanged);
+    //         }
+    //         else
+    //         {
+    //             _isDarkMode = false;
+    //             await InvokeAsync(StateHasChanged);
+    //         } 
+    //     }
         
-    }
+    // }
 
     public async Task DarkModeLocalStorage()
     {

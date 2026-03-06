@@ -22,7 +22,6 @@ namespace LBQuiz.Services
             {
                 returnString += await _js.InvokeAsync<string>("localStorage.getItem", key);
             }
-            Console.WriteLine(returnString);
             return returnString;
            
         }
