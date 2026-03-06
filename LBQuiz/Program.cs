@@ -56,6 +56,7 @@ builder.Services.AddScoped<IQuizManager, QuizManager>();
 builder.Services.AddScoped<IQuestionScoringService, QuestionScoringService>();
 builder.Services.AddScoped<IChatHubConnection, ChatHubConnection>();
 builder.Services.AddScoped<IQRCodeService, QRCodeService>();
+builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 
 var app = builder.Build();
 
