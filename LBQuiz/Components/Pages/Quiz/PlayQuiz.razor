@@ -21,8 +21,6 @@
 
 @page "/quiz/play/{LobbyCode}"
 
-<h3>PlayQuiz</h3>
-
 @if (_showResults == false)
 {
     @if (CurrentQuestion2 != null)
@@ -59,13 +57,13 @@
     else if(CurrentQuestion2 != null && CurrentQuestion2 is MultipleChoice questionMultiple)
     {
         <MudItem xs="12" md="4">
-            <MudPaper Class="pa-4" Style="height: auto; background:linear-gradient(90deg,rgba(0, 200, 0, 0.4) 0%, rgba(200, 0, 0, 0.4) 100%);">
+            <MudPaper Class="pa-4" Style="height: auto;">
                 <MudText Typo="Typo.h2" Class="mb-3">@questionMultiple.QuestionText</MudText>
                 
                 <MudButton Disabled="answerButtonShow" OnClick="() => SubmitMulipleChoice()">Submit answers</MudButton>
             </MudPaper>
         </MudItem>
-        <MudGrid Style="margin-top: 20px;">
+        <MudGrid Style="margin-top: 20px;" Justify="Justify.Center">
             @foreach (var option in questionMultiple.MultipleOptionsList)
             {
                 <MudItem xs="12" sm="6" md="4" lg="3">
@@ -346,7 +344,7 @@ else
                         QuizId = CurrentQuestion.QuizId,
                         QuestionText = CurrentQuestion.QuestionText,
                         Points = multiple.Points,
-                        SortOrder = so,
+                        SortOrder = CurrentQuestion.SortOrder,
                         MultipleOptionsList = multiple.MultipleOptionsList
                     };
             }
