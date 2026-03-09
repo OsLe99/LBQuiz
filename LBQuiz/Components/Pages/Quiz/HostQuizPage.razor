@@ -366,6 +366,10 @@ else // Questions
     {
         var lobby = await LobbyService.GetLobbyByJoinCodeAsync(LobbyCode);
         await LobbyHub.GoToNextQuestionAsync(_questionIndex, lobby.Id);
+        if(_questionIndex == AllQuestions.Count - 1)
+        {
+            _resultButton = false;
+        }
         await InvokeAsync(StateHasChanged);
     }
 
