@@ -45,6 +45,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 builder.Services.AddMudServices();
 builder.Services.AddSignalR();
+builder.Services.AddHttpContextAccessor();
 
 // Lobby services
 builder.Services.AddSingleton<ILobbyParticipantManager, LobbyParticipantManager>();

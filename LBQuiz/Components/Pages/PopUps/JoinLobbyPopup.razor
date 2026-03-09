@@ -6,6 +6,7 @@
 @using LBQuiz.Services.Interfaces
 @using LBQuiz.Models.Lobby
 @inject ISnackbar Snackbar
+@using Microsoft.AspNetCore.WebUtilities
 
 <MudDialog>
     <TitleContent>
@@ -50,7 +51,7 @@
             string email = user.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
             string nickName = email.Split("@")[0];
         }
-
+        
         await LobbyHub.InitializeAsync(Navigation);
     }
 
