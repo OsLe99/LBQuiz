@@ -1,0 +1,81 @@
+﻿@page "/join={joinCode}"
+@using LBQuiz.Models.Lobby
+@using LBQuiz.Services.Interfaces
+@inject NavigationManager Navigation
+@inject ILobbyHubConnection LobbyHub
+@inject ILobbyService LobbyService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JS
+
+<MudStack RowAlignment="RowAlignment.Center" Spacing="4">
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert
+            Severity="Severity.Error"
+            ShowCloseIcon="true"
+            CloseIconClicked="() => _errorMessage = null"
+            Style="width: 100%; margin-bottom: 16px;"
+            Elevation="5">
+            @_errorMessage
+        </MudAlert>
+    }
+
+    <MudTextField
+        @bind-Value="_participant.Nickname"
+        Label="Your nickname"
+        Placeholder="Enter your nickname"
+        Adornment="Adornment.Start"
+        AdornmentIcon="@Icons.Material.Filled.Person"
+        Style="width: 100%; margin-bottom: 8px;"
+        Variant="Variant.Outlined"
+        Required="true"
+        RequiredError="Nickname is required">
+    </MudTextField>
+
+    <MudButton
+        @onclick="AddUser"
+        Variant="Variant.Filled"
+        Color="Color.Success"
+        Style="width: 100%;"
+        StartIcon="@Icons.Material.Filled.Login">
+        Join Lobby
+    </MudButton>
+</MudStack>
+
+@code {
+
+    [Parameter]
+    public string joinCode { get; set; }
+    private LobbyParticipant _participant = new() { Nickname = string.Empty, ConnectionId = string.Empty };
+    private string _errorMessage;
+
+    public async Task AddUser()
+    {
+        _errorMessage = null;
+
+        try
+        {
+            if (string.IsNullOrEmpty(joinCode) || joinCode.Length != 6)
+            {
+                _errorMessage = "Invalid join code.";
+                return;
+            }
+
+            if (string.IsNullOrEmpty(_participant.Nickname))
+            {
+                _errorMessage = "Invalid nickname.";
+                return;
+            }
+
+            await LobbyHub.JoinLobbyAsync(joinCode, _participant.Nickname);
+            await JS.InvokeVoidAsync("sessionStorage.setItem", "lobbyNickname", _participant.Nickname);
+            var quizLobby = await LobbyService.GetLobbyByJoinCodeAsync(joinCode);
+
+            Navigation.NavigateTo($"/quiz/{joinCode}");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+    }
+}
