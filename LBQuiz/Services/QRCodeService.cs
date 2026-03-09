@@ -6,19 +6,29 @@ namespace LBQuiz.Services
     public class QRCodeService : IQRCodeService
     {
         private readonly IConfiguration _configuration;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         public string PathString { get; set; }
         public string UriString { get; set; }
 
-        public QRCodeService(IConfiguration config)
+        public QRCodeService(IConfiguration config, IHttpContextAccessor httpContextAccessor)
         {
             _configuration = config;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<string> GetQRImageFromApiAsync(string joinCode)
         {
+            var request = _httpContextAccessor.HttpContext?.Request;
+
+            var baseUrl = $"{request?.Scheme}://{request?.Host}";
+
+            var url = $"{baseUrl}/quiz/{joinCode}";
+
+            //"/quiz/{LobbyCode}"
+
             var apiKey = _configuration["ApiNinjas:ApiKey"];
 
-            var url = $"https://github.com/OsLe99/LBQuiz";
+            //var url = $"https://github.com/OsLe99/LBQuiz";
 
             var client = new HttpClient();
 
