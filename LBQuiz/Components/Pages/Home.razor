@@ -9,17 +9,21 @@
 
 
 <MudContainer Class="d-flex flex-column" Style="min-height: calc(100vh - 64px); overflow: hidden;">
-    <span>
-        <MudGrid Spacing="2" Justify="Justify.Center" AlignItems="AlignItems.Center">
-            <MudItem xs="2">
-                <MudImage Src="/images/background/LBQuizPngLogo.png" Style="position:relative; width: 200px;"></MudImage>
-            </MudItem>
-            <MudItem xs="10" Style="display:flex; justify-content:center; align-items:center;">
-                <MudText Typo="Typo.h5" Style="font-family: 'Fredoka One', cursive; text-align:center;">Create, host and take quizzes live</MudText>
-            </MudItem>
-            
-        </MudGrid>
-     </span>
+    <MudGrid Spacing="2" Justify="Justify.Center" AlignItems="AlignItems.Center">
+
+        <MudItem xs="12" sm="3" Style="display:flex; justify-content:center;">
+            <MudImage Src="/images/background/LBQuizPngLogo.png"
+                      Style="width:200px; max-width:100%;" />
+        </MudItem>
+
+        <MudItem xs="12" sm="9" Style="display:flex; justify-content:center; align-items:center;">
+            <MudText Typo="Typo.h5"
+                     Style="font-family: 'Fredoka One', cursive; text-align:center;">
+                Create, host and take quizzes live
+            </MudText>
+        </MudItem>
+
+    </MudGrid>
     
     <MudStack Row="true"
               Spacing="3"
@@ -47,37 +51,46 @@
     </MudStack>
     
     <MudPaper Class="pa-4 my-4 rounded-xl text-center" Elevation="2">
-        
-        <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-4" Style="font-family: 'Fredoka One', cursive;">Current Statistics</MudText>
-        
-        <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="6">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+
+    <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-4" Style="font-family: 'Fredoka One', cursive;">
+        Current Statistics
+    </MudText>
+
+    <MudGrid Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="4">
+
+        <MudItem xs="12" sm="4">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="2">
                 <MudIcon Icon="@Icons.Material.Filled.Leaderboard" Color="Color.Primary" Size="Size.Large"/>
                 <MudStack Spacing="0">
                     <MudText Typo="Typo.h4" Color="Color.Primary" Style="font-family: 'Fredoka One', cursive;">@_quizCount</MudText>
                     <MudText Typo="Typo.body2">quizzes created</MudText>
                 </MudStack>
             </MudStack>
+        </MudItem>
 
-            <MudDivider Vertical="true" FlexItem="true"/>
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudItem xs="12" sm="4">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="2">
                 <MudIcon Icon="@Icons.Material.Filled.QuestionAnswer" Color="Color.Secondary" Size="Size.Large"/>
                 <MudStack Spacing="0">
                     <MudText Typo="Typo.h4" Color="Color.Secondary" Style="font-family: 'Fredoka One', cursive;">@_questionCount</MudText>
                     <MudText Typo="Typo.body2">questions written</MudText>
                 </MudStack>
             </MudStack>
+        </MudItem>
 
-            <MudDivider Vertical="true" FlexItem="true"/>
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudItem xs="12" sm="4">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center" Spacing="2">
                 <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Info" Size="Size.Large"/>
                 <MudStack Spacing="0">
                     <MudText Typo="Typo.h4" Color="Color.Info" Style="font-family: 'Fredoka One', cursive;">@_userCount</MudText>
                     <MudText Typo="Typo.body2">registered users</MudText>
                 </MudStack>
             </MudStack>
-        </MudStack>
-    </MudPaper>
+        </MudItem>
+
+    </MudGrid>
+
+</MudPaper>
     
     <MudDivider DividerType="DividerType.Middle" Class="my-auto"></MudDivider>
     

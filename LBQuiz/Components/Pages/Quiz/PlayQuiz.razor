@@ -38,9 +38,11 @@
     {
         <MudItem xs="12" md="4">
             <MudPaper Class="pa-4" Style="height: auto">
-                <MudText Typo="Typo.h2" Class="mb-3">@questionOpen.QuestionText</MudText>
-                <MudTextField @bind-Value="Answer" Label="Answer" Variant="Variant.Filled"></MudTextField>
-                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SaveAnswer(Answer))">Submit answer</MudButton>
+                <MudStack Spacing="3">
+                    <MudText Typo="Typo.h2" Class="mb-3">@questionOpen.QuestionText</MudText>
+                    <MudTextField @bind-Value="Answer" Label="Answer" Variant="Variant.Filled"></MudTextField>
+                    <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SaveAnswer(Answer))">Submit answer</MudButton>
+                </MudStack>
             </MudPaper>
         </MudItem>
     }
@@ -48,52 +50,80 @@
     {
         <MudItem xs="12" md="4">
             <MudPaper Class="pa-4" Style="height: auto">
-                <MudText Typo="Typo.h2" Class="mb-3">@questionSlider.QuestionText</MudText>
-                <MudSlider @bind-Value="sliderValue" Min="@questionSlider.MinValue" Max="@questionSlider.MaxValue">Value: @sliderValue.ToString()</MudSlider>
-                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() =>SaveAnswer(sliderValue.ToString()))">Submit answer</MudButton>
+                <MudStack Spacing="3">
+                    <MudText Typo="Typo.h2" Class="mb-3">@questionSlider.QuestionText</MudText>
+                    <MudSlider @bind-Value="sliderValue" Min="@questionSlider.MinValue" Max="@questionSlider.MaxValue">Value: @sliderValue.ToString()</MudSlider>
+                    <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SaveAnswer(sliderValue.ToString()))">Submit answer</MudButton>
+                </MudStack>
             </MudPaper>
         </MudItem>
     }
     else if(CurrentQuestion2 != null && CurrentQuestion2 is MultipleChoice questionMultiple)
     {
         <MudItem xs="12" md="4">
-            <MudPaper Class="pa-4" Style="height: auto;">
-                <MudText Typo="Typo.h2" Class="mb-3">@questionMultiple.QuestionText</MudText>
-                
-                <MudButton Disabled="answerButtonShow" OnClick="() => SubmitMulipleChoice()" Variant="Variant.Filled" Color="Color.Primary">Submit answers</MudButton>
+            <MudPaper Class="pa-4">
+
+                <MudStack Spacing="3">
+
+                    <MudText Typo="Typo.h2">
+                        @questionMultiple.QuestionText
+                    </MudText>
+
+                    <MudButton Disabled="answerButtonShow"
+                               OnClick="() => SubmitMulipleChoice()"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary">
+                        Submit answers
+                    </MudButton>
+
+                </MudStack>
+
             </MudPaper>
         </MudItem>
-        <MudGrid Style="margin-top: 20px;" Justify="Justify.Center">
+
+
+        <MudGrid Class="mt-4" Justify="Justify.Center" Spacing="3">
+
             @foreach (var option in questionMultiple.MultipleOptionsList)
             {
                 <MudItem xs="12" sm="6" md="4" lg="3">
-                    <MudLink OnClick="() => OnClickChangeColor(option)" Style="text-align: center;">
-                        <MudCard Outlined="true" Class="pa-2">
-                            <MudCardContent Style=@($"background:{option.ColorString}")>
-                                <MudText Typo="Typo.body2">
-                                    @option.Text
-                                </MudText>
-                            </MudCardContent>
-                        </MudCard>
-                    </MudLink>
+
+                    <MudCard Outlined="true"
+                             Class="pa-2"
+                             Style="cursor:pointer"
+                             @onclick="() => OnClickChangeColor(option)">
+
+                        <MudCardContent Style=@($"background:{option.ColorString}; min-height:80px; display:flex; align-items:center; justify-content:center;")>
+
+                            <MudText Typo="Typo.body1" Align="Align.Center">
+                                @option.Text
+                            </MudText>
+
+                        </MudCardContent>
+
+                    </MudCard>
+
                 </MudItem>
             }
+
         </MudGrid>
     }
     else if (CurrentQuestion2 != null && CurrentQuestion2 is QuestionWordCloud questionWordCloud)
     {
         <MudItem xs="12" md="4">
             <MudPaper Class="pa-4" Style="height: auto">
-                <MudText Typo="Typo.h2" Class="mb-3">@questionWordCloud.QuestionText</MudText>
-                @for (int i = 0; i < questionWordCloud.MaxEntries; i++)
-                {
-                    var index = i;
-                    <MudTextField @bind-Value="_wordCloudEntries[index]"
-                                  Label="@($"Word {index + 1}")"
-                                  Variant="Variant.Filled"
-                                  Class="mb-2"/>
-                }
-                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitWordCloud">Submit answer</MudButton>
+                <MudStack Spacing="3">
+                    <MudText Typo="Typo.h2" Class="mb-3">@questionWordCloud.QuestionText</MudText>
+                    @for (int i = 0; i < questionWordCloud.MaxEntries; i++)
+                    {
+                        var index = i;
+                        <MudTextField @bind-Value="_wordCloudEntries[index]"
+                                      Label="@($"Word {index + 1}")"
+                                      Variant="Variant.Filled"
+                                      Class="mb-2"/>
+                    }
+                    <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="SubmitWordCloud">Submit answer</MudButton>
+                </MudStack>
             </MudPaper>
         </MudItem>
     }
@@ -101,9 +131,11 @@
     {
         <MudItem xs="12" md="4">
             <MudPaper Class="pa-4" Style="height: auto">
-                <MudText Typo="Typo.h2" Class="mb-3">@questionReview.QuestionText</MudText>
-                <MudSlider @bind-Value="sliderValue" Min="@questionReview.MinValue" Max="@questionReview.MaxValue">Value: @sliderValue.ToString()</MudSlider>
-                <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SaveAnswer(sliderValue.ToString()))">Submit answer</MudButton>
+                <MudStack Spacing="3">
+                    <MudText Typo="Typo.h2" Class="mb-3">@questionReview.QuestionText</MudText>
+                    <MudSlider @bind-Value="sliderValue" Min="@questionReview.MinValue" Max="@questionReview.MaxValue">Value: @sliderValue.ToString()</MudSlider>
+                    <MudButton Disabled="answerButtonShow" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => SaveAnswer(sliderValue.ToString()))">Submit answer</MudButton>
+                </MudStack>
             </MudPaper>
         </MudItem>
     }
