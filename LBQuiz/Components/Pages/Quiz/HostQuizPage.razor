@@ -300,7 +300,16 @@ else // Questions
 
         LobbyHub.OnParticipantsChanged += async () =>
         {
-            _userList = LobbyHub.Participants.ToList();
+            var incoming = LobbyHub.Participants.ToList();
+            foreach (var participant in incoming)
+            {
+                var existing = _userList.FirstOrDefault(u => u.Nickname == participant.Nickname);
+                if (existing != null)
+                {
+                    participant.Score = existing.Score;
+                }
+            }
+            _userList = incoming;
             await InvokeAsync(StateHasChanged);
         };
         LobbyHub.OnQuestionChanged += HandleNextQuestion;
