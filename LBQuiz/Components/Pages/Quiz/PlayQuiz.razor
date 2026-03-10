@@ -60,7 +60,7 @@
             <MudPaper Class="pa-4" Style="height: auto;">
                 <MudText Typo="Typo.h2" Class="mb-3">@questionMultiple.QuestionText</MudText>
                 
-                <MudButton Disabled="answerButtonShow" OnClick="() => SubmitMulipleChoice()">Submit answers</MudButton>
+                <MudButton Disabled="answerButtonShow" OnClick="() => SubmitMulipleChoice()" Variant="Variant.Filled" Color="Color.Primary">Submit answers</MudButton>
             </MudPaper>
         </MudItem>
         <MudGrid Style="margin-top: 20px;" Justify="Justify.Center">
@@ -331,6 +331,7 @@ else
             {
                 var question = JsonSerializer.Deserialize<QuestionSlider>(CurrentQuestion.Blob);
                 CurrentQuestion2 = question!;
+                sliderValue = question.MinValue;
             }
             else if (questionType == "Multiple")
             {
@@ -376,6 +377,7 @@ else
                     MaxValue = dto.MaxValue
                 };
                 CurrentQuestion2 = review;
+                sliderValue = dto.MinValue;
             }
         }
         catch (Exception ex)
@@ -451,10 +453,6 @@ else
     {
         _chatOpen = true;
         _unreadChatCount = 0;
-    }
-    private void OnDrawerOpenChanged(bool isOpen)
-    {
-        _chatOpen = isOpen;
     }
 
     private async Task HandleChatMessageReceived(ChatMessage message)
