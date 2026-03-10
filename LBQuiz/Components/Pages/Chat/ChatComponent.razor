@@ -8,7 +8,7 @@
  @inject ILobbyHubConnection LobbyHubConnection
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<MudInputLabel Style="margin-left: 10px;">Message: <MudInput @bind-Value="playerMessage.Message" OnKeyUp="HandleKeyDown"></MudInput><MudButton OnClick="OnHandleChatSend">Send</MudButton></MudInputLabel>
+<div style="flex-grow: 1; overflow: auto; display: flex; flex-direction: column-reverse">
 @foreach (var mess in AllMessages)
 {
     @if (HostId != null)
@@ -38,6 +38,8 @@
         }
     }
 }
+</div>
+<MudInputLabel Style="margin-left: 10px;">Message: <MudInput @bind-Value="playerMessage.Message" OnKeyUp="HandleKeyDown"></MudInput><MudButton OnClick="OnHandleChatSend">Send</MudButton></MudInputLabel>
 
 @code {
     [Parameter]

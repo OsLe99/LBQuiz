@@ -21,8 +21,6 @@
 
 @page "/quiz/play/{LobbyCode}"
 
-<h3>PlayQuiz</h3>
-
 @if (_showResults == false)
 {
     @if (CurrentQuestion2 != null)
@@ -59,13 +57,13 @@
     else if(CurrentQuestion2 != null && CurrentQuestion2 is MultipleChoice questionMultiple)
     {
         <MudItem xs="12" md="4">
-            <MudPaper Class="pa-4" Style="height: auto; background:linear-gradient(90deg,rgba(0, 200, 0, 0.4) 0%, rgba(200, 0, 0, 0.4) 100%);">
+            <MudPaper Class="pa-4" Style="height: auto;">
                 <MudText Typo="Typo.h2" Class="mb-3">@questionMultiple.QuestionText</MudText>
                 
-                <MudButton Disabled="answerButtonShow" OnClick="() => SubmitMulipleChoice()">Submit answers</MudButton>
+                <MudButton Disabled="answerButtonShow" OnClick="() => SubmitMulipleChoice()" Variant="Variant.Filled" Color="Color.Primary">Submit answers</MudButton>
             </MudPaper>
         </MudItem>
-        <MudGrid Style="margin-top: 20px;">
+        <MudGrid Style="margin-top: 20px;" Justify="Justify.Center">
             @foreach (var option in questionMultiple.MultipleOptionsList)
             {
                 <MudItem xs="12" sm="6" md="4" lg="3">
@@ -121,30 +119,29 @@
             </MudBadge>
         </div>
     }
-    <MudDrawer Anchor="Anchor.Right"
-           Open="_chatOpen"
-           OpenChanged="OnDrawerOpenChanged"
-           Variant="DrawerVariant.Temporary"
-           Elevation="6"
-           Width="400px">
+    
+    <div class="chat-panel @(_chatOpen ? "open" : "")">
+        <MudPaper Height="100%" Style="display: flex; flex-direction: column">
+            <div style="display:flex; align-items:center; padding: 8px;">
+                <MudText Typo="Typo.h6">Chat</MudText>
+                <MudSpacer/>
+                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                               OnClick="@(() => _chatOpen = false)"/>
+            </div>
 
-    <MudDrawerHeader>
-        <MudText Typo="Typo.h6">Chat</MudText>
-        <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.Close"
-                       OnClick="@(() => _chatOpen = false)" />
-    </MudDrawerHeader>
+            <MudDivider Class="mb-2"/>
 
-    <MudDivider />
-
-    <MudDrawerContent>
-
-        <LBQuiz.Components.Pages.Chat.ChatComponent 
-            HostId="@_currentHostId" 
-            LobbyId="@_currentLobby.Id.ToString()" />
-
-    </MudDrawerContent>
-</MudDrawer>
+            <div style="margin-bottom: 2px; display: flex; flex-direction: column; flex-grow: 1; overflow: auto">
+                <LBQuiz.Components.Pages.Chat.ChatComponent
+                    HostId="@_currentHostId"
+                    LobbyId="@_currentLobby.Id.ToString()"/>
+            </div>
+        </MudPaper>
+  </div>
+    
+    /*  <LBQuiz.Components.Pages.Chat.ChatComponent 
+    HostId="@_currentHostId"
+    LobbyId="@_currentLobby.Id.ToString()" /> */
 }
 else
 {
@@ -334,6 +331,7 @@ else
             {
                 var question = JsonSerializer.Deserialize<QuestionSlider>(CurrentQuestion.Blob);
                 CurrentQuestion2 = question!;
+                sliderValue = question.MinValue;
             }
             else if (questionType == "Multiple")
             {
@@ -346,7 +344,7 @@ else
                         QuizId = CurrentQuestion.QuizId,
                         QuestionText = CurrentQuestion.QuestionText,
                         Points = multiple.Points,
-                        SortOrder = so,
+                        SortOrder = CurrentQuestion.SortOrder,
                         MultipleOptionsList = multiple.MultipleOptionsList
                     };
             }
@@ -379,6 +377,7 @@ else
                     MaxValue = dto.MaxValue
                 };
                 CurrentQuestion2 = review;
+                sliderValue = dto.MinValue;
             }
         }
         catch (Exception ex)
@@ -454,10 +453,6 @@ else
     {
         _chatOpen = true;
         _unreadChatCount = 0;
-    }
-    private void OnDrawerOpenChanged(bool isOpen)
-    {
-        _chatOpen = isOpen;
     }
 
     private async Task HandleChatMessageReceived(ChatMessage message)

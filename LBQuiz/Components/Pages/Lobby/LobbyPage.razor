@@ -17,91 +17,107 @@
 
 @page "/quiz/{LobbyCode}"
 
-<div class="createBar">
-    <MudText Align="Align.Center" Typo="Typo.h5">
-        Lobbypage
-        <MudIcon Icon="@Icons.Material.Filled.Face"></MudIcon>
-    </MudText>
-</div>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <div class="createBar">
+        <MudText Align="Align.Center" Typo="Typo.h5">
+            Lobby: @LobbyCode
+            <MudIcon Icon="@Icons.Material.Filled.Face" />
+        </MudText>
+    </div>
 
-@if(_isCountingDown == false)
-{
     @if (CurrentLobby == null)
     {
-        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4"/>
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
     }
-    else if (_quizStart == false)
+    else if (_isCountingDown)
     {
-        <MudContainer Class="mb-5 d-flex-1">
-
-            <MudPaper Style="background-color: lightgrey; height: 75vh;" Class="flex-grow-1">
-
-                <MudGrid Justify="Justify.SpaceEvenly" Spacing="2">
-
-                    <MudItem xs="12" md="4">
-                        <MudText Typo="Typo.h4">Welcome to the lobby!</MudText>
-                        @if (CurrentQuiz != null)
-                        {
-                            <div class="text-center mt-6">
-                                <MudText Typo="Typo.h5">@CurrentQuiz.Name</MudText>
-                                <MudText Typo="Typo.h6">@CurrentQuiz.Description</MudText>
-                            </div>
-                        }
-                    </MudItem>
-
-                    <MudItem>
-                        <MudText Typo="Typo.h4">
-                            Join Code: @CurrentLobby.JoinCode
-                            <MudTooltip Text="Copy Code">
-                                <MudFab StartIcon="@Icons.Material.Filled.ContentCopy" Color="Color.Primary" Size="Size.Small" OnClick="CopyToClipboard"></MudFab>
-                            </MudTooltip>
-                        </MudText>
-                        @if (qrImgString != null && qrImgString != "")
-                        {
-                            <div class="d-flex justify-content-center mt-6">
-                                <MudImage Src="@qrImgString" Style="max-height: 180px;" Class="rounded-lg"></MudImage>
-                            </div>
-                        }
-                    </MudItem>
-
-                    <MudItem>
-                        <MudText Typo="Typo.h6">Number of players in lobby: @LobbyHub.Participants.Count</MudText>
-                        <MudContainer Style="max-height: 70vh; overflow: scroll;">
-                            <MudList T="string" ReadOnly="true">
+        <MudText Style="text-align: center;" Color="@countDownColor" Typo="Typo.h1">
+            Quiz starting in @_countdownValue
+        </MudText>
+    }
+    else
+    {
+        <div class="d-flex justify-center">
+            <MudGrid Class="mt-2" Spacing="4" Style="max-width: 1000px; width: 100%;">
+                <MudItem xs="12" md="4" Class="d-flex justify-center">
+                    <MudCard Elevation="2" Style="width: 100%; max-width: 350px; height: 100%;">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6" Class="mb-4 text-center">Welcome to the lobby!</MudText>
+                            @if (CurrentQuiz != null)
+                            {
+                                <div class="text-center">
+                                    <MudText Typo="Typo.subtitle1" Class="mb-1">@CurrentQuiz.Name</MudText>
+                                    <MudText Typo="Typo.body2">@CurrentQuiz.Description</MudText>
+                                </div>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                
+                <MudItem xs="12" md="4" Class="d-flex justify-center">
+                    <MudCard Elevation="2" Style="width: 100%; max-width: 350px; height: 100%;">
+                        <MudCardContent Class="d-flex flex-column align-center">
+                            <MudText Typo="Typo.subtitle1" Class="mb-3 text-center">
+                                Join Code: <strong>@CurrentLobby.JoinCode</strong>
+                                <MudTooltip Text="Copy Code">
+                                    <MudIconButton
+                                        Icon="@Icons.Material.Filled.ContentCopy"
+                                        Color="Color.Primary"
+                                        Size="Size.Small"
+                                        OnClick="CopyToClipboard">
+                                    </MudIconButton>
+                                </MudTooltip>
+                            </MudText>
+                            @if (_userId == CurrentQuiz?.HostId && qrImgString != null && qrImgString != "")
+                            {
+                                <div class="d-flex justify-center mt-2">
+                                    <MudImage
+                                        Src="@qrImgString"
+                                        Style="max-height: 180px; max-width: 100%; border-radius: 8px;">
+                                    </MudImage>
+                                </div>
+                            }
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                
+                <MudItem xs="12" md="4" Class="d-flex justify-center">
+                    <MudCard Elevation="2" Style="width: 100%; max-width: 350px; height: 100%; display: flex; flex-direction: column;">
+                        <MudCardContent Class="flex-grow-1 overflow-auto">
+                            <MudText Typo="Typo.subtitle1" Class="mb-3 text-center">Players (@LobbyHub.Participants.Count)</MudText>
+                            <MudList T="string">
                                 @foreach (var part in LobbyHub.Participants)
                                 {
-                                    <MudListItem>
-                                        <MudChip Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Primary">
+                                    <MudListItem Class="justify-center">
+                                        <MudChip
+                                            Icon="@Icons.Material.Filled.AccountCircle"
+                                            Color="Color.Primary"
+                                            Variant="Variant.Outlined">
                                             @part.Nickname
                                         </MudChip>
                                     </MudListItem>
                                 }
                             </MudList>
-                        </MudContainer>
-
-                    </MudItem>
-
-
-                </MudGrid>
-
-            </MudPaper>
-            <div class="d-flex justify-content-center mt-4">
-                @if (_userId == CurrentQuiz.HostId)
-                {
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="StartQuiz">Start Quiz</MudButton>
-                }
-            </div>
-
-
-        </MudContainer>
-
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </div>
+        
+        <div class="d-flex justify-center mt-4">
+            @if (_userId == CurrentQuiz?.HostId)
+            {
+                <MudButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    OnClick="StartQuiz"
+                    StartIcon="@Icons.Material.Filled.PlayArrow">
+                    Start Quiz
+                </MudButton>
+            }
+        </div>
     }
-}
-else
-{
-    <MudText Style="text-align: center;" Color="@countDownColor" Typo="Typo.h1">Quiz starting in @_countdownValue</MudText>
-}
-
+</MudContainer>
 
 @code {
     // [Parameter]

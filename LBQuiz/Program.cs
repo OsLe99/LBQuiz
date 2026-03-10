@@ -45,6 +45,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 builder.Services.AddMudServices();
 builder.Services.AddSignalR();
+builder.Services.AddHttpContextAccessor();
 
 // Lobby services
 builder.Services.AddSingleton<ILobbyParticipantManager, LobbyParticipantManager>();
@@ -56,6 +57,7 @@ builder.Services.AddScoped<IQuizManager, QuizManager>();
 builder.Services.AddScoped<IQuestionScoringService, QuestionScoringService>();
 builder.Services.AddScoped<IChatHubConnection, ChatHubConnection>();
 builder.Services.AddScoped<IQRCodeService, QRCodeService>();
+builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 
 var app = builder.Build();
 
