@@ -9,12 +9,12 @@ A real-time multiplayer quiz platform built with **Blazor Server** (.NET 10) and
   - Open-ended
   - Slider
   - Word cloud
+  - Review (with average answer)
 - **Lobby system** – Create or join lobbies via link or QR code
 - **Real-time gameplay** – Live question progression and answer handling powered by SignalR
 - **Scoring** – Automatic question scoring after each round
 - **In-game chat** – Players can chat during a quiz session
 - **User accounts** – Registration, login, and profile pictures via ASP.NET Core Identity
-- **Theming** – Customisable UI themes via MudBlazor ThemeManager
 
 ## Tech Stack
 
